@@ -27,16 +27,21 @@ USER app
 
 EXPOSE 48080
 
-ENV JAVA_OPTS="-server \
-    -Xms512m \
-    -Xmx1024m \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/app/logs/heapdump.hprof \
-    -Djava.security.egd=file:/dev/./urandom \
-    -Dfile.encoding=UTF-8 \
-    -Duser.timezone=Asia/Shanghai"
+# JVM 参数说明：
+#   UseContainerSupport  — JDK8u191+ 支持，自动读取 cgroup 内存限制
+#   MaxRAMPercentage     — 使用容器内存的 75%，比固定 Xmx 更灵活
+#   UseStringDeduplication — G1GC 下减少重复字符串内存占用
+ENV JAVA_OPTS="\
+-XX:+UseContainerSupport \
+-XX:MaxRAMPercentage=75.0 \
+-XX:+UseG1GC \
+-XX:MaxGCPauseMillis=200 \
+-XX:+UseStringDeduplication \
+-XX:+HeapDumpOnOutOfMemoryError \
+-XX:HeapDumpPath=/app/logs/heapdump.hprof \
+-Djava.security.egd=file:/dev/./urandom \
+-Dfile.encoding=UTF-8 \
+-Duser.timezone=Asia/Shanghai"
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -sf http://localhost:48080/actuator/health || exit 1

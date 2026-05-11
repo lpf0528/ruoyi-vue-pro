@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Maven settings.xml - 使用阿里云镜像加速依赖下载
-  放置路径：.github/maven/settings.xml
-  在 CI 中通过 --settings .github/maven/settings.xml 引用
--->
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                               http://maven.apache.org/xsd/settings-1.0.0.xsd">
 
   <mirrors>
-    <!-- 阿里云公共仓库（覆盖 central + jcenter + google + gradle） -->
     <mirror>
       <id>aliyun-central</id>
       <name>Aliyun Central Mirror</name>
@@ -32,9 +26,9 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <!-- 跳过 GPG 签名验证，加速构建 -->
         <gpg.skip>true</gpg.skip>
       </properties>
     </profile>
   </profiles>
+
 </settings>

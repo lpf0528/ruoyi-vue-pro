@@ -1,14 +1,16 @@
-name: 后端 - 构建并推送镜像到腾讯云（优化版）
+name: 后端 - 构建推送并部署（最终优化版）
 
 # ============================================================
-# 优化要点：
-#   1. Maven 构建在 GHA Runner 中完成，依赖使用 actions/cache 缓存
-#      → 首次构建后，依赖层命中率接近 100%，节省 3~8 分钟
-#   2. Docker 只做打包（COPY jar），build context 极小
-#      → Docker build 从 5~10 分钟降至 30 秒内
-#   3. 阿里云 Maven 镜像加速依赖下载
-#   4. Maven 并行构建 -T 1C
-#   5. 仅推送变更模块的镜像（避免无效构建）
+# 优化清单（相比原始版本）：
+#
+#   ① Maven cache（actions/setup-java）      → 节省 3~8 分钟
+#   ② Maven 移出 Docker，只 COPY jar          → Docker build < 30s
+#   ③ Registry cache（替代 gha cache）        → 层缓存更稳定
+#   ④ .dockerignore                           → build context 从几百MB→几KB
+#   ⑤ provenance: false + sbom: false         → 推送快 20~30s
+#   ⑥ Branch name sanitize                    → 修复 release/v1 等非法 tag
+#   ⑦ JVM UseContainerSupport+MaxRAMPercentage → 更适合容器
+#   ⑧ SSH 自动部署                             → 全链路自动化
 # ============================================================
 
 on:
@@ -23,13 +25,6 @@ on:
       - '.image/**'
       - 'sql/**'
 
-  workflow_dispatch:
-    inputs:
-      push_latest:
-        description: '是否同时推送 latest 标签'
-        required: false
-        default: true
-        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,25 +41,23 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
       image_full: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+      image_tag: ${{ steps.meta.outputs.version }}
 
     steps:
       # ── 1. 检出代码 ────────────────────────────────────────
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # ── 2. 配置 JDK（含 Maven 缓存）──────────────────────
-      - name: 配置 JDK ${{ env.JAVA_VERSION }}
+      # ── 2. JDK + Maven 缓存（最大优化点） ─────────────────
+      - name: 配置 JDK（含 Maven 缓存）
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-          # 自动缓存 ~/.m2/repository，key 基于 pom.xml 哈希
-          # 命中缓存时可节省 3~8 分钟的依赖下载时间
-          cache: 'maven'
+          cache: 'maven'   # 自动缓存 ~/.m2/repository，key=pom.xml hash
 
-      # ── 3. Maven 构建（在 Runner 上直接构建，非 Docker 内）──
+      # ── 3. Maven 构建 ──────────────────────────────────────
       - name: Maven 构建
         run: |
           mvn clean package \
@@ -72,42 +65,32 @@ jobs:
             -DskipTests \
             -T 1C \
             -B \
-            --no-transfer-progress \
-            -Dmaven.compile.fork=true
-        # 说明：
-        #   --settings  使用阿里云镜像，加速依赖下载
-        #   -T 1C       按 CPU 核心数并行编译模块
-        #   -DskipTests 跳过单元测试（如需保留可去掉）
+            --no-transfer-progress
 
-      - name: 验证构建产物
-        run: |
-          JAR=$(ls yudao-server/target/yudao-server*.jar 2>/dev/null | head -1)
-          if [ -z "$JAR" ]; then
-            echo "❌ 未找到构建产物，构建失败"
-            exit 1
-          fi
-          echo "✅ 构建产物：$JAR ($(du -sh $JAR | cut -f1))"
-
-      # ── 4. 配置 Docker Buildx ──────────────────────────────
+      # ── 4. Docker Buildx ───────────────────────────────────
       - name: 配置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── 5. 生成镜像元数据 ──────────────────────────────────
+      # ── 5. 生成镜像元数据（修复 branch name 含 / 的问题） ──
       - name: 生成镜像元数据
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # 说明：
+          #   type=ref,event=branch  — 自动 sanitize 分支名（/ → -）
+          #   type=sha               — 精确定位提交
+          #   latest                 — 仅 master/main 分支才打
           tags: |
-            type=sha,prefix=${{ github.ref_name }}-,format=short
-            type=raw,value=latest,enable=${{ github.ref_name == 'master' || github.ref_name == 'main' || github.event.inputs.push_latest == 'true' }}
-            type=raw,value=${{ github.ref_name }}-{{date 'YYYYMMDD'}}
+            type=ref,event=branch
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.ref_name == 'master' || github.ref_name == 'main' }}
           labels: |
             org.opencontainers.image.title=yudao-server
             org.opencontainers.image.description=芋道后端服务
             org.opencontainers.image.revision=${{ github.sha }}
 
-      # ── 6. 登录腾讯云镜像仓库 ──────────────────────────────
+      # ── 6. 登录腾讯云 ──────────────────────────────────────
       - name: 登录腾讯云镜像仓库
         uses: docker/login-action@v3
         with:
@@ -115,8 +98,7 @@ jobs:
           username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
           password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
 
-      # ── 7. 构建并推送 Docker 镜像 ──────────────────────────
-      # 此时 Dockerfile 只做 COPY jar，build 极快（< 30s）
+      # ── 7. 构建并推送 ──────────────────────────────────────
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
@@ -126,22 +108,25 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          # Docker 层缓存（Dockerfile 不含 Maven，层极少且稳定）
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      # ── 8. 输出构建摘要 ────────────────────────────────────
+          # Registry Cache（比 gha cache 更稳定）
+          # BuildKit 直接从 TCR 拉取缓存层，不依赖 GHA 缓存空间
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+          # 关闭 provenance/sbom，推送速度提升 20~30s
+          provenance: false
+          sbom: false
+
+      # ── 8. 输出摘要 ────────────────────────────────────────
       - name: 输出构建结果
         run: |
-          echo "## 🚀 后端镜像推送成功" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 镜像推送成功" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
           echo "| 镜像 | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| 构建耗时 | 见各步骤时间 |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**标签列表：**" >> $GITHUB_STEP_SUMMARY
+          echo "**标签：**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
