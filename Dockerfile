@@ -1,7 +1,8 @@
 # =====================================================
 # Stage 1: 构建阶段
 # =====================================================
-FROM maven:3.9-eclipse-temurin-8-alpine AS builder
+# 使用 debian 版（非 alpine），TLS 兼容性更好
+FROM maven:3.9-eclipse-temurin-8 AS builder
 
 WORKDIR /app
 
@@ -36,33 +37,29 @@ RUN mvn clean package -DskipTests -B --no-transfer-progress \
     && ls -lh yudao-server/target/*.jar
 
 # =====================================================
-# Stage 2: 运行阶段
+# Stage 2: 运行阶段（用 alpine 减小镜像体积）
 # =====================================================
 FROM eclipse-temurin:8-jre-alpine
 
-# 安装时区工具
+# 设置时区
 RUN apk add --no-cache tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     apk del tzdata
 
-# 创建非 root 用户运行（安全最佳实践）
+# 创建非 root 用户
 RUN addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 
-# 从构建阶段复制 JAR
 COPY --from=builder /app/yudao-server/target/yudao-server.jar app.jar
 
-# 日志目录
 RUN mkdir -p /app/logs && chown -R app:app /app
 
 USER app
 
-# 暴露端口（yudao-server 默认 48080）
 EXPOSE 48080
 
-# JVM 参数优化（容器友好）
 ENV JAVA_OPTS="-server \
     -Xms512m \
     -Xmx1024m \
