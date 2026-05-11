@@ -1,5 +1,4 @@
 name: 后端 - 构建推送并部署（DockerHub版）
-
 on:
   push:
     branches:
@@ -11,35 +10,25 @@ on:
       - '.gitignore'
       - '.image/**'
       - 'sql/**'
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 env:
   REGISTRY: docker.io
-
-  # Docker Hub 仓库名
-  # 格式：dockerhub用户名/仓库名
   IMAGE_NAME: eatsleeprun/yudao-server
-
   JAVA_VERSION: '8'
 
 jobs:
   build-and-push:
     name: 构建并推送镜像
     runs-on: ubuntu-latest
-
     outputs:
       image_full: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
       image_tag: ${{ steps.meta.outputs.version }}
-
     steps:
-      # ── 1. 检出代码 ─────────────────────────────
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # ── 2. JDK + Maven Cache ───────────────────
       - name: 配置 JDK（含 Maven 缓存）
         uses: actions/setup-java@v4
         with:
@@ -47,7 +36,6 @@ jobs:
           distribution: temurin
           cache: maven
 
-      # ── 3. Maven Build ─────────────────────────
       - name: Maven 构建
         run: |
           mvn clean package \
@@ -56,57 +44,43 @@ jobs:
             -B \
             --no-transfer-progress
 
-      # ── 4. Docker Buildx ───────────────────────
       - name: 配置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── 5. 生成镜像元数据 ──────────────────────
       - name: 生成镜像元数据
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
-
           tags: |
             type=ref,event=branch
             type=sha,format=short
             type=raw,value=latest,enable=${{ github.ref_name == 'master' || github.ref_name == 'main' }}
-
           labels: |
             org.opencontainers.image.title=yudao-server
             org.opencontainers.image.description=芋道后端服务
             org.opencontainers.image.revision=${{ github.sha }}
 
-      # ── 6. 登录 Docker Hub ─────────────────────
       - name: 登录 Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── 7. 构建并推送 Docker 镜像 ───────────────
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-
           push: true
-
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
           platforms: linux/amd64
-
-          # Docker Hub Registry Cache
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}-cache:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}-cache:buildcache,mode=max
-
-          # 提升推送速度
           provenance: false
           sbom: false
 
-      # ── 8. 输出摘要 ─────────────────────────────
       - name: 输出构建结果
         run: |
           echo "## 🚀 镜像推送成功" >> $GITHUB_STEP_SUMMARY
@@ -114,8 +88,48 @@ jobs:
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
           echo "| 镜像 | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-
           echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: 部署到服务器
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref_name == 'master' || github.ref_name == 'main'
+    steps:
+      - name: SSH 远程部署
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          request_pty: true
+          script: |
+            IMAGE="${{ needs.build-and-push.outputs.image_full }}"
+            echo "▶ 拉取镜像: $IMAGE"
+            sudo docker pull "$IMAGE"
+
+            echo "▶ 重启容器: yudao-server"
+            sudo docker stop yudao-server || true
+            sudo docker rm   yudao-server || true
+            sudo docker run -d \
+              --name yudao-server \
+              -p 48080:48080 \
+              -v /opt/deployments/resources:/config \
+              -e SPRING_PROFILES_ACTIVE=dev \
+              --network 1panel-network \
+              "$IMAGE"
+
+            echo "▶ 清理旧镜像"
+            sudo docker image prune -f
+            echo "✅ 后端部署完成"
+
+      - name: 输出部署结果
+        run: |
+          echo "## ✅ 后端部署成功" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`${{ needs.build-and-push.outputs.image_full }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 服务器 | \`${{ secrets.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY

@@ -54,6 +54,7 @@ java $JAVA_OPTS \
 # docker run -d \
 #   --name yudao-server \
 #   -p 48080:48080 \
-#   -v /data/yudao/config:/config \
-#   -e SPRING_PROFILES_ACTIVE=prod \
-#   abc/yudao-server:latest
+#   -v /opt/deployments/resources:/config \
+#   -e SPRING_PROFILES_ACTIVE=dev \
+#   --network 1panel-network \
+#   eatsleeprun/yudao-server:latest
