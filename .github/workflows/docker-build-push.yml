@@ -38,7 +38,7 @@ jobs:
 
       - name: Maven 构建
         run: |
-          mvn clean package \
+          mvn clean install \
             -DskipTests \
             -T 1C \
             -B \
