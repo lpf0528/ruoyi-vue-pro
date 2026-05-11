@@ -107,29 +107,39 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           request_pty: true
           script: |
-            IMAGE="${{ needs.build-and-push.outputs.image_full }}"
-            echo "▶ 拉取镜像: $IMAGE"
-            sudo docker pull "$IMAGE"
+            IMAGE="docker.io/eatsleeprun/yudao-server:latest"
+            CONTAINER="yudao-server"
 
-            echo "▶ 重启容器: yudao-server"
-            sudo docker stop yudao-server || true
-            sudo docker rm   yudao-server || true
-            sudo docker run -d \
-              --name yudao-server \
+            echo "▶ 拉取镜像: $IMAGE"
+            sudo docker pull "$IMAGE" || { echo "❌ 镜像拉取失败，终止部署"; exit 1; }
+
+            echo "▶ 备份旧容器"
+            sudo docker rename "$CONTAINER" "${CONTAINER}-old" 2>/dev/null || true
+
+            echo "▶ 启动新容器"
+            if sudo docker run -d \
+              --name "$CONTAINER" \
               -p 48080:48080 \
               -v /opt/deployments/resources:/config \
               -e SPRING_PROFILES_ACTIVE=dev \
               --network 1panel-network \
-              "$IMAGE"
-
-            echo "▶ 清理旧镜像"
-            sudo docker image prune -f
-            echo "✅ 后端部署完成"
+              "$IMAGE"; then
+              echo "✅ 启动成功，清理旧容器"
+              sudo docker stop "${CONTAINER}-old" 2>/dev/null || true
+              sudo docker rm   "${CONTAINER}-old" 2>/dev/null || true
+              sudo docker image prune -f
+            else
+              echo "❌ 启动失败，回滚旧容器"
+              sudo docker rm "$CONTAINER" 2>/dev/null || true
+              sudo docker rename "${CONTAINER}-old" "$CONTAINER"
+              sudo docker start "$CONTAINER"
+              exit 1
+            fi
 
       - name: 输出部署结果
         run: |
           echo "## ✅ 后端部署成功" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| 镜像 | \`${{ needs.build-and-push.outputs.image_full }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`docker.io/eatsleeprun/yudao-server:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| 服务器 | \`${{ secrets.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY
