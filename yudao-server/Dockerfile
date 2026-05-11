@@ -21,3 +21,7 @@ EXPOSE 48080
 
 ## 启动后端项目
 CMD java ${JAVA_OPTS} -jar app.jar $ARGS
+
+
+
+# docker run -d --name yudao-server -p 48080:48080 -v /opt/deployments/resources:/config -e DEBUG=true --network 1panel-network  -e SPRING_PROFILES_ACTIVE=dev  yudao-server:latest
