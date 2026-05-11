@@ -1,0 +1,15 @@
+.git
+.gitignore
+*.md
+.image/
+sql/
+.idea/
+*.iml
+.DS_Store
+
+# Maven 构建产物（Docker 内重新构建）
+**/target/
+
+# 本地配置（不打入镜像）
+**/src/main/resources/application-local.yaml
+**/src/main/resources/application-local.yml
