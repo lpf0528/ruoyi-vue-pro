@@ -1,17 +1,4 @@
-name: 后端 - 构建推送并部署（最终优化版）
-
-# ============================================================
-# 优化清单（相比原始版本）：
-#
-#   ① Maven cache（actions/setup-java）      → 节省 3~8 分钟
-#   ② Maven 移出 Docker，只 COPY jar          → Docker build < 30s
-#   ③ Registry cache（替代 gha cache）        → 层缓存更稳定
-#   ④ .dockerignore                           → build context 从几百MB→几KB
-#   ⑤ provenance: false + sbom: false         → 推送快 20~30s
-#   ⑥ Branch name sanitize                    → 修复 release/v1 等非法 tag
-#   ⑦ JVM UseContainerSupport+MaxRAMPercentage → 更适合容器
-#   ⑧ SSH 自动部署                             → 全链路自动化
-# ============================================================
+name: 后端 - 构建推送并部署（DockerHub版）
 
 on:
   push:
@@ -25,14 +12,18 @@ on:
       - '.image/**'
       - 'sql/**'
 
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  REGISTRY: ${{ secrets.TENCENT_REGISTRY_URL }}
-  IMAGE_NAME: ${{ secrets.TENCENT_REGISTRY_NAMESPACE }}/yudao-server
+  # Docker Hub 固定 registry
+  REGISTRY: docker.io
+
+  # Docker Hub 仓库名
+  # 格式：dockerhub用户名/仓库名
+  IMAGE_NAME: eatsleeprun/yudao-server
+
   JAVA_VERSION: '8'
 
 jobs:
@@ -45,19 +36,19 @@ jobs:
       image_tag: ${{ steps.meta.outputs.version }}
 
     steps:
-      # ── 1. 检出代码 ────────────────────────────────────────
+      # ── 1. 检出代码 ─────────────────────────────
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # ── 2. JDK + Maven 缓存（最大优化点） ─────────────────
+      # ── 2. JDK + Maven Cache ───────────────────
       - name: 配置 JDK（含 Maven 缓存）
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-          cache: 'maven'   # 自动缓存 ~/.m2/repository，key=pom.xml hash
+          cache: 'maven'
 
-      # ── 3. Maven 构建 ──────────────────────────────────────
+      # ── 3. Maven Build ─────────────────────────
       - name: Maven 构建
         run: |
           mvn clean package \
@@ -67,65 +58,63 @@ jobs:
             -B \
             --no-transfer-progress
 
-      # ── 4. Docker Buildx ───────────────────────────────────
+      # ── 4. Docker Buildx ───────────────────────
       - name: 配置 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── 5. 生成镜像元数据（修复 branch name 含 / 的问题） ──
+      # ── 5. Docker Meta ─────────────────────────
       - name: 生成镜像元数据
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # 说明：
-          #   type=ref,event=branch  — 自动 sanitize 分支名（/ → -）
-          #   type=sha               — 精确定位提交
-          #   latest                 — 仅 master/main 分支才打
+          images: ${{ env.IMAGE_NAME }}
+
           tags: |
             type=ref,event=branch
             type=sha,format=short
             type=raw,value=latest,enable=${{ github.ref_name == 'master' || github.ref_name == 'main' }}
+
           labels: |
             org.opencontainers.image.title=yudao-server
             org.opencontainers.image.description=芋道后端服务
             org.opencontainers.image.revision=${{ github.sha }}
 
-      # ── 6. 登录腾讯云 ──────────────────────────────────────
-      - name: 登录腾讯云镜像仓库
+      # ── 6. 登录 Docker Hub ─────────────────────
+      - name: 登录 Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
-          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── 7. 构建并推送 ──────────────────────────────────────
+      # ── 7. Build & Push ────────────────────────
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
+
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
           platforms: linux/amd64
 
-          # Registry Cache（比 gha cache 更稳定）
-          # BuildKit 直接从 TCR 拉取缓存层，不依赖 GHA 缓存空间
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          # Registry Cache
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
 
-          # 关闭 provenance/sbom，推送速度提升 20~30s
           provenance: false
           sbom: false
 
-      # ── 8. 输出摘要 ────────────────────────────────────────
+      # ── 8. Summary ─────────────────────────────
       - name: 输出构建结果
         run: |
           echo "## 🚀 镜像推送成功" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| 镜像 | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+
           echo "**标签：**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
