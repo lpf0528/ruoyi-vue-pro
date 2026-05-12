@@ -92,7 +92,6 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
   deploy:
     name: 部署到服务器
     runs-on: ubuntu-latest
@@ -107,34 +106,18 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           request_pty: true
           script: |
-            IMAGE="docker.io/eatsleeprun/yudao-server:latest"
-            CONTAINER="yudao-server"
+            cd /opt/deployments
 
-            echo "▶ 拉取镜像: $IMAGE"
-            sudo docker pull "$IMAGE" || { echo "❌ 镜像拉取失败，终止部署"; exit 1; }
+            echo "▶ 拉取最新镜像"
+            sudo docker compose pull yudao-server
 
-            echo "▶ 备份旧容器"
-            sudo docker rename "$CONTAINER" "${CONTAINER}-old" 2>/dev/null || true
+            echo "▶ 重启服务"
+            sudo docker compose up -d yudao-server
 
-            echo "▶ 启动新容器"
-            if sudo docker run -d \
-              --name "$CONTAINER" \
-              -p 48080:48080 \
-              -v /opt/deployments/resources:/config \
-              -e SPRING_PROFILES_ACTIVE=dev \
-              --network 1panel-network \
-              "$IMAGE"; then
-              echo "✅ 启动成功，清理旧容器"
-              sudo docker stop "${CONTAINER}-old" 2>/dev/null || true
-              sudo docker rm   "${CONTAINER}-old" 2>/dev/null || true
-              sudo docker image prune -f
-            else
-              echo "❌ 启动失败，回滚旧容器"
-              sudo docker rm "$CONTAINER" 2>/dev/null || true
-              sudo docker rename "${CONTAINER}-old" "$CONTAINER"
-              sudo docker start "$CONTAINER"
-              exit 1
-            fi
+            echo "▶ 清理旧镜像"
+            sudo docker image prune -f
+
+            echo "✅ 后端部署完成"
 
       - name: 输出部署结果
         run: |

@@ -1,0 +1,26 @@
+services:
+  yudao-server:
+    image: docker.io/eatsleeprun/yudao-server:latest
+    container_name: yudao-server
+    restart: always
+    ports:
+      - "48080:48080"
+    volumes:
+      - /opt/deployments/resources:/config
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - 1panel-network
+
+  yudao-ui:
+    image: docker.io/eatsleeprun/yudao-ui-admin-vue3:latest
+    container_name: yudao-ui
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true   # 使用已有的 1panel 网络，不新建
