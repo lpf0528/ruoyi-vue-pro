@@ -1,9 +1,0 @@
-package cn.iocoder.yudao.module.zc.dal.mysql.base;
-
-import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
-import cn.iocoder.yudao.module.zc.dal.dataobject.base.ZcSupplierDO;
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface ZcSupplierMapper extends BaseMapperX<ZcSupplierDO> {
-}

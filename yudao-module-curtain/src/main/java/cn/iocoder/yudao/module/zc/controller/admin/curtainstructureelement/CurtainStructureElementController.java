@@ -1,0 +1,104 @@
+package cn.iocoder.yudao.module.zc.controller.admin.curtainstructureelement;
+
+import org.springframework.web.bind.annotation.*;
+import javax.annotation.Resource;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+
+import javax.validation.constraints.*;
+import javax.validation.*;
+import javax.servlet.http.*;
+import java.util.*;
+import java.io.IOException;
+
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+
+import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
+
+import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
+import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
+
+import cn.iocoder.yudao.module.zc.controller.admin.curtainstructureelement.vo.*;
+import cn.iocoder.yudao.module.zc.dal.dataobject.curtainstructureelement.CurtainStructureElementDO;
+import cn.iocoder.yudao.module.zc.service.curtainstructureelement.CurtainStructureElementService;
+
+@Tag(name = "管理后台 - 结构配件类型")
+@RestController
+@RequestMapping("/zc/curtain-structure-element")
+@Validated
+public class CurtainStructureElementController {
+
+    @Resource
+    private CurtainStructureElementService curtainStructureElementService;
+
+    @PostMapping("/create")
+    @Operation(summary = "创建结构配件类型")
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:create')")
+    public CommonResult<Long> createCurtainStructureElement(@Valid @RequestBody CurtainStructureElementSaveReqVO createReqVO) {
+        return success(curtainStructureElementService.createCurtainStructureElement(createReqVO));
+    }
+
+    @PutMapping("/update")
+    @Operation(summary = "更新结构配件类型")
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:update')")
+    public CommonResult<Boolean> updateCurtainStructureElement(@Valid @RequestBody CurtainStructureElementSaveReqVO updateReqVO) {
+        curtainStructureElementService.updateCurtainStructureElement(updateReqVO);
+        return success(true);
+    }
+
+    @DeleteMapping("/delete")
+    @Operation(summary = "删除结构配件类型")
+    @Parameter(name = "id", description = "编号", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:delete')")
+    public CommonResult<Boolean> deleteCurtainStructureElement(@RequestParam("id") Long id) {
+        curtainStructureElementService.deleteCurtainStructureElement(id);
+        return success(true);
+    }
+
+    @DeleteMapping("/delete-list")
+    @Parameter(name = "ids", description = "编号", required = true)
+    @Operation(summary = "批量删除结构配件类型")
+                @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:delete')")
+    public CommonResult<Boolean> deleteCurtainStructureElementList(@RequestParam("ids") List<Long> ids) {
+        curtainStructureElementService.deleteCurtainStructureElementListByIds(ids);
+        return success(true);
+    }
+
+    @GetMapping("/get")
+    @Operation(summary = "获得结构配件类型")
+    @Parameter(name = "id", description = "编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:query')")
+    public CommonResult<CurtainStructureElementRespVO> getCurtainStructureElement(@RequestParam("id") Long id) {
+        CurtainStructureElementDO curtainStructureElement = curtainStructureElementService.getCurtainStructureElement(id);
+        return success(BeanUtils.toBean(curtainStructureElement, CurtainStructureElementRespVO.class));
+    }
+
+    @GetMapping("/page")
+    @Operation(summary = "获得结构配件类型分页")
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:query')")
+    public CommonResult<PageResult<CurtainStructureElementRespVO>> getCurtainStructureElementPage(@Valid CurtainStructureElementPageReqVO pageReqVO) {
+        PageResult<CurtainStructureElementDO> pageResult = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO);
+        return success(BeanUtils.toBean(pageResult, CurtainStructureElementRespVO.class));
+    }
+
+    @GetMapping("/export-excel")
+    @Operation(summary = "导出结构配件类型 Excel")
+    @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:export')")
+    @ApiAccessLog(operateType = EXPORT)
+    public void exportCurtainStructureElementExcel(@Valid CurtainStructureElementPageReqVO pageReqVO,
+              HttpServletResponse response) throws IOException {
+        pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
+        List<CurtainStructureElementDO> list = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO).getList();
+        // 导出 Excel
+        ExcelUtils.write(response, "结构配件类型.xls", "数据", CurtainStructureElementRespVO.class,
+                        BeanUtils.toBean(list, CurtainStructureElementRespVO.class));
+    }
+
+}
