@@ -11,28 +11,15 @@ import static cn.iocoder.yudao.framework.common.util.date.DateUtils.FORMAT_YEAR_
 
 @Schema(description = "管理后台 - 物流公司分页 Request VO")
 @Data
-public class LogisticsPageReqVO extends PageParam {
+public class ZcLogisticsPageReqVO extends PageParam {
 
-    @Schema(description = "编码，例如：shunfeng")
+    @Schema(description = "编码", example = "shunfeng")
     private String code;
 
-    @Schema(description = "名称，例如：顺丰快递", example = "赵六")
+    @Schema(description = "名称", example = "顺丰快递")
     private String name;
 
     @Schema(description = "联系人", example = "王五")
     private String contactName;
-
-    @Schema(description = "电话")
-    private String mobile;
-
-    @Schema(description = "地址")
-    private String address;
-
-    @Schema(description = "备注")
-    private String note;
-
-    @Schema(description = "创建时间")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private LocalDateTime[] createTime;
 
 }
