@@ -1,0 +1,85 @@
+package cn.iocoder.yudao.module.zc.service.customer;
+
+import cn.hutool.core.collection.CollUtil;
+import org.springframework.stereotype.Service;
+import javax.annotation.Resource;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
+import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+
+import cn.iocoder.yudao.module.zc.dal.mysql.customer.ZcCustomerMapper;
+
+import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+
+/**
+ * 客户资料 Service 实现类
+ *
+ * @author 芋道源码
+ */
+@Service
+@Validated
+public class ZcCustomerServiceImpl implements ZcCustomerService {
+
+    @Resource
+    private ZcCustomerMapper customerMapper;
+
+    @Override
+    public Long createCustomer(ZcCustomerSaveReqVO createReqVO) {
+        // 插入
+        ZcCustomerDO customer = BeanUtils.toBean(createReqVO, ZcCustomerDO.class);
+        customerMapper.insert(customer);
+
+        // 返回
+        return customer.getId();
+    }
+
+    @Override
+    public void updateCustomer(ZcCustomerSaveReqVO updateReqVO) {
+        // 校验存在
+        validateCustomerExists(updateReqVO.getId());
+        // 更新
+        ZcCustomerDO updateObj = BeanUtils.toBean(updateReqVO, ZcCustomerDO.class);
+        customerMapper.updateById(updateObj);
+    }
+
+    @Override
+    public void deleteCustomer(Long id) {
+        // 校验存在
+        validateCustomerExists(id);
+        // 删除
+        customerMapper.deleteById(id);
+    }
+
+    @Override
+        public void deleteCustomerListByIds(List<Long> ids) {
+        // 删除
+        customerMapper.deleteByIds(ids);
+        }
+
+
+    private void validateCustomerExists(Long id) {
+        if (customerMapper.selectById(id) == null) {
+            throw exception(CUSTOMER_NOT_EXISTS);
+        }
+    }
+
+    @Override
+    public ZcCustomerDO getCustomer(Long id) {
+        return customerMapper.selectById(id);
+    }
+
+    @Override
+    public PageResult<ZcCustomerDO> getCustomerPage(ZcCustomerPageReqVO pageReqVO) {
+        return customerMapper.selectPage(pageReqVO);
+    }
+
+}
