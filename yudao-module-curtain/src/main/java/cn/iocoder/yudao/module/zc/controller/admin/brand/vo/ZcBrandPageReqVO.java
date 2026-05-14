@@ -11,25 +11,9 @@ import static cn.iocoder.yudao.framework.common.util.date.DateUtils.FORMAT_YEAR_
 
 @Schema(description = "管理后台 - 品牌分页 Request VO")
 @Data
-public class BrandPageReqVO extends PageParam {
+public class ZcBrandPageReqVO extends PageParam {
 
     @Schema(description = "名称", example = "王五")
     private String name;
-
-    @Schema(description = "Logo URL")
-    private String logo;
-
-    @Schema(description = "电话")
-    private String mobile;
-
-    @Schema(description = "地址")
-    private String address;
-
-    @Schema(description = "备注")
-    private String note;
-
-    @Schema(description = "创建时间")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private LocalDateTime[] createTime;
 
 }
