@@ -17,5 +17,6 @@ public interface ErrorCodeConstants {
     ErrorCode PRODUCT_CATEGORY_NOT_EXISTS = new ErrorCode(100012, "产品类别不存在");
     ErrorCode PRODUCT_VERSION_NOT_EXISTS = new ErrorCode(100013, "产品版本不存在");
     ErrorCode PRODUCT_SPEC_NOT_EXISTS = new ErrorCode(100014, "产品规格不存在");
+
 }
 

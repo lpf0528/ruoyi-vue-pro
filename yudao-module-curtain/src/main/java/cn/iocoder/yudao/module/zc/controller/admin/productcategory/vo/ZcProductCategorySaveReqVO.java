@@ -7,7 +7,7 @@ import javax.validation.constraints.*;
 
 @Schema(description = "管理后台 - 产品类别新增/修改 Request VO")
 @Data
-public class ProductCategorySaveReqVO {
+public class ZcProductCategorySaveReqVO {
 
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "10243")
     private Long id;

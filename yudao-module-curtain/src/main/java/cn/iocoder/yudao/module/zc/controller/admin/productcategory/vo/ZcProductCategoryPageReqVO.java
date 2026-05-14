@@ -11,7 +11,7 @@ import static cn.iocoder.yudao.framework.common.util.date.DateUtils.FORMAT_YEAR_
 
 @Schema(description = "管理后台 - 产品类别分页 Request VO")
 @Data
-public class ProductCategoryPageReqVO extends PageParam {
+public class ZcProductCategoryPageReqVO extends PageParam {
 
     @Schema(description = "类别名称")
     private String value;
