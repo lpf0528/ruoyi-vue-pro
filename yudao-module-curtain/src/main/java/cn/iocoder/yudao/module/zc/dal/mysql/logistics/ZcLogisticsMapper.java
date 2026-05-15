@@ -17,6 +17,12 @@ import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.*;
 @Mapper
 public interface ZcLogisticsMapper extends BaseMapperX<ZcLogisticsDO> {
 
+    default List<ZcLogisticsDO> selectList(ZcLogisticsListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcLogisticsDO>()
+                .likeIfPresent(ZcLogisticsDO::getName, reqVO.getName())
+                .orderByDesc(ZcLogisticsDO::getId));
+    }
+
     default PageResult<ZcLogisticsDO> selectPage(ZcLogisticsPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcLogisticsDO>()
                 .eqIfPresent(ZcLogisticsDO::getCode, reqVO.getCode())

@@ -78,6 +78,11 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
     }
 
     @Override
+    public List<ZcLogisticsDO> getLogisticsList(ZcLogisticsListReqVO listReqVO) {
+        return logisticsMapper.selectList(listReqVO);
+    }
+
+    @Override
     public PageResult<ZcLogisticsDO> getLogisticsPage(ZcLogisticsPageReqVO pageReqVO) {
         return logisticsMapper.selectPage(pageReqVO);
     }

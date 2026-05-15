@@ -52,6 +52,14 @@ public interface ZcLogisticsService {
     ZcLogisticsDO getLogistics(Long id);
 
     /**
+     * 获得物流公司列表
+     *
+     * @param listReqVO 列表查询
+     * @return 物流公司列表
+     */
+    List<ZcLogisticsDO> getLogisticsList(ZcLogisticsListReqVO listReqVO);
+
+    /**
      * 获得物流公司分页
      *
      * @param pageReqVO 分页查询
