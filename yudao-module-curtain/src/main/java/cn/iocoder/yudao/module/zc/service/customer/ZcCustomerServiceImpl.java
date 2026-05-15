@@ -82,4 +82,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
         return customerMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcCustomerDO> getCustomerList(ZcCustomerListReqVO listReqVO) {
+        return customerMapper.selectList(listReqVO);
+    }
+
 }

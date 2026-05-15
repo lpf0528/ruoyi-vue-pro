@@ -26,4 +26,10 @@ public interface ZcCustomerMapper extends BaseMapperX<ZcCustomerDO> {
                 .orderByDesc(ZcCustomerDO::getId));
     }
 
+    default List<ZcCustomerDO> selectList(ZcCustomerListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcCustomerDO>()
+                .likeIfPresent(ZcCustomerDO::getShortName, reqVO.getShortName())
+                .orderByDesc(ZcCustomerDO::getId));
+    }
+
 }

@@ -59,4 +59,12 @@ public interface ZcCustomerService {
      */
     PageResult<ZcCustomerDO> getCustomerPage(ZcCustomerPageReqVO pageReqVO);
 
+    /**
+     * 获得客户资料列表
+     *
+     * @param listReqVO 列表查询
+     * @return 客户资料列表
+     */
+    List<ZcCustomerDO> getCustomerList(ZcCustomerListReqVO listReqVO);
+
 }

@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,17 @@ public class ZcCustomerController {
     public CommonResult<PageResult<ZcCustomerRespVO>> getCustomerPage(@Valid ZcCustomerPageReqVO pageReqVO) {
         PageResult<ZcCustomerDO> pageResult = customerService.getCustomerPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcCustomerRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得客户资料精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcCustomerSimpleRespVO>> getCustomerSimpleList(
+            @RequestParam(value = "shortName", required = false) String shortName) {
+        List<ZcCustomerDO> list = customerService.getCustomerList(
+                new ZcCustomerListReqVO().setShortName(shortName));
+        return success(convertList(list, item -> new ZcCustomerSimpleRespVO()
+                .setId(item.getId())
+                .setShortName(item.getShortName())));
     }
 
     @GetMapping("/export-excel")
