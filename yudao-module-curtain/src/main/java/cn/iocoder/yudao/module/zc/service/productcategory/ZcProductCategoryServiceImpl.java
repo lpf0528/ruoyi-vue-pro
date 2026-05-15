@@ -82,4 +82,9 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
         return productCategoryMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcProductCategoryDO> getProductCategoryList(ZcProductCategoryListReqVO listReqVO) {
+        return productCategoryMapper.selectList(listReqVO);
+    }
+
 }

@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -78,6 +79,14 @@ public class ZcProductCategoryController {
     public CommonResult<ZcProductCategoryRespVO> getProductCategory(@RequestParam("id") Long id) {
         ZcProductCategoryDO productCategory = productCategoryService.getProductCategory(id);
         return success(BeanUtils.toBean(productCategory, ZcProductCategoryRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得产品类别精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcProductCategorySimpleRespVO>> getProductCategorySimpleList() {
+        List<ZcProductCategoryDO> list = productCategoryService.getProductCategoryList(new ZcProductCategoryListReqVO());
+        return success(convertList(list, item -> new ZcProductCategorySimpleRespVO()
+                .setId(item.getId()).setValue(item.getValue())));
     }
 
     @GetMapping("/page")

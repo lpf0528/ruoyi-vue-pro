@@ -25,4 +25,10 @@ public interface ZcProductCategoryMapper extends BaseMapperX<ZcProductCategoryDO
                 .orderByDesc(ZcProductCategoryDO::getId));
     }
 
+    default List<ZcProductCategoryDO> selectList(ZcProductCategoryListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProductCategoryDO>()
+                .eqIfPresent(ZcProductCategoryDO::getValue, reqVO.getValue())
+                .orderByDesc(ZcProductCategoryDO::getId));
+    }
+
 }

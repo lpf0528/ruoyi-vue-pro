@@ -36,5 +36,4 @@ public class ZcProductCategoryDO extends BaseDO {
      */
     private String note;
 
-
 }
