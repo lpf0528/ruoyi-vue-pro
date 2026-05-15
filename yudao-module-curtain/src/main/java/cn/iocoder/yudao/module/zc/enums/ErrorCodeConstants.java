@@ -20,5 +20,6 @@ public interface ErrorCodeConstants {
     ErrorCode INVENTORY_RECORD_NOT_EXISTS = new ErrorCode(100015, "盘点记录不存在");
     ErrorCode CUSTOMER_PRODUCT_PRICE_NOT_EXISTS = new ErrorCode(100016, "客户产品销售授权价不存在");
     ErrorCode PRODUCT_BATCH_NOT_EXISTS = new ErrorCode(100017, "产品批次不存在");
+    ErrorCode PRODUCT_NOT_EXISTS = new ErrorCode(100018, "产品不存在");
 }
 
