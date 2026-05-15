@@ -32,9 +32,13 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("规格值")
     private String specValue;
 
-    @Schema(description = "物料类别")
-    @ExcelProperty("物料类别")
+    @Schema(description = "产品品类")
+    @ExcelProperty("产品品类")
     private String categoryValue;
+
+    @Schema(description = "产品品类ID")
+    @ExcelProperty("产品品类ID")
+    private Long categoryId;
 
     @Schema(description = "出货价类型", example = "fixed_price:统一价、sku_price:型号价")
     @ExcelProperty(value = "出货价类型", converter = DictConvert.class)
@@ -66,4 +70,4 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
-}
+}
