@@ -6,7 +6,6 @@ public interface ErrorCodeConstants {
     ErrorCode CUSTOMER_NOT_EXISTS = new ErrorCode(100001, "参数配置不存在");
     ErrorCode BRAND_NOT_EXISTS = new ErrorCode(100002, "品牌不存在");
     ErrorCode CURTAIN_NOT_EXISTS = new ErrorCode(100003, "窗帘不存在");
-    ErrorCode CURTAIN_SERIES_NOT_EXISTS = new ErrorCode(100004, "窗帘系列不存在");
     ErrorCode CURTAIN_STRUCTURE_NOT_EXISTS = new ErrorCode(100005, "窗帘结构不存在");
     ErrorCode CURTAIN_STRUCTURE_ELEMENT_NOT_EXISTS = new ErrorCode(100006, "窗帘结构元素不存在");
     ErrorCode CURTAIN_TEMPLATE_NOT_EXISTS = new ErrorCode(100007, "窗帘模板不存在");
@@ -21,5 +20,6 @@ public interface ErrorCodeConstants {
     ErrorCode CUSTOMER_PRODUCT_PRICE_NOT_EXISTS = new ErrorCode(100016, "客户产品销售授权价不存在");
     ErrorCode PRODUCT_BATCH_NOT_EXISTS = new ErrorCode(100017, "产品批次不存在");
     ErrorCode PRODUCT_NOT_EXISTS = new ErrorCode(100018, "产品不存在");
+    ErrorCode CURTAIN_INSTALL_PROCESS_NOT_EXISTS = new ErrorCode(100018, "安装工艺不存在");
 }
 
