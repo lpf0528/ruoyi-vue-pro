@@ -32,6 +32,10 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("规格值")
     private String specValue;
 
+    @Schema(description = "规格ID")
+    @ExcelProperty("规格ID")
+    private String specID;
+
     @Schema(description = "产品品类")
     @ExcelProperty("产品品类")
     private String categoryValue;

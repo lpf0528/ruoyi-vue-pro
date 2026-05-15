@@ -23,4 +23,10 @@ public interface ZcProductSpecMapper extends BaseMapperX<ZcProductSpecDO> {
                 .orderByDesc(ZcProductSpecDO::getId));
     }
 
+    default List<ZcProductSpecDO> selectList(ZcProductSpecListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProductSpecDO>()
+                .eqIfPresent(ZcProductSpecDO::getValue, reqVO.getValue())
+                .orderByDesc(ZcProductSpecDO::getId));
+    }
+
 }

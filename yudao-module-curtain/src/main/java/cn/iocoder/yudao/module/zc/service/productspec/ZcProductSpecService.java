@@ -59,4 +59,12 @@ public interface ZcProductSpecService {
      */
     PageResult<ZcProductSpecDO> getProductSpecPage(ZcProductSpecPageReqVO pageReqVO);
 
+    /**
+     * 获得产品规格列表
+     *
+     * @param listReqVO 列表查询
+     * @return 产品规格列表
+     */
+    List<ZcProductSpecDO> getProductSpecList(ZcProductSpecListReqVO listReqVO);
+
 }
