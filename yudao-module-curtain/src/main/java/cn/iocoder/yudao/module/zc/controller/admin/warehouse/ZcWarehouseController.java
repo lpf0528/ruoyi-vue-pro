@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,15 @@ public class ZcWarehouseController {
     public CommonResult<PageResult<ZcWarehouseRespVO>> getWarehousePage(@Valid ZcWarehousePageReqVO pageReqVO) {
         PageResult<ZcWarehouseDO> pageResult = warehouseService.getWarehousePage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcWarehouseRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得仓库精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcWarehouseSimpleRespVO>> getWarehouseSimpleList() {
+        List<ZcWarehouseDO> list = warehouseService.getWarehouseList(new ZcWarehouseListReqVO());
+        return success(convertList(list, item -> new ZcWarehouseSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())));
     }
 
     @GetMapping("/export-excel")

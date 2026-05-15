@@ -59,4 +59,12 @@ public interface ZcWarehouseService {
      */
     PageResult<ZcWarehouseDO> getWarehousePage(ZcWarehousePageReqVO pageReqVO);
 
+    /**
+     * 获得仓库列表
+     *
+     * @param listReqVO 列表查询
+     * @return 仓库列表
+     */
+    List<ZcWarehouseDO> getWarehouseList(ZcWarehouseListReqVO listReqVO);
+
 }

@@ -24,4 +24,10 @@ public interface ZcWarehouseMapper extends BaseMapperX<ZcWarehouseDO> {
                 .orderByDesc(ZcWarehouseDO::getId));
     }
 
+    default List<ZcWarehouseDO> selectList(ZcWarehouseListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcWarehouseDO>()
+                .likeIfPresent(ZcWarehouseDO::getName, reqVO.getName())
+                .orderByDesc(ZcWarehouseDO::getId));
+    }
+
 }

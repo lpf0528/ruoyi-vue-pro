@@ -82,4 +82,9 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         return warehouseMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcWarehouseDO> getWarehouseList(ZcWarehouseListReqVO listReqVO) {
+        return warehouseMapper.selectList(listReqVO);
+    }
+
 }
