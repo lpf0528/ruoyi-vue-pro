@@ -28,21 +28,21 @@ public class ZcProductVersionRespVO {
     @DictFormat("zc_product_unit") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private String unitValue;
 
+    @Schema(description = "规格ID", example = "14205")
+    @ExcelProperty("规格ID")
+    private Long specId;
+
     @Schema(description = "规格值")
     @ExcelProperty("规格值")
     private String specValue;
 
-    @Schema(description = "规格ID")
-    @ExcelProperty("规格ID")
-    private String specID;
+    @Schema(description = "产品品类ID", example = "12697")
+    @ExcelProperty("产品品类ID")
+    private Long categoryId;
 
     @Schema(description = "产品品类")
     @ExcelProperty("产品品类")
     private String categoryValue;
-
-    @Schema(description = "产品品类ID")
-    @ExcelProperty("产品品类ID")
-    private Long categoryId;
 
     @Schema(description = "出货价类型", example = "fixed_price:统一价、sku_price:型号价")
     @ExcelProperty(value = "出货价类型", converter = DictConvert.class)
