@@ -1,6 +1,8 @@
 package cn.iocoder.yudao.module.zc.dal.dataobject.productbatch;
 
 import lombok.*;
+
+import java.time.LocalDate;
 import java.util.*;
 import java.math.BigDecimal;
 import java.math.BigDecimal;

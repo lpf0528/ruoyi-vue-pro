@@ -2,6 +2,8 @@ package cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+
+import java.time.LocalDate;
 import java.util.*;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
