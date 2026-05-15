@@ -1,0 +1,35 @@
+package cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import java.util.*;
+import javax.validation.constraints.*;
+import java.math.BigDecimal;
+
+@Schema(description = "管理后台 - 盘点记录新增/修改 Request VO")
+@Data
+public class ZcInventoryRecordSaveReqVO {
+
+    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "8627")
+    private Long id;
+
+    @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
+    @NotNull(message = "货号不能为空")
+    private Long productId;
+
+    @Schema(description = "批次", requiredMode = Schema.RequiredMode.REQUIRED, example = "8051")
+    @NotNull(message = "批次不能为空")
+    private Long batchId;
+
+    @Schema(description = "盘点前数量", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "盘点前数量不能为空")
+    private BigDecimal oldQuantity;
+
+    @Schema(description = "盘点后数量", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "盘点后数量不能为空")
+    private BigDecimal newQuantity;
+
+    @Schema(description = "备注")
+    private String note;
+
+}
