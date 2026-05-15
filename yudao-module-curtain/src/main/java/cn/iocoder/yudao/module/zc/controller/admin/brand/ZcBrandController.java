@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,15 @@ public class ZcBrandController {
     public CommonResult<PageResult<ZcBrandRespVO>> getBrandPage(@Valid ZcBrandPageReqVO pageReqVO) {
         PageResult<ZcBrandDO> pageResult = brandService.getBrandPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcBrandRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得品牌精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcBrandSimpleRespVO>> getBrandSimpleList() {
+        List<ZcBrandDO> list = brandService.getBrandList(new ZcBrandListReqVO());
+        return success(convertList(list, item -> new ZcBrandSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())));
     }
 
     @GetMapping("/export-excel")

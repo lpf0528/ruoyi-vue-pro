@@ -23,4 +23,10 @@ public interface ZcBrandMapper extends BaseMapperX<ZcBrandDO> {
                 .orderByDesc(ZcBrandDO::getId));
     }
 
+    default List<ZcBrandDO> selectList(ZcBrandListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcBrandDO>()
+                .likeIfPresent(ZcBrandDO::getName, reqVO.getName())
+                .orderByDesc(ZcBrandDO::getId));
+    }
+
 }

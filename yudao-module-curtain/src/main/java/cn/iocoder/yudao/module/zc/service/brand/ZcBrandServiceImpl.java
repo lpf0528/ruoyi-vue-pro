@@ -82,4 +82,9 @@ public class ZcBrandServiceImpl implements ZcBrandService {
         return brandMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcBrandDO> getBrandList(ZcBrandListReqVO listReqVO) {
+        return brandMapper.selectList(listReqVO);
+    }
+
 }

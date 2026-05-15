@@ -59,4 +59,12 @@ public interface ZcBrandService {
      */
     PageResult<ZcBrandDO> getBrandPage(ZcBrandPageReqVO pageReqVO);
 
+    /**
+     * 获得品牌列表
+     *
+     * @param listReqVO 列表查询
+     * @return 品牌列表
+     */
+    List<ZcBrandDO> getBrandList(ZcBrandListReqVO listReqVO);
+
 }
