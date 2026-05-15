@@ -59,4 +59,12 @@ public interface ZcSupplierService {
      */
     PageResult<ZcSupplierDO> getSupplierPage(ZcSupplierPageReqVO pageReqVO);
 
+    /**
+     * 获得供应商列表
+     *
+     * @param listReqVO 列表查询
+     * @return 供应商列表
+     */
+    List<ZcSupplierDO> getSupplierList(ZcSupplierListReqVO listReqVO);
+
 }

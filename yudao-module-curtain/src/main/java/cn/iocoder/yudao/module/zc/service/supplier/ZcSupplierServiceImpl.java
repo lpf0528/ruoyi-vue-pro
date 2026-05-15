@@ -82,4 +82,9 @@ public class ZcSupplierServiceImpl implements ZcSupplierService {
         return supplierMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcSupplierDO> getSupplierList(ZcSupplierListReqVO listReqVO) {
+        return supplierMapper.selectList(listReqVO);
+    }
+
 }

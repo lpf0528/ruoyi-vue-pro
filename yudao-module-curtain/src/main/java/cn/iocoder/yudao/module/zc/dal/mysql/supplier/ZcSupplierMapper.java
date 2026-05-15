@@ -24,4 +24,11 @@ public interface ZcSupplierMapper extends BaseMapperX<ZcSupplierDO> {
                 .orderByDesc(ZcSupplierDO::getId));
     }
 
+    default List<ZcSupplierDO> selectList(ZcSupplierListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcSupplierDO>()
+                .likeIfPresent(ZcSupplierDO::getShortName, reqVO.getShortName())
+                .likeIfPresent(ZcSupplierDO::getName, reqVO.getName())
+                .orderByDesc(ZcSupplierDO::getId));
+    }
+
 }
