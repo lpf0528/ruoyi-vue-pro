@@ -30,7 +30,7 @@ public class ZcInventoryRecordDO extends BaseDO {
     @TableId
     private Long id;
     /**
-     * 货号
+     * 产品
      */
     private Long productId;
     /**

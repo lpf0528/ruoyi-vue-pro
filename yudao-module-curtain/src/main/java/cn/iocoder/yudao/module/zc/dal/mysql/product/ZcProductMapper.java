@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
 import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 
 /**
- * 货号档案 Mapper
+ * 产品 Mapper
  *
  * @author 芋道源码
  */

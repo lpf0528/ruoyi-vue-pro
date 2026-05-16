@@ -13,8 +13,8 @@ public class ZcInventoryRecordSaveReqVO {
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "8627")
     private Long id;
 
-    @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
-    @NotNull(message = "货号不能为空")
+    @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
+    @NotNull(message = "产品不能为空")
     private Long productId;
 
     @Schema(description = "批次", requiredMode = Schema.RequiredMode.REQUIRED, example = "8051")

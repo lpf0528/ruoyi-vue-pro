@@ -6,7 +6,7 @@ import java.util.*;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
 
-@Schema(description = "管理后台 - 货号档案新增/修改 Request VO")
+@Schema(description = "管理后台 - 产品档案新增/修改 Request VO")
 @Data
 public class ZcProductSaveReqVO {
 

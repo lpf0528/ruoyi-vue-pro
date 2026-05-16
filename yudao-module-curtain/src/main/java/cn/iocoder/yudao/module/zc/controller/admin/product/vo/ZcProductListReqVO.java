@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-@Schema(description = "管理后台 - 货号档案列表 Request VO")
+@Schema(description = "管理后台 - 产品档案列表 Request VO")
 @Data
 @Accessors(chain = true)
 public class ZcProductListReqVO {

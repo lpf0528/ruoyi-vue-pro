@@ -17,8 +17,8 @@ public class ZcInventoryRecordRespVO {
     @ExcelProperty("主键")
     private Long id;
 
-    @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
-    @ExcelProperty("货号")
+    @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
+    @ExcelProperty("产品")
     private Long productId;
 
     @Schema(description = "批次", requiredMode = Schema.RequiredMode.REQUIRED, example = "8051")

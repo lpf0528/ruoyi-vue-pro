@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 
 /**
- * 货号档案 DO
+ * 产品 DO
  *
  * @author 芋道源码
  */

@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import java.math.BigDecimal;
 
-@Schema(description = "管理后台 - 货号档案精简 Response VO")
+@Schema(description = "管理后台 - 产品档案精简 Response VO")
 @Data
 @Accessors(chain = true)
 public class ZcProductSimpleRespVO {

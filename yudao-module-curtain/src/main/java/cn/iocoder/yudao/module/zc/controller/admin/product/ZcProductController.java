@@ -30,7 +30,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import cn.iocoder.yudao.module.zc.service.product.ZcProductService;
 
-@Tag(name = "管理后台 - 货号档案")
+@Tag(name = "管理后台 - 产品管理")
 @RestController
 @RequestMapping("/zc/product")
 @Validated
@@ -40,14 +40,14 @@ public class ZcProductController {
     private ZcProductService productService;
 
     @PostMapping("/create")
-    @Operation(summary = "创建货号档案")
+    @Operation(summary = "创建产品")
     @PreAuthorize("@ss.hasPermission('zc:product:create')")
     public CommonResult<Long> createProduct(@Valid @RequestBody ZcProductSaveReqVO createReqVO) {
         return success(productService.createProduct(createReqVO));
     }
 
     @PutMapping("/update")
-    @Operation(summary = "更新货号档案")
+    @Operation(summary = "更新产品")
     @PreAuthorize("@ss.hasPermission('zc:product:update')")
     public CommonResult<Boolean> updateProduct(@Valid @RequestBody ZcProductSaveReqVO updateReqVO) {
         productService.updateProduct(updateReqVO);
@@ -55,7 +55,7 @@ public class ZcProductController {
     }
 
     @DeleteMapping("/delete")
-    @Operation(summary = "删除货号档案")
+    @Operation(summary = "删除产品")
     @Parameter(name = "id", description = "编号", required = true)
     @PreAuthorize("@ss.hasPermission('zc:product:delete')")
     public CommonResult<Boolean> deleteProduct(@RequestParam("id") Long id) {
@@ -65,7 +65,7 @@ public class ZcProductController {
 
     @DeleteMapping("/delete-list")
     @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除货号档案")
+    @Operation(summary = "批量删除产品")
                 @PreAuthorize("@ss.hasPermission('zc:product:delete')")
     public CommonResult<Boolean> deleteProductList(@RequestParam("ids") List<Long> ids) {
         productService.deleteProductListByIds(ids);
@@ -73,7 +73,7 @@ public class ZcProductController {
     }
 
     @GetMapping("/get")
-    @Operation(summary = "获得货号档案")
+    @Operation(summary = "获得产品")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('zc:product:query')")
     public CommonResult<ZcProductRespVO> getProduct(@RequestParam("id") Long id) {
@@ -82,7 +82,7 @@ public class ZcProductController {
     }
 
     @GetMapping("/page")
-    @Operation(summary = "获得货号档案分页")
+    @Operation(summary = "获得产品分页")
     @PreAuthorize("@ss.hasPermission('zc:product:query')")
     public CommonResult<PageResult<ZcProductRespVO>> getProductPage(@Valid ZcProductPageReqVO pageReqVO) {
         PageResult<ZcProductDO> pageResult = productService.getProductPage(pageReqVO);
@@ -104,7 +104,7 @@ public class ZcProductController {
     }
 
     @GetMapping("/export-excel")
-    @Operation(summary = "导出货号档案 Excel")
+    @Operation(summary = "导出产品 Excel")
     @PreAuthorize("@ss.hasPermission('zc:product:export')")
     @ApiAccessLog(operateType = EXPORT)
     public void exportProductExcel(@Valid ZcProductPageReqVO pageReqVO,
@@ -112,7 +112,7 @@ public class ZcProductController {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
         List<ZcProductDO> list = productService.getProductPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "货号档案.xls", "数据", ZcProductRespVO.class,
+        ExcelUtils.write(response, "产品.xls", "数据", ZcProductRespVO.class,
                         BeanUtils.toBean(list, ZcProductRespVO.class));
     }
 

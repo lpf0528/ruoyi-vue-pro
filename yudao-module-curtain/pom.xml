@@ -13,7 +13,7 @@
 
     <name>${project.artifactId}</name>
     <description>
-        智仓（窗帘）业务：客户、货号、批次、销售单、收款、余额流水、订单进度与工序等。
+        智仓（窗帘）业务：客户、产品、批次、销售单、收款、余额流水、订单进度与工序等。
     </description>
 
     <dependencies>

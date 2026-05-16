@@ -14,7 +14,7 @@ import static cn.iocoder.yudao.framework.common.util.date.DateUtils.FORMAT_YEAR_
 @Data
 public class ZcInventoryRecordPageReqVO extends PageParam {
 
-    @Schema(description = "货号", example = "9127")
+    @Schema(description = "产品", example = "9127")
     private Long productId;
 
     @Schema(description = "批次", example = "8051")
