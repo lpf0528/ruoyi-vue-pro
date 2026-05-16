@@ -23,4 +23,10 @@ public interface ZcCurtainMapper extends BaseMapperX<ZcCurtainDO> {
                 .orderByDesc(ZcCurtainDO::getId));
     }
 
+    default List<ZcCurtainDO> selectList(ZcCurtainListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcCurtainDO>()
+                .likeIfPresent(ZcCurtainDO::getName, reqVO.getName())
+                .orderByDesc(ZcCurtainDO::getId));
+    }
+
 }

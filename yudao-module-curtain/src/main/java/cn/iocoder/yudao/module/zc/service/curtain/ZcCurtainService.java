@@ -59,4 +59,12 @@ public interface ZcCurtainService {
      */
     PageResult<ZcCurtainDO> getCurtainPage(ZcCurtainPageReqVO pageReqVO);
 
+    /**
+     * 获得窗帘列表
+     *
+     * @param listReqVO 列表查询
+     * @return 窗帘列表
+     */
+    List<ZcCurtainDO> getCurtainList(ZcCurtainListReqVO listReqVO);
+
 }

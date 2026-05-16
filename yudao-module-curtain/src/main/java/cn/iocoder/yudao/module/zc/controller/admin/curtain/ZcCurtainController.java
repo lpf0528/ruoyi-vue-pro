@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -78,6 +79,17 @@ public class ZcCurtainController {
     public CommonResult<ZcCurtainRespVO> getCurtain(@RequestParam("id") Long id) {
         ZcCurtainDO curtain = curtainService.getCurtain(id);
         return success(BeanUtils.toBean(curtain, ZcCurtainRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得窗帘精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcCurtainSimpleRespVO>> getCurtainSimpleList() {
+        List<ZcCurtainDO> list = curtainService.getCurtainList(new ZcCurtainListReqVO());
+        return success(convertList(list, item -> new ZcCurtainSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())
+                .setPleatRatioValue(item.getPleatRatioValue())
+                .setPleatsDistance(item.getPleatsDistance())));
     }
 
     @GetMapping("/page")
