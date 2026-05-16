@@ -78,7 +78,7 @@ public class ZcCustomerProductPriceServiceImpl implements ZcCustomerProductPrice
     }
 
     @Override
-    public PageResult<ZcCustomerProductPriceDO> getCustomerProductPricePage(ZcCustomerProductPricePageReqVO pageReqVO) {
+    public PageResult<ZcCustomerProductPriceRespVO> getCustomerProductPricePage(ZcCustomerProductPricePageReqVO pageReqVO) {
         return customerProductPriceMapper.selectPage(pageReqVO);
     }
 

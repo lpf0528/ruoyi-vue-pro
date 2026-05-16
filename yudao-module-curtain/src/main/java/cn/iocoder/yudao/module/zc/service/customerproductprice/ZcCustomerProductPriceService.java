@@ -57,6 +57,6 @@ public interface ZcCustomerProductPriceService {
      * @param pageReqVO 分页查询
      * @return 客户产品销售授权价分页
      */
-    PageResult<ZcCustomerProductPriceDO> getCustomerProductPricePage(ZcCustomerProductPricePageReqVO pageReqVO);
+    PageResult<ZcCustomerProductPriceRespVO> getCustomerProductPricePage(ZcCustomerProductPricePageReqVO pageReqVO);
 
 }

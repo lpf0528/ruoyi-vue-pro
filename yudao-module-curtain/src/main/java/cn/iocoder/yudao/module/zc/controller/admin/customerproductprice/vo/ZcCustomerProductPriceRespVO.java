@@ -29,6 +29,14 @@ public class ZcCustomerProductPriceRespVO {
     @ExcelProperty("授权价格")
     private BigDecimal authorizedPrice;
 
+    @Schema(description = "产品名称")
+    @ExcelProperty("产品名称")
+    private String productName;
+
+    @Schema(description = "客户简称")
+    @ExcelProperty("客户简称")
+    private String customerName;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

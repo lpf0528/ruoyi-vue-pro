@@ -84,8 +84,7 @@ public class ZcCustomerProductPriceController {
     @Operation(summary = "获得客户产品销售授权价分页")
     @PreAuthorize("@ss.hasPermission('zc:customer-product-price:query')")
     public CommonResult<PageResult<ZcCustomerProductPriceRespVO>> getCustomerProductPricePage(@Valid ZcCustomerProductPricePageReqVO pageReqVO) {
-        PageResult<ZcCustomerProductPriceDO> pageResult = customerProductPriceService.getCustomerProductPricePage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcCustomerProductPriceRespVO.class));
+        return success(customerProductPriceService.getCustomerProductPricePage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,9 @@ public class ZcCustomerProductPriceController {
     public void exportCustomerProductPriceExcel(@Valid ZcCustomerProductPricePageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCustomerProductPriceDO> list = customerProductPriceService.getCustomerProductPricePage(pageReqVO).getList();
+        List<ZcCustomerProductPriceRespVO> list = customerProductPriceService.getCustomerProductPricePage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "客户产品销售授权价.xls", "数据", ZcCustomerProductPriceRespVO.class,
-                        BeanUtils.toBean(list, ZcCustomerProductPriceRespVO.class));
+        ExcelUtils.write(response, "客户产品销售授权价.xls", "数据", ZcCustomerProductPriceRespVO.class, list);
     }
 
 }
