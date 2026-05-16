@@ -57,7 +57,7 @@ public interface ZcCustomerService {
      * @param pageReqVO 分页查询
      * @return 客户资料分页
      */
-    PageResult<ZcCustomerDO> getCustomerPage(ZcCustomerPageReqVO pageReqVO);
+    PageResult<ZcCustomerRespVO> getCustomerPage(ZcCustomerPageReqVO pageReqVO);
 
     /**
      * 获得客户资料列表

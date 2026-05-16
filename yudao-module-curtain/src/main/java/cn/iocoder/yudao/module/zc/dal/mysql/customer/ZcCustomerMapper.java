@@ -8,6 +8,9 @@ import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import org.apache.ibatis.annotations.Mapper;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 客户资料 Mapper
@@ -17,13 +20,12 @@ import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 @Mapper
 public interface ZcCustomerMapper extends BaseMapperX<ZcCustomerDO> {
 
-    default PageResult<ZcCustomerDO> selectPage(ZcCustomerPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<ZcCustomerDO>()
-                .likeIfPresent(ZcCustomerDO::getShortName, reqVO.getShortName())
-                .likeIfPresent(ZcCustomerDO::getName, reqVO.getName())
-                .eqIfPresent(ZcCustomerDO::getLogisticId, reqVO.getLogisticId())
-                .eqIfPresent(ZcCustomerDO::getBrandId, reqVO.getBrandId())
-                .orderByDesc(ZcCustomerDO::getId));
+    IPage<ZcCustomerRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcCustomerPageReqVO reqVO);
+
+    default PageResult<ZcCustomerRespVO> selectPage(ZcCustomerPageReqVO reqVO) {
+        IPage<ZcCustomerRespVO> result = selectPageWithVO(
+                new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
     default List<ZcCustomerDO> selectList(ZcCustomerListReqVO reqVO) {

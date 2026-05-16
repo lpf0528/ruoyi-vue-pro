@@ -61,6 +61,14 @@ public class ZcCustomerRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "物流名称")
+    @ExcelProperty("物流名称")
+    private String logisticName;
+
+    @Schema(description = "品牌名称")
+    @ExcelProperty("品牌名称")
+    private String brandName;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

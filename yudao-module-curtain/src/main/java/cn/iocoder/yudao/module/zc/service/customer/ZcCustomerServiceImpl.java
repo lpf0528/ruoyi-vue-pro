@@ -78,7 +78,7 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     }
 
     @Override
-    public PageResult<ZcCustomerDO> getCustomerPage(ZcCustomerPageReqVO pageReqVO) {
+    public PageResult<ZcCustomerRespVO> getCustomerPage(ZcCustomerPageReqVO pageReqVO) {
         return customerMapper.selectPage(pageReqVO);
     }
 

@@ -85,8 +85,7 @@ public class ZcCustomerController {
     @Operation(summary = "获得客户资料分页")
     @PreAuthorize("@ss.hasPermission('zc:customer:query')")
     public CommonResult<PageResult<ZcCustomerRespVO>> getCustomerPage(@Valid ZcCustomerPageReqVO pageReqVO) {
-        PageResult<ZcCustomerDO> pageResult = customerService.getCustomerPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcCustomerRespVO.class));
+        return success(customerService.getCustomerPage(pageReqVO));
     }
 
     @GetMapping("/simple-list")
@@ -107,10 +106,9 @@ public class ZcCustomerController {
     public void exportCustomerExcel(@Valid ZcCustomerPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCustomerDO> list = customerService.getCustomerPage(pageReqVO).getList();
+        List<ZcCustomerRespVO> list = customerService.getCustomerPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "客户资料.xls", "数据", ZcCustomerRespVO.class,
-                        BeanUtils.toBean(list, ZcCustomerRespVO.class));
+        ExcelUtils.write(response, "客户资料.xls", "数据", ZcCustomerRespVO.class, list);
     }
 
 }
