@@ -28,4 +28,9 @@ public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> 
         return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
+    default List<ZcProductVersionDO> selectList(ZcProductVersionListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProductVersionDO>()
+                .orderByDesc(ZcProductVersionDO::getId));
+    }
+
 }

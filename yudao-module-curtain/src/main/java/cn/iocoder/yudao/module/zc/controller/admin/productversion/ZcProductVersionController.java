@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -85,6 +86,18 @@ public class ZcProductVersionController {
     @PreAuthorize("@ss.hasPermission('zc:product-version:query')")
     public CommonResult<PageResult<ZcProductVersionRespVO>> getProductVersionPage(@Valid ZcProductVersionPageReqVO pageReqVO) {
         return success(productVersionService.getProductVersionPage(pageReqVO));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得产品版本精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcProductVersionSimpleRespVO>> getProductVersionSimpleList() {
+        List<ZcProductVersionDO> list = productVersionService.getProductVersionList(new ZcProductVersionListReqVO());
+        return success(convertList(list, item -> new ZcProductVersionSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())
+                .setUnitValue(item.getUnitValue())
+                .setCategoryId(item.getCategoryId())
+                .setSellingPriceType(item.getSellingPriceType())));
     }
 
     @GetMapping("/export-excel")
