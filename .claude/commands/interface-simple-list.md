@@ -1,186 +1,98 @@
 # interface-simple-list
 
-为指定模块快速生成 `GET /simple-list` 精简列表接口，专为前端下拉筛选场景服务。
+为指定模块生成 `GET /simple-list` 精简列表接口（前端下拉专用，无权限校验）。
+
+**核心规则：** 实体有 `status` 字段 → 过滤启用状态（`CommonStatusEnum.ENABLE`）；无 `status` → 全量返回，不新增该字段。
 
 ---
 
-## 触发方式
+## 执行流程
 
-用户说"给 XXX 模块生成 simple-list 接口"或"仿照 XXX 生成精简列表"时使用本 skill。
+### Step 1：读 DO + 确认字段
 
----
+用 Glob 从传入的 Controller 路径推断模块路径，找到对应 DO 文件读取。
+排除基础字段（`createTime/updateTime/creator/updater/deleted/tenantId`），列出剩余业务字段，用 `AskUserQuestion`（multiSelect）让用户勾选 simple-list 需要返回的字段。**等待用户确认后再继续。**
 
-## 接口定位
+### Step 2：并行读取现有文件
 
-`/simple-list` 是**无权限校验**的精简查询接口，专为前端下拉选项/筛选器服务：
-- 只返回下拉所需的**最少字段**（id + 名称字段，如有 status 也返回）
-- 无分页，返回全量 List
-- 不加 `@PreAuthorize`（登录即可访问）
-- 若实体有 `status` 字段，则固定只返回启用状态（`CommonStatusEnum.ENABLE`）数据；**若实体无 status 字段，不新增，返回全量数据**
+同时读取：`Mapper`、`Service` 接口、`ServiceImpl`、`vo/` 目录（Glob），判断 `ListReqVO`、`selectList`、`getXxxList` 是否已存在，按需生成。
 
-### 与 `/list` 接口的区别
+### Step 3：生成代码（5处）
 
-| 维度 | `/list` | `/simple-list` |
-|------|---------|----------------|
-| 权限 | 需要 query 权限 | 无需权限 |
-| 返回字段 | 完整 RespVO | 仅下拉所需关键字段 |
-| 状态过滤 | 支持自定义条件 | 有 status 则过滤启用；无则全量 |
-| 用途 | 列表页展示 | 下拉选择器 / 筛选器 |
-
----
-
-## 生成前的字段确认规则（必须执行）
-
-**每次生成前都必须执行以下步骤，不得跳过：**
-
-1. 读取实体 DO 文件，列出所有字段
-2. 排除基础字段（`createTime`、`updateTime`、`creator`、`updater`、`deleted`、`tenantId`）
-3. 将剩余业务字段全部列出，向用户提问：
-
-> 当前实体业务字段如下，请确认 simple-list 接口需要返回哪些字段？
->
-> | 字段名 | 类型 | 说明 |
-> |--------|------|------|
-> | id | Long | 主键 |
-> | xxx | String | ... |
-> | ...（列出所有业务字段）|
->
-> 典型组合参考：
-> - 最简：`id` + 名称字段（`name` / `value` / `title` 等）
-> - 含状态：`id` + 名称 + `status`（仅当 DO 本身有 status 时）
-> - 树形结构：`id` + 名称 + `parentId`
-
-4. 等待用户确认字段列表后，再生成代码
-
----
-
-## 代码生成步骤
-
-### 第一步：确认 ListReqVO 是否存在
-
-若已有 `ListReqVO`，确认其是否有 `status` 字段（实体有 status 时需要）。
-若不存在，新建 `{模块}ListReqVO`，加 `@Accessors(chain = true)` 支持链式调用：
+**① ListReqVO**（`vo/` 目录，若已存在则检查是否需补 status 字段）
 
 ```java
-@Schema(description = "管理后台 - {中文名称}列表 Request VO")
+@Schema(description = "管理后台 - {中文名}列表 Request VO")
 @Data
 @Accessors(chain = true)
-public class {模块}ListReqVO {
-
-    @Schema(description = "名称字段")
-    private String {nameField};
-
-    // 仅当 DO 有 status 字段时添加
-    @Schema(description = "开启状态", example = "1")
-    private Integer status;
+public class {Prefix}ListReqVO {
+    // DO 有 status 时添加：
+    // @Schema(description = "状态", example = "1")
+    // private Integer status;
 }
 ```
 
-### 第二步：确认 Mapper 有 selectList 方法
-
-若已有 `selectList(ListReqVO)`，检查是否有 `eqIfPresent(status)` 条件（DO 有 status 时需要）。
-若不存在，新增：
+**② Mapper**（追加到现有 `}` 前）
 
 ```java
-default List<{模块}DO> selectList({模块}ListReqVO reqVO) {
-    return selectList(new LambdaQueryWrapperX<{模块}DO>()
-            .eqIfPresent({模块}DO::{nameField}, reqVO.get{NameField}())
-            // 仅当 DO 有 status 时加此行：
-            .eqIfPresent({模块}DO::getStatus, reqVO.getStatus())
-            .orderByDesc({模块}DO::getId));
+default List<{Prefix}DO> selectList({Prefix}ListReqVO reqVO) {
+    return selectList(new LambdaQueryWrapperX<{Prefix}DO>()
+            // DO 有 status 时添加：.eqIfPresent({Prefix}DO::getStatus, reqVO.getStatus())
+            .orderByDesc({Prefix}DO::getId));
 }
 ```
 
-### 第三步：Service 接口 + 实现（通常需新增）
+**③ Service 接口**（追加到 `}` 前）
 
-Service 接口添加：
 ```java
-List<{模块}DO> get{Entity}List({模块}ListReqVO listReqVO);
+List<{Prefix}DO> get{Entity}List({Prefix}ListReqVO listReqVO);
 ```
 
-ServiceImpl 实现：
+**④ ServiceImpl**（追加到最后一个 `@Override` 方法后）
+
 ```java
 @Override
-public List<{模块}DO> get{Entity}List({模块}ListReqVO listReqVO) {
-    return {mapper}.selectList(listReqVO);
+public List<{Prefix}DO> get{Entity}List({Prefix}ListReqVO listReqVO) {
+    return {mapperField}.selectList(listReqVO);
 }
 ```
 
-### 第四步：新建专用 SimpleRespVO
-
-**必须**为 simple-list 创建独立的精简 VO，不复用完整 RespVO（复用会导致未赋值字段以 `null` 出现在响应中）。
-
-文件命名：`{模块}SimpleRespVO.java`，加 `@Accessors(chain = true)` 支持链式 set：
+**⑤ SimpleRespVO**（`vo/` 目录新建）
 
 ```java
-@Schema(description = "管理后台 - {中文名称}精简 Response VO")
+@Schema(description = "管理后台 - {中文名}精简 Response VO")
 @Data
 @Accessors(chain = true)
-public class {模块}SimpleRespVO {
-
+public class {Prefix}SimpleRespVO {
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long id;
-
-    @Schema(description = "{名称字段说明}", requiredMode = Schema.RequiredMode.REQUIRED)
-    private {Type} {nameField};
-
-    // 按用户确认的字段继续添加...
+    // 按用户确认的字段逐一添加（含类型、@Schema）
 }
 ```
 
-### 第五步：Controller 层新增 simple-list 方法
+**⑥ Controller**（在 `export-excel` 方法前插入；同时补 `convertList` 静态导入）
 
 ```java
 @GetMapping("/simple-list")
-@Operation(summary = "获得{中文名称}精简列表", description = "主要用于前端的下拉选项")
-public CommonResult<List<{模块}SimpleRespVO>> get{Entity}SimpleList() {
-    // 有 status 时：
-    List<{模块}DO> list = {service}.get{Entity}List(
-            new {模块}ListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus()));
-    // 无 status 时：
-    // List<{模块}DO> list = {service}.get{Entity}List(new {模块}ListReqVO());
-
-    return success(convertList(list, item -> new {模块}SimpleRespVO()
+@Operation(summary = "获得{中文名}精简列表", description = "主要用于前端的下拉选项")
+public CommonResult<List<{Prefix}SimpleRespVO>> get{Entity}SimpleList() {
+    List<{Prefix}DO> list = {serviceField}.get{Entity}List(
+            new {Prefix}ListReqVO()/* DO 有 status 时追加：.setStatus(CommonStatusEnum.ENABLE.getStatus()) */);
+    return success(convertList(list, item -> new {Prefix}SimpleRespVO()
             .setId(item.getId())
-            .set{NameField}(item.get{NameField}())
-            // 按确认的字段继续链式 set...
+            // 按确认字段链式：.setXxx(item.getXxx())
     ));
 }
 ```
 
-**关键点：**
-- 无 `@PreAuthorize`
-- 返回类型用 `{模块}SimpleRespVO`，不用完整 `RespVO`
-- 用 `convertList` 做字段投影，不用 `BeanUtils.toBean`
-- 需静态导入 `cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList`
+`convertList` 静态导入：`cn.iocoder.yudao.framework.common.util.collection.CollectionUtils`
 
 ---
 
-## 完整示例参考（ErpProductCategory）
+## 禁止事项
 
-```java
-// DO 有 status + parentId（树形结构）的典型写法
-@GetMapping("/simple-list")
-@Operation(summary = "获得产品分类精简列表", description = "只包含被开启的分类，主要用于前端的下拉选项")
-public CommonResult<List<ErpProductCategoryRespVO>> getProductCategorySimpleList() {
-    List<ErpProductCategoryDO> list = productCategoryService.getProductCategoryList(
-            new ErpProductCategoryListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus()));
-    return success(convertList(list, category -> new ErpProductCategoryRespVO()
-            .setId(category.getId()).setName(category.getName()).setParentId(category.getParentId())));
-}
-```
-
-参考文件：
-- `yudao-module-erp/.../ErpProductCategoryController.java`（第 80-87 行）
-- `yudao-module-erp/.../ErpProductCategoryMapper.java`
-- `yudao-module-erp/.../ErpProductCategoryService.java`
-
----
-
-## 注意事项
-
-- **不要为了 simple-list 给实体新增 status 字段**，status 是业务属性，应在需求层面决定
-- `convertList` 静态导入：`cn.iocoder.yudao.framework.common.util.collection.CollectionUtils`
-- `CommonStatusEnum.ENABLE.getStatus()` 返回 `1`（整型）
-- simple-list 不新增 Service/Mapper 方法以外的业务逻辑
-- 若实体是树形结构（有 `parentId`），精简 VO 中必须包含 `parentId`，前端才能构建树
+- 不加 `@PreAuthorize`
+- 禁止复用完整 `RespVO`（未赋值字段会以 `null` 返回）
+- 禁止用 `BeanUtils.toBean`，必须用 `convertList` 投影
+- 不为 simple-list 新增 `status` 字段
+- 树形结构（含 `parentId`）的 SimpleRespVO 必须包含 `parentId`
