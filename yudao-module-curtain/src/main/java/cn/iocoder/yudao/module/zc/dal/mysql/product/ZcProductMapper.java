@@ -4,6 +4,7 @@ import java.util.*;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -25,6 +26,12 @@ public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
         IPage<ZcProductRespVO> result = selectPageWithVO(
                 new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
         return new PageResult<>(result.getRecords(), result.getTotal());
+    }
+
+    default List<ZcProductDO> selectList(ZcProductListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProductDO>()
+                .likeIfPresent(ZcProductDO::getName, reqVO.getName())
+                .orderByDesc(ZcProductDO::getId));
     }
 
 }
