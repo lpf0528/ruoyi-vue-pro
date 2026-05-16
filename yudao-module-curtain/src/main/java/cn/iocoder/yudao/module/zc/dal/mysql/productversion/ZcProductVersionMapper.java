@@ -32,4 +32,9 @@ public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> 
                 .orderByDesc(ZcProductVersionDO::getId));
     }
 
+    default List<ZcProductVersionDO> selectList(ZcProductVersionListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProductVersionDO>()
+                .orderByDesc(ZcProductVersionDO::getId));
+    }
+
 }
