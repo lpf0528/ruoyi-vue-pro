@@ -45,6 +45,14 @@ public class ZcCustomerProductPriceController {
         return success(customerProductPriceService.createCustomerProductPrice(createReqVO));
     }
 
+    @PostMapping("/create-batch")
+    @Operation(summary = "批量创建客户产品销售授权价")
+    @PreAuthorize("@ss.hasPermission('zc:customer-product-price:create')")
+    public CommonResult<Boolean> createCustomerProductPriceList(@Valid @RequestBody List<ZcCustomerProductPriceSaveReqVO> createReqVOs) {
+        customerProductPriceService.createCustomerProductPriceList(createReqVOs);
+        return success(true);
+    }
+
     @PutMapping("/update")
     @Operation(summary = "更新客户产品销售授权价")
     @PreAuthorize("@ss.hasPermission('zc:customer-product-price:update')")

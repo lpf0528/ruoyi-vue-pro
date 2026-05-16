@@ -43,6 +43,12 @@ public class ZcCustomerProductPriceServiceImpl implements ZcCustomerProductPrice
     }
 
     @Override
+    public void createCustomerProductPriceList(List<ZcCustomerProductPriceSaveReqVO> createReqVOs) {
+        List<ZcCustomerProductPriceDO> list = BeanUtils.toBean(createReqVOs, ZcCustomerProductPriceDO.class);
+        customerProductPriceMapper.insertBatch(list);
+    }
+
+    @Override
     public void updateCustomerProductPrice(ZcCustomerProductPriceSaveReqVO updateReqVO) {
         // 校验存在
         validateCustomerProductPriceExists(updateReqVO.getId());

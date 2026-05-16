@@ -23,6 +23,13 @@ public interface ZcCustomerProductPriceService {
     Long createCustomerProductPrice(@Valid ZcCustomerProductPriceSaveReqVO createReqVO);
 
     /**
+     * 批量创建客户产品销售授权价
+     *
+     * @param createReqVOs 创建信息列表
+     */
+    void createCustomerProductPriceList(@Valid List<ZcCustomerProductPriceSaveReqVO> createReqVOs);
+
+    /**
      * 更新客户产品销售授权价
      *
      * @param updateReqVO 更新信息
