@@ -20,6 +20,7 @@ public interface ErrorCodeConstants {
     ErrorCode CUSTOMER_PRODUCT_PRICE_NOT_EXISTS = new ErrorCode(100016, "客户产品销售授权价不存在");
     ErrorCode PRODUCT_BATCH_NOT_EXISTS = new ErrorCode(100017, "产品批次不存在");
     ErrorCode PRODUCT_NOT_EXISTS = new ErrorCode(100018, "产品不存在");
+    ErrorCode PRODUCT_HAS_BATCH = new ErrorCode(100019, "产品存在批次记录，禁止删除");
     ErrorCode CURTAIN_INSTALL_PROCESS_NOT_EXISTS = new ErrorCode(100018, "安装工艺不存在");
 }
 

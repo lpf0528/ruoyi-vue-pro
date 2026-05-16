@@ -14,6 +14,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
@@ -31,6 +32,8 @@ public class ZcProductServiceImpl implements ZcProductService {
 
     @Resource
     private ZcProductMapper productMapper;
+    @Resource
+    private ZcProductBatchMapper productBatchMapper;
 
     @Override
     public Long createProduct(ZcProductSaveReqVO createReqVO) {
@@ -53,17 +56,23 @@ public class ZcProductServiceImpl implements ZcProductService {
 
     @Override
     public void deleteProduct(Long id) {
-        // 校验存在
         validateProductExists(id);
-        // 删除
+        validateProductHasNoBatch(Collections.singletonList(id));
         productMapper.deleteById(id);
     }
 
     @Override
-        public void deleteProductListByIds(List<Long> ids) {
-        // 删除
+    public void deleteProductListByIds(List<Long> ids) {
+        validateProductHasNoBatch(ids);
         productMapper.deleteByIds(ids);
+    }
+
+    private void validateProductHasNoBatch(List<Long> ids) {
+        List<Long> usedIds = productBatchMapper.selectProductIdsWithBatch(ids);
+        if (CollUtil.isNotEmpty(usedIds)) {
+            throw exception(PRODUCT_HAS_BATCH);
         }
+    }
 
 
     private void validateProductExists(Long id) {

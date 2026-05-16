@@ -23,6 +23,16 @@ public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
     @Select("SELECT COUNT(*) + 1 FROM zc_product_batch WHERE product_id = #{productId} AND DATE(create_time) = CURDATE() AND deleted = 0")
     Integer countTodayBatchSeqByProductId(@Param("productId") Long productId);
 
+    default List<Long> selectProductIdsWithBatch(List<Long> productIds) {
+        return selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ZcProductBatchDO>()
+                .select(ZcProductBatchDO::getProductId)
+                .in(ZcProductBatchDO::getProductId, productIds)
+                .groupBy(ZcProductBatchDO::getProductId))
+                .stream()
+                .map(ZcProductBatchDO::getProductId)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     IPage<ZcProductBatchRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcProductBatchPageReqVO reqVO);
 
     default PageResult<ZcProductBatchRespVO> selectPage(ZcProductBatchPageReqVO reqVO) {
