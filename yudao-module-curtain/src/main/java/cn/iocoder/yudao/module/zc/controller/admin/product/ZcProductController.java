@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,20 @@ public class ZcProductController {
     public CommonResult<PageResult<ZcProductRespVO>> getProductPage(@Valid ZcProductPageReqVO pageReqVO) {
         PageResult<ZcProductDO> pageResult = productService.getProductPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcProductRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得产品精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcProductSimpleRespVO>> getProductSimpleList() {
+        List<ZcProductDO> list = productService.getProductList(new ZcProductListReqVO());
+        return success(convertList(list, item -> new ZcProductSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())
+                .setVersionId(item.getVersionId())
+                .setSupplierId(item.getSupplierId())
+                .setAPrice(item.getAPrice())
+                .setInboundPrice(item.getInboundPrice())
+        ));
     }
 
     @GetMapping("/export-excel")

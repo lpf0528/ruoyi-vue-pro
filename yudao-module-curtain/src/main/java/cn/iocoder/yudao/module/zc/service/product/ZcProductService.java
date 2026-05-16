@@ -59,4 +59,6 @@ public interface ZcProductService {
      */
     PageResult<ZcProductDO> getProductPage(ZcProductPageReqVO pageReqVO);
 
+    List<ZcProductDO> getProductList(ZcProductListReqVO listReqVO);
+
 }
