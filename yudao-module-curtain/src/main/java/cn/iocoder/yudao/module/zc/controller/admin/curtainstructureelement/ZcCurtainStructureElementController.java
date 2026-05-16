@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,17 @@ public class ZcCurtainStructureElementController {
     public CommonResult<PageResult<ZcCurtainStructureElementRespVO>> getCurtainStructureElementPage(@Valid ZcCurtainStructureElementPageReqVO pageReqVO) {
         PageResult<ZcCurtainStructureElementDO> pageResult = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcCurtainStructureElementRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得窗帘结构组件精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcCurtainStructureElementSimpleRespVO>> getCurtainStructureElementSimpleList() {
+        List<ZcCurtainStructureElementDO> list = curtainStructureElementService.getCurtainStructureElementList(
+                new ZcCurtainStructureElementListReqVO());
+        return success(convertList(list, item -> new ZcCurtainStructureElementSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())
+        ));
     }
 
     @GetMapping("/export-excel")

@@ -82,4 +82,9 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
         return curtainStructureElementMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcCurtainStructureElementDO> getCurtainStructureElementList(ZcCurtainStructureElementListReqVO listReqVO) {
+        return curtainStructureElementMapper.selectList(listReqVO);
+    }
+
 }

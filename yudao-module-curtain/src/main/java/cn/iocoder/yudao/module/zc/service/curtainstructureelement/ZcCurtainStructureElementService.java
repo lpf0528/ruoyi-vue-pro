@@ -59,4 +59,12 @@ public interface ZcCurtainStructureElementService {
      */
     PageResult<ZcCurtainStructureElementDO> getCurtainStructureElementPage(ZcCurtainStructureElementPageReqVO pageReqVO);
 
+    /**
+     * 获得窗帘结构组件列表
+     *
+     * @param listReqVO 列表查询
+     * @return 窗帘结构组件列表
+     */
+    List<ZcCurtainStructureElementDO> getCurtainStructureElementList(ZcCurtainStructureElementListReqVO listReqVO);
+
 }
