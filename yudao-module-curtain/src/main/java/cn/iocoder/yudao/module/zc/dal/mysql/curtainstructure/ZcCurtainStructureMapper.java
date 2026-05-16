@@ -24,4 +24,9 @@ public interface ZcCurtainStructureMapper extends BaseMapperX<ZcCurtainStructure
                 .orderByDesc(ZcCurtainStructureDO::getId));
     }
 
+    default List<ZcCurtainStructureDO> selectList(ZcCurtainStructureListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcCurtainStructureDO>()
+                .orderByDesc(ZcCurtainStructureDO::getId));
+    }
+
 }
