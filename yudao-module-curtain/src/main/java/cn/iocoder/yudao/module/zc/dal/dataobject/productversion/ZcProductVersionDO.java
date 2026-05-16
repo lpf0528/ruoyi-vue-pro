@@ -41,18 +41,22 @@ public class ZcProductVersionDO extends BaseDO {
     /**
      * 规格ID
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long specId;
     /**
      * 规格值
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String specValue;
     /**
      * 类别ID
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long categoryId;
     /**
      * 物料类别
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String categoryValue;
     /**
      * 出货价类型
