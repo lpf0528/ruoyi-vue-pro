@@ -44,6 +44,7 @@ public class ZcProductDO extends BaseDO {
     /**
      * 规格
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long specId;
     /**
      * 一级销售价
@@ -52,6 +53,7 @@ public class ZcProductDO extends BaseDO {
     /**
      * 供应商
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long supplierId;
     /**
      * 备注
