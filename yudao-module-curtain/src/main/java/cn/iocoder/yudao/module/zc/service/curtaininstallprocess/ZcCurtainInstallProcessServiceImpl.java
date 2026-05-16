@@ -82,4 +82,9 @@ public class ZcCurtainInstallProcessServiceImpl implements ZcCurtainInstallProce
         return curtainInstallProcessMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcCurtainInstallProcessDO> getCurtainInstallProcessList(ZcCurtainInstallProcessListReqVO listReqVO) {
+        return curtainInstallProcessMapper.selectList(listReqVO);
+    }
+
 }

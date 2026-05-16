@@ -59,4 +59,12 @@ public interface ZcCurtainInstallProcessService {
      */
     PageResult<ZcCurtainInstallProcessDO> getCurtainInstallProcessPage(ZcCurtainInstallProcessPageReqVO pageReqVO);
 
+    /**
+     * 获得安装工艺列表
+     *
+     * @param listReqVO 列表查询
+     * @return 安装工艺列表
+     */
+    List<ZcCurtainInstallProcessDO> getCurtainInstallProcessList(ZcCurtainInstallProcessListReqVO listReqVO);
+
 }

@@ -23,4 +23,10 @@ public interface ZcCurtainInstallProcessMapper extends BaseMapperX<ZcCurtainInst
                 .orderByDesc(ZcCurtainInstallProcessDO::getId));
     }
 
+    default List<ZcCurtainInstallProcessDO> selectList(ZcCurtainInstallProcessListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcCurtainInstallProcessDO>()
+                .likeIfPresent(ZcCurtainInstallProcessDO::getName, reqVO.getName())
+                .orderByDesc(ZcCurtainInstallProcessDO::getId));
+    }
+
 }

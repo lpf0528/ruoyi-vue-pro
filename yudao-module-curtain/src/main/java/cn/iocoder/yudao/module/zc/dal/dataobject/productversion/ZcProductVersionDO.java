@@ -73,10 +73,12 @@ public class ZcProductVersionDO extends BaseDO {
      *
      * 枚举 {@link TODO zc_product_classify 对应的类}
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Integer classify;
     /**
      * 供应商
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long supplierId;
     /**
      * 备注
@@ -84,4 +86,4 @@ public class ZcProductVersionDO extends BaseDO {
     private String note;
 
 
-}
+}

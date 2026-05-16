@@ -19,6 +19,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +87,16 @@ public class ZcCurtainInstallProcessController {
     public CommonResult<PageResult<ZcCurtainInstallProcessRespVO>> getCurtainInstallProcessPage(@Valid ZcCurtainInstallProcessPageReqVO pageReqVO) {
         PageResult<ZcCurtainInstallProcessDO> pageResult = curtainInstallProcessService.getCurtainInstallProcessPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcCurtainInstallProcessRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得安装工艺精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcCurtainInstallProcessSimpleRespVO>> getCurtainInstallProcessSimpleList() {
+        List<ZcCurtainInstallProcessDO> list = curtainInstallProcessService.getCurtainInstallProcessList(
+                new ZcCurtainInstallProcessListReqVO());
+        return success(convertList(list, item -> new ZcCurtainInstallProcessSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())));
     }
 
     @GetMapping("/export-excel")
