@@ -42,6 +42,7 @@ public class ZcProductVersionDO extends BaseDO {
     /**
      * 类别ID
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long categoryId;
     /**
      * 出货价类型
@@ -66,6 +67,7 @@ public class ZcProductVersionDO extends BaseDO {
     /**
      * 供应商
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long supplierId;
     /**
      * 备注
