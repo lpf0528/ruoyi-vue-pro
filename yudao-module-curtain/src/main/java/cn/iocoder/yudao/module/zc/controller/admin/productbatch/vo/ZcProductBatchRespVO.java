@@ -55,6 +55,26 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "产品名称")
+    @ExcelProperty("产品名称")
+    private String productName;
+
+    @Schema(description = "规格")
+    @ExcelProperty("规格")
+    private String specValue;
+
+    @Schema(description = "版本名称")
+    @ExcelProperty("版本名称")
+    private String versionName;
+
+    @Schema(description = "供应商名称")
+    @ExcelProperty("供应商名称")
+    private String supplierName;
+
+    @Schema(description = "仓库名称")
+    @ExcelProperty("仓库名称")
+    private String warehouseName;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

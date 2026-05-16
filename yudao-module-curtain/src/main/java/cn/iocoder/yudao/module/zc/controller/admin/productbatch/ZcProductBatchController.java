@@ -84,8 +84,7 @@ public class ZcProductBatchController {
     @Operation(summary = "获得产品批次分页")
     @PreAuthorize("@ss.hasPermission('zc:product-batch:query')")
     public CommonResult<PageResult<ZcProductBatchRespVO>> getProductBatchPage(@Valid ZcProductBatchPageReqVO pageReqVO) {
-        PageResult<ZcProductBatchDO> pageResult = productBatchService.getProductBatchPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcProductBatchRespVO.class));
+        return success(productBatchService.getProductBatchPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,9 @@ public class ZcProductBatchController {
     public void exportProductBatchExcel(@Valid ZcProductBatchPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcProductBatchDO> list = productBatchService.getProductBatchPage(pageReqVO).getList();
+        List<ZcProductBatchRespVO> list = productBatchService.getProductBatchPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "产品批次.xls", "数据", ZcProductBatchRespVO.class,
-                        BeanUtils.toBean(list, ZcProductBatchRespVO.class));
+        ExcelUtils.write(response, "产品批次.xls", "数据", ZcProductBatchRespVO.class, list);
     }
 
 }

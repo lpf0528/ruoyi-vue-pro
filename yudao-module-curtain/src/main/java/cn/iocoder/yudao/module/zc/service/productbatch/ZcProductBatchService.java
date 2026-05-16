@@ -57,6 +57,6 @@ public interface ZcProductBatchService {
      * @param pageReqVO 分页查询
      * @return 产品批次分页
      */
-    PageResult<ZcProductBatchDO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO);
+    PageResult<ZcProductBatchRespVO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO);
 
 }

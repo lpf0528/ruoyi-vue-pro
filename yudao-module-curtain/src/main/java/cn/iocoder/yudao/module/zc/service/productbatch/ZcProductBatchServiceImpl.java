@@ -78,7 +78,7 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
     @Override
-    public PageResult<ZcProductBatchDO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO) {
+    public PageResult<ZcProductBatchRespVO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO) {
         return productBatchMapper.selectPage(pageReqVO);
     }
 
