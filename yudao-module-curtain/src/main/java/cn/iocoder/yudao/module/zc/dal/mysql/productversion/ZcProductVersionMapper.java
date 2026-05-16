@@ -6,7 +6,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionDO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.*;
 
 /**
@@ -17,16 +20,12 @@ import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.*;
 @Mapper
 public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> {
 
-    default PageResult<ZcProductVersionDO> selectPage(ZcProductVersionPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductVersionDO>()
-                .likeIfPresent(ZcProductVersionDO::getName, reqVO.getName())
-                .eqIfPresent(ZcProductVersionDO::getUnitValue, reqVO.getUnitValue())
-                .eqIfPresent(ZcProductVersionDO::getCategoryId, reqVO.getCategoryId())
-                .eqIfPresent(ZcProductVersionDO::getSellingPriceType, reqVO.getSellingPriceType())
-                .eqIfPresent(ZcProductVersionDO::getClassify, reqVO.getClassify())
-                .eqIfPresent(ZcProductVersionDO::getSupplierId, reqVO.getSupplierId())
-                .betweenIfPresent(ZcProductVersionDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(ZcProductVersionDO::getId));
+    IPage<ZcProductVersionRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcProductVersionPageReqVO reqVO);
+
+    default PageResult<ZcProductVersionRespVO> selectPage(ZcProductVersionPageReqVO reqVO) {
+        IPage<ZcProductVersionRespVO> result = selectPageWithVO(
+                new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
 }

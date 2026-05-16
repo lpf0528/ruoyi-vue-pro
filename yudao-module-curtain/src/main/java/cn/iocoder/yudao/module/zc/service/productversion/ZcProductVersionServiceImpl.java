@@ -78,7 +78,7 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
     }
 
     @Override
-    public PageResult<ZcProductVersionDO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO) {
+    public PageResult<ZcProductVersionRespVO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO) {
         return productVersionMapper.selectPage(pageReqVO);
     }
 

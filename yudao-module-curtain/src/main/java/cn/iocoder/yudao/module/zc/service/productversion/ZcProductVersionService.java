@@ -57,6 +57,6 @@ public interface ZcProductVersionService {
      * @param pageReqVO 分页查询
      * @return 产品版本分页
      */
-    PageResult<ZcProductVersionDO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO);
+    PageResult<ZcProductVersionRespVO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO);
 
 }

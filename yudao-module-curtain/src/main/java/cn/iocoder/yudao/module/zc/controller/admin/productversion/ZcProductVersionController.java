@@ -84,8 +84,7 @@ public class ZcProductVersionController {
     @Operation(summary = "获得产品版本分页")
     @PreAuthorize("@ss.hasPermission('zc:product-version:query')")
     public CommonResult<PageResult<ZcProductVersionRespVO>> getProductVersionPage(@Valid ZcProductVersionPageReqVO pageReqVO) {
-        PageResult<ZcProductVersionDO> pageResult = productVersionService.getProductVersionPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcProductVersionRespVO.class));
+        return success(productVersionService.getProductVersionPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,8 @@ public class ZcProductVersionController {
     public void exportProductVersionExcel(@Valid ZcProductVersionPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcProductVersionDO> list = productVersionService.getProductVersionPage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "产品版本.xls", "数据", ZcProductVersionRespVO.class,
-                        BeanUtils.toBean(list, ZcProductVersionRespVO.class));
+        List<ZcProductVersionRespVO> list = productVersionService.getProductVersionPage(pageReqVO).getList();
+        ExcelUtils.write(response, "产品版本.xls", "数据", ZcProductVersionRespVO.class, list);
     }
 
 }

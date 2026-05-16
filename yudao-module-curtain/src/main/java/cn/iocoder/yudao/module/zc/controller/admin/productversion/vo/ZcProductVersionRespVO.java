@@ -58,6 +58,14 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "类别名称")
+    @ExcelProperty("类别名称")
+    private String categoryValue;
+
+    @Schema(description = "供应商名称")
+    @ExcelProperty("供应商名称")
+    private String supplierName;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
