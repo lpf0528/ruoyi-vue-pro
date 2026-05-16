@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.customerproductprice.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerproductprice.ZcCustomerProductPriceDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
@@ -43,9 +44,18 @@ public class ZcCustomerProductPriceServiceImpl implements ZcCustomerProductPrice
     }
 
     @Override
-    public void createCustomerProductPriceList(List<ZcCustomerProductPriceSaveReqVO> createReqVOs) {
-        List<ZcCustomerProductPriceDO> list = BeanUtils.toBean(createReqVOs, ZcCustomerProductPriceDO.class);
-        customerProductPriceMapper.insertBatch(list);
+    @Transactional(rollbackFor = Exception.class)
+    public void createCustomerProductPriceList(List<ZcCustomerProductPriceSaveReqVO> reqVOs) {
+        List<ZcCustomerProductPriceSaveReqVO> createList = reqVOs.stream()
+                .filter(vo -> vo.getId() == null).collect(Collectors.toList());
+        List<ZcCustomerProductPriceSaveReqVO> updateList = reqVOs.stream()
+                .filter(vo -> vo.getId() != null).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(createList)) {
+            customerProductPriceMapper.insertBatch(BeanUtils.toBean(createList, ZcCustomerProductPriceDO.class));
+        }
+        if (CollUtil.isNotEmpty(updateList)) {
+            customerProductPriceMapper.updateBatch(BeanUtils.toBean(updateList, ZcCustomerProductPriceDO.class));
+        }
     }
 
     @Override
