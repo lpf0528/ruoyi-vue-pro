@@ -45,6 +45,16 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<Long> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs) {
+        List<Long> ids = new ArrayList<>();
+        for (ZcProductBatchSaveReqVO createReqVO : createReqVOs) {
+            ids.add(createProductBatch(createReqVO));
+        }
+        return ids;
+    }
+
+    @Override
     public void updateProductBatch(ZcProductBatchSaveReqVO updateReqVO) {
         // 校验存在
         validateProductBatchExists(updateReqVO.getId());

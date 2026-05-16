@@ -23,6 +23,14 @@ public interface ZcProductBatchService {
     Long createProductBatch(@Valid ZcProductBatchSaveReqVO createReqVO);
 
     /**
+     * 批量创建产品批次
+     *
+     * @param createReqVOs 创建信息列表
+     * @return 编号列表
+     */
+    List<Long> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs);
+
+    /**
      * 更新产品批次
      *
      * @param updateReqVO 更新信息
