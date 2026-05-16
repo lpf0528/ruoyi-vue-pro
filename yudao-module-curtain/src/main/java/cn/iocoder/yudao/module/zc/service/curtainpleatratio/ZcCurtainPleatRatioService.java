@@ -59,4 +59,12 @@ public interface ZcCurtainPleatRatioService {
      */
     PageResult<ZcCurtainPleatRatioDO> getCurtainPleatRatioPage(ZcCurtainPleatRatioPageReqVO pageReqVO);
 
+    /**
+     * 获得褶倍列表
+     *
+     * @param listReqVO 列表查询
+     * @return 褶倍列表
+     */
+    List<ZcCurtainPleatRatioDO> getCurtainPleatRatioList(ZcCurtainPleatRatioListReqVO listReqVO);
+
 }

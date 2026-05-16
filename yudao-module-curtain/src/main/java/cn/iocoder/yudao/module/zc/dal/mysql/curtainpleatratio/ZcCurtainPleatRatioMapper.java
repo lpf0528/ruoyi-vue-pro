@@ -23,4 +23,9 @@ public interface ZcCurtainPleatRatioMapper extends BaseMapperX<ZcCurtainPleatRat
                 .orderByDesc(ZcCurtainPleatRatioDO::getId));
     }
 
+    default List<ZcCurtainPleatRatioDO> selectList(ZcCurtainPleatRatioListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcCurtainPleatRatioDO>()
+                .orderByDesc(ZcCurtainPleatRatioDO::getId));
+    }
+
 }

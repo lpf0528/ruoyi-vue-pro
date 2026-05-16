@@ -82,4 +82,9 @@ public class ZcCurtainPleatRatioServiceImpl implements ZcCurtainPleatRatioServic
         return curtainPleatRatioMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcCurtainPleatRatioDO> getCurtainPleatRatioList(ZcCurtainPleatRatioListReqVO listReqVO) {
+        return curtainPleatRatioMapper.selectList(listReqVO);
+    }
+
 }
