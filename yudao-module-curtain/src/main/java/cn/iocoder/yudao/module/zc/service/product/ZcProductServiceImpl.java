@@ -78,7 +78,7 @@ public class ZcProductServiceImpl implements ZcProductService {
     }
 
     @Override
-    public PageResult<ZcProductDO> getProductPage(ZcProductPageReqVO pageReqVO) {
+    public PageResult<ZcProductRespVO> getProductPage(ZcProductPageReqVO pageReqVO) {
         return productMapper.selectPage(pageReqVO);
     }
 

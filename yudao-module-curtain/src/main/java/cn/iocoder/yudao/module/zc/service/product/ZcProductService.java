@@ -57,6 +57,6 @@ public interface ZcProductService {
      * @param pageReqVO 分页查询
      * @return 产品分页
      */
-    PageResult<ZcProductDO> getProductPage(ZcProductPageReqVO pageReqVO);
+    PageResult<ZcProductRespVO> getProductPage(ZcProductPageReqVO pageReqVO);
 
 }

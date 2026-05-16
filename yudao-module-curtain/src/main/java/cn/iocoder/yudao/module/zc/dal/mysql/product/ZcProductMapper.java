@@ -3,10 +3,12 @@ package cn.iocoder.yudao.module.zc.dal.mysql.product;
 import java.util.*;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 
 /**
@@ -17,14 +19,12 @@ import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 @Mapper
 public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
 
-    default PageResult<ZcProductDO> selectPage(ZcProductPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductDO>()
-                .likeIfPresent(ZcProductDO::getName, reqVO.getName())
-                .eqIfPresent(ZcProductDO::getVersionId, reqVO.getVersionId())
-                .eqIfPresent(ZcProductDO::getSpecId, reqVO.getSpecId())
-                .eqIfPresent(ZcProductDO::getSupplierId, reqVO.getSupplierId())
-                .betweenIfPresent(ZcProductDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(ZcProductDO::getId));
+    IPage<ZcProductRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcProductPageReqVO reqVO);
+
+    default PageResult<ZcProductRespVO> selectPage(ZcProductPageReqVO reqVO) {
+        IPage<ZcProductRespVO> result = selectPageWithVO(
+                new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
 }

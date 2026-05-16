@@ -84,8 +84,7 @@ public class ZcProductController {
     @Operation(summary = "获得产品分页")
     @PreAuthorize("@ss.hasPermission('zc:product:query')")
     public CommonResult<PageResult<ZcProductRespVO>> getProductPage(@Valid ZcProductPageReqVO pageReqVO) {
-        PageResult<ZcProductDO> pageResult = productService.getProductPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcProductRespVO.class));
+        return success(productService.getProductPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,8 @@ public class ZcProductController {
     public void exportProductExcel(@Valid ZcProductPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcProductDO> list = productService.getProductPage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "产品.xls", "数据", ZcProductRespVO.class,
-                        BeanUtils.toBean(list, ZcProductRespVO.class));
+        List<ZcProductRespVO> list = productService.getProductPage(pageReqVO).getList();
+        ExcelUtils.write(response, "产品.xls", "数据", ZcProductRespVO.class, list);
     }
 
 }
