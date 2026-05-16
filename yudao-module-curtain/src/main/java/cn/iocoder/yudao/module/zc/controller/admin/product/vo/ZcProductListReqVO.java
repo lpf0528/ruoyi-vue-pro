@@ -8,4 +8,8 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class ZcProductListReqVO {
+
+    @Schema(description = "产品名称", example = "遮光布")
+    private String name;
+
 }

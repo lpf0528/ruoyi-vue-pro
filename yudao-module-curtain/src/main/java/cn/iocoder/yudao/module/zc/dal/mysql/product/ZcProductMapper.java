@@ -29,6 +29,7 @@ public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
 
     default List<ZcProductDO> selectList(ZcProductListReqVO reqVO) {
         return selectList(new LambdaQueryWrapperX<ZcProductDO>()
+                .likeIfPresent(ZcProductDO::getName, reqVO.getName())
                 .orderByDesc(ZcProductDO::getId));
     }
 
