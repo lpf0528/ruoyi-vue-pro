@@ -1,8 +1,6 @@
 package cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo;
 
 import lombok.*;
-
-import java.time.LocalDate;
 import java.util.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
@@ -23,13 +21,13 @@ public class ZcProductBatchPageReqVO extends PageParam {
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDate[] inboundDate;
 
-    @Schema(description = "产品", example = "5889")
+    @Schema(description = "产品", example = "7855")
     private Long productId;
 
-    @Schema(description = "仓库", example = "17396")
+    @Schema(description = "仓库", example = "5470")
     private Long warehouseId;
 
-    @Schema(description = "供应商", example = "28315")
+    @Schema(description = "供应商", example = "12241")
     private Long supplierId;
 
     @Schema(description = "创建时间")

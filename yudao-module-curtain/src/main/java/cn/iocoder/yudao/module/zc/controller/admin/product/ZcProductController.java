@@ -19,7 +19,6 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -30,7 +29,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import cn.iocoder.yudao.module.zc.service.product.ZcProductService;
 
-@Tag(name = "管理后台 - 产品管理")
+@Tag(name = "管理后台 - 产品")
 @RestController
 @RequestMapping("/zc/product")
 @Validated
@@ -87,21 +86,6 @@ public class ZcProductController {
     public CommonResult<PageResult<ZcProductRespVO>> getProductPage(@Valid ZcProductPageReqVO pageReqVO) {
         PageResult<ZcProductDO> pageResult = productService.getProductPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcProductRespVO.class));
-    }
-
-    @GetMapping("/simple-list")
-    @Operation(summary = "获得产品精简列表", description = "主要用于前端的下拉选项")
-    public CommonResult<List<ZcProductSimpleRespVO>> getProductSimpleList(
-            @Parameter(name = "name", description = "产品名称，模糊匹配") @RequestParam(value = "name", required = false) String name) {
-        List<ZcProductDO> list = productService.getProductList(new ZcProductListReqVO().setName(name));
-        return success(convertList(list, item -> new ZcProductSimpleRespVO()
-                .setId(item.getId())
-                .setName(item.getName())
-                .setVersionId(item.getVersionId())
-                .setSupplierId(item.getSupplierId())
-                .setAPrice(item.getAPrice())
-                .setInboundPrice(item.getInboundPrice())
-        ));
     }
 
     @GetMapping("/export-excel")

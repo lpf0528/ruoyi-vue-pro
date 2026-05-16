@@ -2,8 +2,6 @@ package cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-
-import java.time.LocalDate;
 import java.util.*;
 import java.math.BigDecimal;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,7 +13,7 @@ import cn.idev.excel.annotation.*;
 @ExcelIgnoreUnannotated
 public class ZcProductBatchRespVO {
 
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "31107")
+    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "209")
     @ExcelProperty("主键")
     private Long id;
 
@@ -27,23 +25,27 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("入库日期")
     private LocalDate inboundDate;
 
-    @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "5889")
+    @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "7855")
     @ExcelProperty("产品")
     private Long productId;
+
+    @Schema(description = "进货价", example = "6838")
+    @ExcelProperty("进货价")
+    private BigDecimal inboundPrice;
 
     @Schema(description = "入库数量", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("入库数量")
     private BigDecimal inboundQuantity;
 
-    @Schema(description = "剩余数量")
+    @Schema(description = "剩余数量", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("剩余数量")
     private BigDecimal quantity;
 
-    @Schema(description = "仓库", example = "17396")
+    @Schema(description = "仓库", example = "5470")
     @ExcelProperty("仓库")
     private Long warehouseId;
 
-    @Schema(description = "供应商", example = "28315")
+    @Schema(description = "供应商", example = "12241")
     @ExcelProperty("供应商")
     private Long supplierId;
 

@@ -12,7 +12,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.*;
 /**
  * 产品版本 Mapper
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @Mapper
 public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> {
@@ -21,19 +21,11 @@ public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> 
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductVersionDO>()
                 .likeIfPresent(ZcProductVersionDO::getName, reqVO.getName())
                 .eqIfPresent(ZcProductVersionDO::getUnitValue, reqVO.getUnitValue())
-                .eqIfPresent(ZcProductVersionDO::getSpecId, reqVO.getSpecId())
                 .eqIfPresent(ZcProductVersionDO::getCategoryId, reqVO.getCategoryId())
                 .eqIfPresent(ZcProductVersionDO::getSellingPriceType, reqVO.getSellingPriceType())
-                .betweenIfPresent(ZcProductVersionDO::getInboundPrice, reqVO.getInboundPrice())
                 .eqIfPresent(ZcProductVersionDO::getClassify, reqVO.getClassify())
                 .eqIfPresent(ZcProductVersionDO::getSupplierId, reqVO.getSupplierId())
-                .eqIfPresent(ZcProductVersionDO::getCreator, reqVO.getCreator())
                 .betweenIfPresent(ZcProductVersionDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(ZcProductVersionDO::getId));
-    }
-
-    default List<ZcProductVersionDO> selectList(ZcProductVersionListReqVO reqVO) {
-        return selectList(new LambdaQueryWrapperX<ZcProductVersionDO>()
                 .orderByDesc(ZcProductVersionDO::getId));
     }
 

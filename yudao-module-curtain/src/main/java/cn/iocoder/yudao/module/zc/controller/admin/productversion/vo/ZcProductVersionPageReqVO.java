@@ -14,33 +14,23 @@ import static cn.iocoder.yudao.framework.common.util.date.DateUtils.FORMAT_YEAR_
 @Data
 public class ZcProductVersionPageReqVO extends PageParam {
 
-    @Schema(description = "版本名称", example = "王五")
+    @Schema(description = "版本名称", example = "芋艿")
     private String name;
 
-    @Schema(description = "单位（字典）")
+    @Schema(description = "单位")
     private String unitValue;
 
-    @Schema(description = "规格ID", example = "14205")
-    private Long specId;
-
-    @Schema(description = "类别ID", example = "12697")
+    @Schema(description = "类别ID", example = "18979")
     private Long categoryId;
 
-    @Schema(description = "出货价类型", example = "fixed_price:统一价、sku_price:型号价")
+    @Schema(description = "出货价类型", example = "fixed_price / sku_price")
     private String sellingPriceType;
 
-    @Schema(description = "进货价", example = "13750")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
-    private BigDecimal[] inboundPrice;
-
-    @Schema(description = "分类")
+    @Schema(description = "分类", example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
     private Integer classify;
 
-    @Schema(description = "供应商", example = "21214")
+    @Schema(description = "供应商", example = "7521")
     private Long supplierId;
-
-    @Schema(description = "创建者")
-    private String creator;
 
     @Schema(description = "创建时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)

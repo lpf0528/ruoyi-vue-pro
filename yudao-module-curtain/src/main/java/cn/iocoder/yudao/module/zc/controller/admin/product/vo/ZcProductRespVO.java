@@ -8,20 +8,20 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
-@Schema(description = "管理后台 - 产品档案 Response VO")
+@Schema(description = "管理后台 - 产品 Response VO")
 @Data
 @ExcelIgnoreUnannotated
 public class ZcProductRespVO {
 
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "21159")
+    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "27909")
     @ExcelProperty("主键")
     private Long id;
 
-    @Schema(description = "产品名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
-    @ExcelProperty("产品名称")
+    @Schema(description = "名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "张三")
+    @ExcelProperty("名称")
     private String name;
 
-    @Schema(description = "版本", example = "17507")
+    @Schema(description = "版本", requiredMode = Schema.RequiredMode.REQUIRED, example = "6")
     @ExcelProperty("版本")
     private Long versionId;
 
@@ -29,25 +29,21 @@ public class ZcProductRespVO {
     @ExcelProperty("进货价")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "A 类销售价", example = "12540")
-    @ExcelProperty("A 类销售价")
-    private BigDecimal aPrice;
+    @Schema(description = "规格", example = "27939")
+    @ExcelProperty("规格")
+    private Long specId;
+
+    @Schema(description = "一级销售价", example = "25120")
+    @ExcelProperty("一级销售价")
+    private BigDecimal onePrice;
 
     @Schema(description = "供应商", example = "25473")
     @ExcelProperty("供应商")
     private Long supplierId;
 
-    @Schema(description = "采购类型", example = "0 整采 1 零采")
-    @ExcelProperty("采购类型")
-    private Integer purchaseType;
-
     @Schema(description = "备注")
     @ExcelProperty("备注")
     private String note;
-
-    @Schema(description = "创建者")
-    @ExcelProperty("创建者")
-    private String creator;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")

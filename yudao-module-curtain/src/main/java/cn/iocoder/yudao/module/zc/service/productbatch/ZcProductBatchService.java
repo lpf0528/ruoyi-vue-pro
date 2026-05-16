@@ -10,7 +10,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 /**
  * 产品批次 Service 接口
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 public interface ZcProductBatchService {
 

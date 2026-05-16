@@ -10,38 +10,34 @@ import java.math.BigDecimal;
 @Data
 public class ZcProductVersionSaveReqVO {
 
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "22953")
+    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "22024")
     private Long id;
 
-    @Schema(description = "版本名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
+    @Schema(description = "版本名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
     @NotEmpty(message = "版本名称不能为空")
     private String name;
 
-    @Schema(description = "单位（字典）")
+    @Schema(description = "单位")
     private String unitValue;
 
-    @Schema(description = "规格ID", example = "14205")
-    private Long specId;
-
-    @Schema(description = "规格值")
-    private String specValue;
-
-    @Schema(description = "类别ID", example = "12697")
+    @Schema(description = "类别ID", example = "18979")
     private Long categoryId;
 
-    @Schema(description = "物料类别")
-    private String categoryValue;
-
-    @Schema(description = "出货价类型", example = "fixed_price:统一价、sku_price:型号价")
+    @Schema(description = "出货价类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "fixed_price / sku_price")
+    @NotEmpty(message = "出货价类型不能为空")
     private String sellingPriceType;
 
-    @Schema(description = "进货价", example = "13750")
+    @Schema(description = "进货价", example = "10033")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "分类")
+    @Schema(description = "一级类销售价", example = "18914")
+    private BigDecimal onePrice;
+
+    @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
+    @NotNull(message = "分类不能为空")
     private Integer classify;
 
-    @Schema(description = "供应商", example = "21214")
+    @Schema(description = "供应商", example = "7521")
     private Long supplierId;
 
     @Schema(description = "备注")

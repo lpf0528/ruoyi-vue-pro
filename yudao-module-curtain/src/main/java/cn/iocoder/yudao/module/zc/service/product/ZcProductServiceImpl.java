@@ -23,7 +23,7 @@ import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 /**
  * 产品 Service 实现类
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @Service
 @Validated
@@ -80,11 +80,6 @@ public class ZcProductServiceImpl implements ZcProductService {
     @Override
     public PageResult<ZcProductDO> getProductPage(ZcProductPageReqVO pageReqVO) {
         return productMapper.selectPage(pageReqVO);
-    }
-
-    @Override
-    public List<ZcProductDO> getProductList(ZcProductListReqVO listReqVO) {
-        return productMapper.selectList(listReqVO);
     }
 
 }

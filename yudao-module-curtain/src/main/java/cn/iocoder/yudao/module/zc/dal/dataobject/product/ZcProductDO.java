@@ -12,7 +12,7 @@ import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 /**
  * 产品 DO
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @TableName("zc_product")
 @KeySequence("zc_product_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
@@ -30,7 +30,7 @@ public class ZcProductDO extends BaseDO {
     @TableId
     private Long id;
     /**
-     * 产品名称
+     * 名称
      */
     private String name;
     /**
@@ -42,17 +42,17 @@ public class ZcProductDO extends BaseDO {
      */
     private BigDecimal inboundPrice;
     /**
-     * A 类销售价
+     * 规格
      */
-    private BigDecimal aPrice;
+    private Long specId;
+    /**
+     * 一级销售价
+     */
+    private BigDecimal onePrice;
     /**
      * 供应商
      */
     private Long supplierId;
-    /**
-     * 采购类型
-     */
-    private Integer purchaseType;
     /**
      * 备注
      */

@@ -12,7 +12,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 /**
  * 产品 Mapper
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @Mapper
 public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
@@ -21,15 +21,9 @@ public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductDO>()
                 .likeIfPresent(ZcProductDO::getName, reqVO.getName())
                 .eqIfPresent(ZcProductDO::getVersionId, reqVO.getVersionId())
-                .betweenIfPresent(ZcProductDO::getInboundPrice, reqVO.getInboundPrice())
+                .eqIfPresent(ZcProductDO::getSpecId, reqVO.getSpecId())
                 .eqIfPresent(ZcProductDO::getSupplierId, reqVO.getSupplierId())
-                .eqIfPresent(ZcProductDO::getPurchaseType, reqVO.getPurchaseType())
-                .orderByDesc(ZcProductDO::getId));
-    }
-
-    default List<ZcProductDO> selectList(ZcProductListReqVO reqVO) {
-        return selectList(new LambdaQueryWrapperX<ZcProductDO>()
-                .likeIfPresent(ZcProductDO::getName, reqVO.getName())
+                .betweenIfPresent(ZcProductDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(ZcProductDO::getId));
     }
 

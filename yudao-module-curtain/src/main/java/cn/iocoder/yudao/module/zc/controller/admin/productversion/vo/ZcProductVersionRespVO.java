@@ -15,60 +15,48 @@ import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
 @ExcelIgnoreUnannotated
 public class ZcProductVersionRespVO {
 
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "22953")
+    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "22024")
     @ExcelProperty("主键")
     private Long id;
 
-    @Schema(description = "版本名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
+    @Schema(description = "版本名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
     @ExcelProperty("版本名称")
     private String name;
 
-    @Schema(description = "单位（字典）")
-    @ExcelProperty(value = "单位（字典）", converter = DictConvert.class)
+    @Schema(description = "单位")
+    @ExcelProperty(value = "单位", converter = DictConvert.class)
     @DictFormat("zc_product_unit") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private String unitValue;
 
-    @Schema(description = "规格ID", example = "14205")
-    @ExcelProperty("规格ID")
-    private Long specId;
-
-    @Schema(description = "规格值")
-    @ExcelProperty("规格值")
-    private String specValue;
-
-    @Schema(description = "产品品类ID", example = "12697")
-    @ExcelProperty("产品品类ID")
+    @Schema(description = "类别ID", example = "18979")
+    @ExcelProperty("类别ID")
     private Long categoryId;
 
-    @Schema(description = "产品品类")
-    @ExcelProperty("产品品类")
-    private String categoryValue;
-
-    @Schema(description = "出货价类型", example = "fixed_price:统一价、sku_price:型号价")
+    @Schema(description = "出货价类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "fixed_price / sku_price")
     @ExcelProperty(value = "出货价类型", converter = DictConvert.class)
     @DictFormat("zc_selling_price_type") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private String sellingPriceType;
 
-    @Schema(description = "进货价", example = "13750")
+    @Schema(description = "进货价", example = "10033")
     @ExcelProperty("进货价")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "分类")
+    @Schema(description = "一级类销售价", example = "18914")
+    @ExcelProperty("一级类销售价")
+    private BigDecimal onePrice;
+
+    @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
     @ExcelProperty(value = "分类", converter = DictConvert.class)
     @DictFormat("zc_product_classify") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
     private Integer classify;
 
-    @Schema(description = "供应商", example = "21214")
+    @Schema(description = "供应商", example = "7521")
     @ExcelProperty("供应商")
     private Long supplierId;
 
     @Schema(description = "备注")
     @ExcelProperty("备注")
     private String note;
-
-    @Schema(description = "创建者")
-    @ExcelProperty("创建者")
-    private String creator;
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")

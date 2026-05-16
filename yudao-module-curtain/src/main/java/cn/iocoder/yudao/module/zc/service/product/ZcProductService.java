@@ -10,7 +10,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 /**
  * 产品 Service 接口
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 public interface ZcProductService {
 
@@ -58,7 +58,5 @@ public interface ZcProductService {
      * @return 产品分页
      */
     PageResult<ZcProductDO> getProductPage(ZcProductPageReqVO pageReqVO);
-
-    List<ZcProductDO> getProductList(ZcProductListReqVO listReqVO);
 
 }

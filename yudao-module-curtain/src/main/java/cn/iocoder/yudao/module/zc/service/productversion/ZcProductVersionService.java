@@ -10,7 +10,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 /**
  * 产品版本 Service 接口
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 public interface ZcProductVersionService {
 
@@ -59,12 +59,4 @@ public interface ZcProductVersionService {
      */
     PageResult<ZcProductVersionDO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO);
 
-    /**
-     * 获得产品版本列表
-     *
-     * @param listReqVO 列表查询
-     * @return 产品版本列表
-     */
-    List<ZcProductVersionDO> getProductVersionList(ZcProductVersionListReqVO listReqVO);
-
-}
+}

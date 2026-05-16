@@ -1,9 +1,8 @@
 package cn.iocoder.yudao.module.zc.dal.dataobject.productbatch;
 
 import lombok.*;
-
-import java.time.LocalDate;
 import java.util.*;
+import java.math.BigDecimal;
 import java.math.BigDecimal;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +13,7 @@ import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 /**
  * 产品批次 DO
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @TableName("zc_product_batch")
 @KeySequence("zc_product_batch_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
@@ -32,10 +31,6 @@ public class ZcProductBatchDO extends BaseDO {
     @TableId
     private Long id;
     /**
-     * 采购单
-     */
-    private Long purchaseOrderId;
-    /**
      * 批号
      */
     private String batchNo;
@@ -47,6 +42,10 @@ public class ZcProductBatchDO extends BaseDO {
      * 产品
      */
     private Long productId;
+    /**
+     * 进货价
+     */
+    private BigDecimal inboundPrice;
     /**
      * 入库数量
      */

@@ -12,14 +12,14 @@ import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 /**
  * 产品批次 Mapper
  *
- * @author 芋道源码
+ * @author 01Coder
  */
 @Mapper
 public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
 
     default PageResult<ZcProductBatchDO> selectPage(ZcProductBatchPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductBatchDO>()
-                .likeIfPresent(ZcProductBatchDO::getBatchNo, reqVO.getBatchNo())
+                .eqIfPresent(ZcProductBatchDO::getBatchNo, reqVO.getBatchNo())
                 .betweenIfPresent(ZcProductBatchDO::getInboundDate, reqVO.getInboundDate())
                 .eqIfPresent(ZcProductBatchDO::getProductId, reqVO.getProductId())
                 .eqIfPresent(ZcProductBatchDO::getWarehouseId, reqVO.getWarehouseId())
