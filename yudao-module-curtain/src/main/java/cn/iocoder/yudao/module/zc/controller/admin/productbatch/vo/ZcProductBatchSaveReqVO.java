@@ -15,10 +15,6 @@ public class ZcProductBatchSaveReqVO {
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "209")
     private Long id;
 
-    @Schema(description = "批号", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotEmpty(message = "批号不能为空")
-    private String batchNo;
-
     @Schema(description = "入库日期", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "入库日期不能为空")
     private LocalDate inboundDate;

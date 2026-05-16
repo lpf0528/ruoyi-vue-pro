@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 产品批次 Mapper
@@ -18,6 +19,9 @@ import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
  */
 @Mapper
 public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
+
+    @Select("SELECT COUNT(*) + 1 FROM zc_product_batch WHERE product_id = #{productId} AND DATE(create_time) = CURDATE() AND deleted = 0")
+    Integer countTodayBatchSeqByProductId(@Param("productId") Long productId);
 
     IPage<ZcProductBatchRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcProductBatchPageReqVO reqVO);
 

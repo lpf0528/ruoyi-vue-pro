@@ -3,11 +3,10 @@ package cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.math.BigDecimal;
-import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import cn.idev.excel.annotation.*;
 
 @Schema(description = "管理后台 - 产品批次 Response VO")
@@ -25,7 +24,8 @@ public class ZcProductBatchRespVO {
 
     @Schema(description = "入库日期", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("入库日期")
-    private LocalDate inboundDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private String inboundDate;
 
     @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "7855")
     @ExcelProperty("产品")

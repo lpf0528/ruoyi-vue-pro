@@ -6,6 +6,8 @@ import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
@@ -34,11 +36,11 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
 
     @Override
     public Long createProductBatch(ZcProductBatchSaveReqVO createReqVO) {
-        // 插入
         ZcProductBatchDO productBatch = BeanUtils.toBean(createReqVO, ZcProductBatchDO.class);
+        // 生成批号：YYYYMMDD-XX（当日该产品的第N条入库记录，从01开始）
+        Integer seq = productBatchMapper.countTodayBatchSeqByProductId(createReqVO.getProductId());
+        productBatch.setBatchNo(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + String.format("%02d", seq));
         productBatchMapper.insert(productBatch);
-
-        // 返回
         return productBatch.getId();
     }
 

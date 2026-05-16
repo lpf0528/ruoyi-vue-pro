@@ -77,7 +77,11 @@ public class ZcProductBatchController {
     @PreAuthorize("@ss.hasPermission('zc:product-batch:query')")
     public CommonResult<ZcProductBatchRespVO> getProductBatch(@RequestParam("id") Long id) {
         ZcProductBatchDO productBatch = productBatchService.getProductBatch(id);
-        return success(BeanUtils.toBean(productBatch, ZcProductBatchRespVO.class));
+        ZcProductBatchRespVO respVO = BeanUtils.toBean(productBatch, ZcProductBatchRespVO.class);
+        if (productBatch != null && productBatch.getInboundDate() != null) {
+            respVO.setInboundDate(productBatch.getInboundDate().toString());
+        }
+        return success(respVO);
     }
 
     @GetMapping("/page")
