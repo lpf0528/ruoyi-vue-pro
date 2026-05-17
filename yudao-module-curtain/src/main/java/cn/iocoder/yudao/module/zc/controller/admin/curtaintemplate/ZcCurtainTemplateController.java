@@ -27,7 +27,7 @@ public class ZcCurtainTemplateController {
     @Resource
     private ZcCurtainTemplateService curtainTemplateService;
 
-    @PostMapping("/save")
+    @PostMapping("/create")
     @Operation(summary = "保存窗帘模板（新增或修改）")
     @PreAuthorize("@ss.hasPermission('zc:curtain-template:create')")
     public CommonResult<Boolean> saveCurtainTemplate(@Valid @RequestBody ZcCurtainTemplateSaveReqVO saveReqVO) {
