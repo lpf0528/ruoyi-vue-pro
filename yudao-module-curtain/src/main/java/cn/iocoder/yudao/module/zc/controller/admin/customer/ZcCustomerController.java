@@ -96,7 +96,16 @@ public class ZcCustomerController {
                 new ZcCustomerListReqVO().setShortName(shortName));
         return success(convertList(list, item -> new ZcCustomerSimpleRespVO()
                 .setId(item.getId())
-                .setShortName(item.getShortName())));
+                .setShortName(item.getShortName())
+                .setName(item.getName())
+                .setContactName(item.getContactName())
+                .setAddress(item.getAddress())
+                .setDeliveryAddress(item.getDeliveryAddress())
+                .setMobile(item.getMobile())
+                .setMobile2(item.getMobile2())
+                .setLogisticId(item.getLogisticId())
+                .setBrandId(item.getBrandId())
+                .setBalance(item.getBalance())));
     }
 
     @GetMapping("/export-excel")
