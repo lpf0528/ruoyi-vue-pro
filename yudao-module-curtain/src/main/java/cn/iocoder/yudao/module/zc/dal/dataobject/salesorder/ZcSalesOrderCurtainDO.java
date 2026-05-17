@@ -70,6 +70,10 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
      * 备注
      */
     private String note;
+    /**
+     * 褶距
+     */
+    private BigDecimal pleatsDistance;
 
 
 }

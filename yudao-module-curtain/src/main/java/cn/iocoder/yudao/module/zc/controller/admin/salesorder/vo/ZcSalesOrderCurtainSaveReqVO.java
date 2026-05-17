@@ -45,4 +45,7 @@ public class ZcSalesOrderCurtainSaveReqVO {
     @Schema(description = "备注")
     private String note;
 
+    @Schema(description = "褶距")
+    private BigDecimal pleatsDistance;
+
 }

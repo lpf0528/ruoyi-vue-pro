@@ -57,6 +57,10 @@ public class ZcSalesOrderCurtainRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "褶距")
+    @ExcelProperty("褶距")
+    private BigDecimal pleatsDistance;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
