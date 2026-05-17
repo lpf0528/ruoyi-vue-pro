@@ -1,24 +1,21 @@
 package cn.iocoder.yudao.module.zc.service.customerproductprice;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.customerproductprice.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerproductprice.ZcCustomerProductPriceDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.customerproductprice.ZcCustomerProductPriceMapper;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 
 /**
@@ -46,16 +43,17 @@ public class ZcCustomerProductPriceServiceImpl implements ZcCustomerProductPrice
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createCustomerProductPriceList(List<ZcCustomerProductPriceSaveReqVO> reqVOs) {
-        List<ZcCustomerProductPriceSaveReqVO> createList = reqVOs.stream()
-                .filter(vo -> vo.getId() == null).collect(Collectors.toList());
-        List<ZcCustomerProductPriceSaveReqVO> updateList = reqVOs.stream()
-                .filter(vo -> vo.getId() != null).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(createList)) {
-            customerProductPriceMapper.insertBatch(BeanUtils.toBean(createList, ZcCustomerProductPriceDO.class));
+        if (CollUtil.isEmpty(reqVOs)) {
+            return;
         }
-        if (CollUtil.isNotEmpty(updateList)) {
-            customerProductPriceMapper.updateBatch(BeanUtils.toBean(updateList, ZcCustomerProductPriceDO.class));
-        }
+        // 自定义 XML INSERT 不经过 MetaObjectHandler，需手动填充审计字段
+        String loginUserId = String.valueOf(SecurityFrameworkUtils.getLoginUserId());
+        List<ZcCustomerProductPriceDO> list = BeanUtils.toBean(reqVOs, ZcCustomerProductPriceDO.class);
+        list.forEach(item -> {
+            item.setCreator(loginUserId);
+            item.setUpdater(loginUserId);
+        });
+        customerProductPriceMapper.insertOrUpdateBatch(list);
     }
 
     @Override

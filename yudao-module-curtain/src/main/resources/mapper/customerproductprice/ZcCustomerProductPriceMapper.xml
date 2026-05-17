@@ -22,4 +22,26 @@
         ORDER BY t1.id DESC
     </select>
 
+
+
+    <!--
+        批量 upsert：存在（含软删除）则更新授权价并恢复删除状态，不存在则新建。
+        tenant_id 由 TenantLineInnerInterceptor 自动注入，无需手动填写。
+        creator / updater 由调用方在 DO 上预填后传入。
+        create_time / update_time / deleted 依赖 DB 默认值与 ON UPDATE CURRENT_TIMESTAMP 兜底。
+    -->
+    <insert id="insertOrUpdateBatch">
+        INSERT INTO zc_customer_product_price
+            (customer_id, product_id, authorized_price, creator, updater)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.customerId}, #{item.productId}, #{item.authorizedPrice},
+             #{item.creator,jdbcType=VARCHAR}, #{item.updater,jdbcType=VARCHAR})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            authorized_price = VALUES(authorized_price),
+            updater          = VALUES(updater),
+            deleted          = 0
+    </insert>
+
 </mapper>

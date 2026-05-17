@@ -21,6 +21,8 @@ public interface ZcCustomerProductPriceMapper extends BaseMapperX<ZcCustomerProd
 
     IPage<ZcCustomerProductPriceRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcCustomerProductPricePageReqVO reqVO);
 
+    void insertOrUpdateBatch(@Param("list") List<ZcCustomerProductPriceDO> list);
+
     default PageResult<ZcCustomerProductPriceRespVO> selectPage(ZcCustomerProductPricePageReqVO reqVO) {
         IPage<ZcCustomerProductPriceRespVO> result = selectPageWithVO(
                 new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
