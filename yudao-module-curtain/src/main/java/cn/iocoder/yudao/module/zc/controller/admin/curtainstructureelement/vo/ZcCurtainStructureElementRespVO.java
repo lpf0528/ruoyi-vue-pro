@@ -24,6 +24,10 @@ public class ZcCurtainStructureElementRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "版本", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("版本")
+    private Long versionId;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

@@ -35,6 +35,10 @@ public class ZcCurtainStructureElementDO extends BaseDO {
      * 备注
      */
     private String note;
+    /**
+     * 版本
+     */
+    private Long versionId;
 
 
 }
