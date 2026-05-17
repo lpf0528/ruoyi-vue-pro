@@ -84,8 +84,7 @@ public class ZcCurtainTemplateController {
     @Operation(summary = "获得窗帘模板分页")
     @PreAuthorize("@ss.hasPermission('zc:curtain-template:query')")
     public CommonResult<PageResult<ZcCurtainTemplateRespVO>> getCurtainTemplatePage(@Valid ZcCurtainTemplatePageReqVO pageReqVO) {
-        PageResult<ZcCurtainTemplateDO> pageResult = curtainTemplateService.getCurtainTemplatePage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcCurtainTemplateRespVO.class));
+        return success(curtainTemplateService.getCurtainTemplatePage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,8 @@ public class ZcCurtainTemplateController {
     public void exportCurtainTemplateExcel(@Valid ZcCurtainTemplatePageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCurtainTemplateDO> list = curtainTemplateService.getCurtainTemplatePage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "窗帘模板.xls", "数据", ZcCurtainTemplateRespVO.class,
-                        BeanUtils.toBean(list, ZcCurtainTemplateRespVO.class));
+        List<ZcCurtainTemplateRespVO> list = curtainTemplateService.getCurtainTemplatePage(pageReqVO).getList();
+        ExcelUtils.write(response, "窗帘模板.xls", "数据", ZcCurtainTemplateRespVO.class, list);
     }
 
 }

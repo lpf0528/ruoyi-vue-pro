@@ -78,7 +78,7 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
     }
 
     @Override
-    public PageResult<ZcCurtainTemplateDO> getCurtainTemplatePage(ZcCurtainTemplatePageReqVO pageReqVO) {
+    public PageResult<ZcCurtainTemplateRespVO> getCurtainTemplatePage(ZcCurtainTemplatePageReqVO pageReqVO) {
         return curtainTemplateMapper.selectPage(pageReqVO);
     }
 

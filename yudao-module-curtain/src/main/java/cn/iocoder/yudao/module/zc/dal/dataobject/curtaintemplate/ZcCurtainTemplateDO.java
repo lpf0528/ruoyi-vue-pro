@@ -39,10 +39,5 @@ public class ZcCurtainTemplateDO extends BaseDO {
      * 配件
      */
     private Long elementId;
-    /**
-     * 单位
-     */
-    private Long unitId;
-
 
 }

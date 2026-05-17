@@ -22,7 +22,4 @@ public class ZcCurtainTemplatePageReqVO extends PageParam {
     @Schema(description = "配件", example = "32517")
     private Long elementId;
 
-    @Schema(description = "单位", example = "15552")
-    private Long unitId;
-
 }

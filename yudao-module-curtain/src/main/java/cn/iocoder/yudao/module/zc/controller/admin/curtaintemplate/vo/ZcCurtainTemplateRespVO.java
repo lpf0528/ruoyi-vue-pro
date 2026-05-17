@@ -28,9 +28,17 @@ public class ZcCurtainTemplateRespVO {
     @ExcelProperty("配件")
     private Long elementId;
 
-    @Schema(description = "单位", example = "15552")
-    @ExcelProperty("单位")
-    private Long unitId;
+    @Schema(description = "款式名称")
+    @ExcelProperty("款式名称")
+    private String curtainName;
+
+    @Schema(description = "结构名称")
+    @ExcelProperty("结构名称")
+    private String structureName;
+
+    @Schema(description = "配件名称")
+    @ExcelProperty("配件名称")
+    private String elementName;
 
     @Schema(description = "创建者")
     @ExcelProperty("创建者")

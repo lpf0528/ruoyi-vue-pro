@@ -57,6 +57,6 @@ public interface ZcCurtainTemplateService {
      * @param pageReqVO 分页查询
      * @return 窗帘模板分页
      */
-    PageResult<ZcCurtainTemplateDO> getCurtainTemplatePage(ZcCurtainTemplatePageReqVO pageReqVO);
+    PageResult<ZcCurtainTemplateRespVO> getCurtainTemplatePage(ZcCurtainTemplatePageReqVO pageReqVO);
 
 }

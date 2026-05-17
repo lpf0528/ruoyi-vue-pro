@@ -24,7 +24,4 @@ public class ZcCurtainTemplateSaveReqVO {
     @NotNull(message = "配件不能为空")
     private Long elementId;
 
-    @Schema(description = "单位", example = "15552")
-    private Long unitId;
-
 }
