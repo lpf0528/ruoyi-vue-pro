@@ -37,7 +37,7 @@ public class ZcCurtainTemplateController {
     @Operation(summary = "获得窗帘模板")
     @Parameter(name = "curtainId", description = "款式ID", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('zc:curtain-template:query')")
-    public CommonResult<ZcCurtainTemplateSaveReqVO> getCurtainTemplate(@RequestParam("curtainId") Long curtainId) {
+    public CommonResult<ZcCurtainTemplateGetRespVO> getCurtainTemplate(@RequestParam("curtainId") Long curtainId) {
         return success(curtainTemplateService.getCurtainTemplateByCurtainId(curtainId));
     }
 

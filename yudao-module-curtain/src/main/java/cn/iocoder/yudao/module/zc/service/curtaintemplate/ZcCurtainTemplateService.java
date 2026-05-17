@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.curtaintemplate;
 
 import javax.validation.*;
+import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.ZcCurtainTemplateGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.ZcCurtainTemplateSaveReqVO;
 
 /**
@@ -23,6 +24,6 @@ public interface ZcCurtainTemplateService {
      * @param curtainId 款式ID
      * @return 窗帘模板聚合结果
      */
-    ZcCurtainTemplateSaveReqVO getCurtainTemplateByCurtainId(Long curtainId);
+    ZcCurtainTemplateGetRespVO getCurtainTemplateByCurtainId(Long curtainId);
 
 }
