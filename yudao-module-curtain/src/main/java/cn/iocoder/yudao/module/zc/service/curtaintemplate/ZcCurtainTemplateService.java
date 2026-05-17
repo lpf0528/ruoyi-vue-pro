@@ -1,9 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.curtaintemplate;
 
-import java.util.*;
 import javax.validation.*;
-import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.*;
-import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
+import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.ZcCurtainTemplateSaveReqVO;
 
 /**
  * 窗帘模板 Service 接口
@@ -20,11 +18,11 @@ public interface ZcCurtainTemplateService {
     void saveCurtainTemplate(@Valid ZcCurtainTemplateSaveReqVO saveReqVO);
 
     /**
-     * 获得窗帘模板
+     * 根据款式ID查询窗帘模板，聚合返回结构列表
      *
-     * @param id 编号
-     * @return 窗帘模板
+     * @param curtainId 款式ID
+     * @return 窗帘模板聚合结果
      */
-    ZcCurtainTemplateDO getCurtainTemplate(Long id);
+    ZcCurtainTemplateSaveReqVO getCurtainTemplateByCurtainId(Long curtainId);
 
 }

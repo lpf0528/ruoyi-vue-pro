@@ -5,6 +5,8 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTempla
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * 窗帘模板 Mapper
  *
@@ -15,6 +17,11 @@ public interface ZcCurtainTemplateMapper extends BaseMapperX<ZcCurtainTemplateDO
 
     default void deleteByCurtainId(Long curtainId) {
         delete(new LambdaQueryWrapper<ZcCurtainTemplateDO>()
+                .eq(ZcCurtainTemplateDO::getCurtainId, curtainId));
+    }
+
+    default List<ZcCurtainTemplateDO> selectByCurtainId(Long curtainId) {
+        return selectList(new LambdaQueryWrapper<ZcCurtainTemplateDO>()
                 .eq(ZcCurtainTemplateDO::getCurtainId, curtainId));
     }
 

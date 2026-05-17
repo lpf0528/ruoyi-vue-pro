@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
 
@@ -42,8 +43,25 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
     }
 
     @Override
-    public ZcCurtainTemplateDO getCurtainTemplate(Long id) {
-        return curtainTemplateMapper.selectById(id);
+    public ZcCurtainTemplateSaveReqVO getCurtainTemplateByCurtainId(Long curtainId) {
+        List<ZcCurtainTemplateDO> list = curtainTemplateMapper.selectByCurtainId(curtainId);
+        ZcCurtainTemplateSaveReqVO result = new ZcCurtainTemplateSaveReqVO();
+        result.setCurtainId(curtainId);
+        Map<Long, List<Long>> structureElementMap = list.stream()
+                .collect(Collectors.groupingBy(
+                        ZcCurtainTemplateDO::getStructureId,
+                        Collectors.mapping(ZcCurtainTemplateDO::getElementId, Collectors.toList())
+                ));
+        List<ZcCurtainTemplateSaveReqVO.StructureItem> structures = structureElementMap.entrySet().stream()
+                .map(entry -> {
+                    ZcCurtainTemplateSaveReqVO.StructureItem item = new ZcCurtainTemplateSaveReqVO.StructureItem();
+                    item.setStructureId(entry.getKey());
+                    item.setElementIds(entry.getValue());
+                    return item;
+                })
+                .collect(Collectors.toList());
+        result.setStructures(structures);
+        return result;
     }
 
 }
