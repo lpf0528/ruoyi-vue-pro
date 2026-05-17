@@ -35,6 +35,7 @@ public class ZcCurtainPleatRatioDO extends BaseDO {
     /**
      * 排序
      */
+    @TableField("`rank`")
     private Integer rank;
 
 
