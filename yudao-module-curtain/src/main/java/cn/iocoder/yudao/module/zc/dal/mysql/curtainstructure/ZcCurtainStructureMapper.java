@@ -20,7 +20,6 @@ public interface ZcCurtainStructureMapper extends BaseMapperX<ZcCurtainStructure
     default PageResult<ZcCurtainStructureDO> selectPage(ZcCurtainStructurePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcCurtainStructureDO>()
                 .likeIfPresent(ZcCurtainStructureDO::getName, reqVO.getName())
-                .eqIfPresent(ZcCurtainStructureDO::getType, reqVO.getType())
                 .orderByDesc(ZcCurtainStructureDO::getId));
     }
 

@@ -6,8 +6,6 @@ import java.util.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
-import cn.iocoder.yudao.framework.excel.core.annotations.DictFormat;
-import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
 
 @Schema(description = "管理后台 - 窗帘结构 Response VO")
 @Data
@@ -22,10 +20,8 @@ public class ZcCurtainStructureRespVO {
     @ExcelProperty("结构名称")
     private String name;
 
-    @Schema(description = "结构类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @ExcelProperty(value = "结构类型", converter = DictConvert.class)
-    @DictFormat("zc_structure_type") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
-    private String type;
+    @Schema(description = "属性多选：长、宽、高、等")
+    private List<String> attributes;
 
     @Schema(description = "备注")
     @ExcelProperty("备注")

@@ -16,7 +16,5 @@ public class ZcCurtainStructurePageReqVO extends PageParam {
     @Schema(description = "结构名称", example = "赵六")
     private String name;
 
-    @Schema(description = "结构类型", example = "1")
-    private String type;
 
 }

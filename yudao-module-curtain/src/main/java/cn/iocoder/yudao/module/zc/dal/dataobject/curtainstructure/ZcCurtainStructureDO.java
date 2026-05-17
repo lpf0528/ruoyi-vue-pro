@@ -5,6 +5,7 @@ import java.util.*;
 import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 
 /**
@@ -12,7 +13,7 @@ import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
  *
  * @author 01Coder
  */
-@TableName("zc_curtain_structure")
+@TableName(value = "zc_curtain_structure", autoResultMap = true)
 @KeySequence("zc_curtain_structure_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,11 +33,10 @@ public class ZcCurtainStructureDO extends BaseDO {
      */
     private String name;
     /**
-     * 结构类型
-     *
-     * 枚举 {@link TODO zc_structure_type 对应的类}
+     * 属性多选：长、宽、高、等
      */
-    private String type;
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> attributes;
     /**
      * 备注
      */

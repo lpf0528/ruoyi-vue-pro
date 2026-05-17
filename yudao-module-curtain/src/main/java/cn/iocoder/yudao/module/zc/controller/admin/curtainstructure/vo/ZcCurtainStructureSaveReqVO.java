@@ -16,9 +16,8 @@ public class ZcCurtainStructureSaveReqVO {
     @NotEmpty(message = "结构名称不能为空")
     private String name;
 
-    @Schema(description = "结构类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    @NotEmpty(message = "结构类型不能为空")
-    private String type;
+    @Schema(description = "属性多选：长、宽、高、等")
+    private List<String> attributes;
 
     @Schema(description = "备注")
     private String note;
