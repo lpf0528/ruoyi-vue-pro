@@ -85,8 +85,7 @@ public class ZcCurtainStructureElementController {
     @Operation(summary = "获得窗帘结构组件分页")
     @PreAuthorize("@ss.hasPermission('zc:curtain-structure-element:query')")
     public CommonResult<PageResult<ZcCurtainStructureElementRespVO>> getCurtainStructureElementPage(@Valid ZcCurtainStructureElementPageReqVO pageReqVO) {
-        PageResult<ZcCurtainStructureElementDO> pageResult = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcCurtainStructureElementRespVO.class));
+        return success(curtainStructureElementService.getCurtainStructureElementPage(pageReqVO));
     }
 
     @GetMapping("/simple-list")
@@ -107,10 +106,9 @@ public class ZcCurtainStructureElementController {
     public void exportCurtainStructureElementExcel(@Valid ZcCurtainStructureElementPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCurtainStructureElementDO> list = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO).getList();
+        List<ZcCurtainStructureElementRespVO> list = curtainStructureElementService.getCurtainStructureElementPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "窗帘结构组件.xls", "数据", ZcCurtainStructureElementRespVO.class,
-                        BeanUtils.toBean(list, ZcCurtainStructureElementRespVO.class));
+        ExcelUtils.write(response, "窗帘结构组件.xls", "数据", ZcCurtainStructureElementRespVO.class, list);
     }
 
 }

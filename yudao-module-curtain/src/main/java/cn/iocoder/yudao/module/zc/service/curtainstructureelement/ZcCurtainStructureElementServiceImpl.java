@@ -78,7 +78,7 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
     }
 
     @Override
-    public PageResult<ZcCurtainStructureElementDO> getCurtainStructureElementPage(ZcCurtainStructureElementPageReqVO pageReqVO) {
+    public PageResult<ZcCurtainStructureElementRespVO> getCurtainStructureElementPage(ZcCurtainStructureElementPageReqVO pageReqVO) {
         return curtainStructureElementMapper.selectPage(pageReqVO);
     }
 

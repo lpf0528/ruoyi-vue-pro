@@ -28,6 +28,10 @@ public class ZcCurtainStructureElementRespVO {
     @ExcelProperty("版本")
     private Long versionId;
 
+    @Schema(description = "版本名称")
+    @ExcelProperty("版本名称")
+    private String versionName;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;
