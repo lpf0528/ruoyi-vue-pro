@@ -9,7 +9,10 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class ZcProductListReqVO {
 
-    @Schema(description = "名称", example = "张三")
+    @Schema(description = "名称", example = "拉斐尔")
     private String name;
+
+    @Schema(description = "版本编号")
+    private Long versionId;
 
 }
