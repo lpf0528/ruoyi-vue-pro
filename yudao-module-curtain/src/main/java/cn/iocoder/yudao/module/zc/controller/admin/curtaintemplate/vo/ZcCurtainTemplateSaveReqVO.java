@@ -9,19 +9,25 @@ import javax.validation.constraints.*;
 @Data
 public class ZcCurtainTemplateSaveReqVO {
 
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "516")
-    private Long id;
-
     @Schema(description = "款式", requiredMode = Schema.RequiredMode.REQUIRED, example = "9997")
     @NotNull(message = "款式不能为空")
     private Long curtainId;
 
-    @Schema(description = "结构", requiredMode = Schema.RequiredMode.REQUIRED, example = "25411")
-    @NotNull(message = "结构不能为空")
-    private Long structureId;
+    @Schema(description = "结构列表", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotEmpty(message = "结构列表不能为空")
+    private List<StructureItem> structures;
 
-    @Schema(description = "配件", requiredMode = Schema.RequiredMode.REQUIRED, example = "32517")
-    @NotNull(message = "配件不能为空")
-    private Long elementId;
+    @Schema(description = "结构项")
+    @Data
+    public static class StructureItem {
+
+        @Schema(description = "结构", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "结构不能为空")
+        private Long structureId;
+
+        @Schema(description = "配件列表", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotEmpty(message = "配件列表不能为空")
+        private List<Long> elementIds;
+    }
 
 }
