@@ -84,8 +84,7 @@ public class ZcInventoryRecordController {
     @Operation(summary = "获得盘点记录分页")
     @PreAuthorize("@ss.hasPermission('zc:inventory-record:query')")
     public CommonResult<PageResult<ZcInventoryRecordRespVO>> getInventoryRecordPage(@Valid ZcInventoryRecordPageReqVO pageReqVO) {
-        PageResult<ZcInventoryRecordDO> pageResult = inventoryRecordService.getInventoryRecordPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcInventoryRecordRespVO.class));
+        return success(inventoryRecordService.getInventoryRecordPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,9 @@ public class ZcInventoryRecordController {
     public void exportInventoryRecordExcel(@Valid ZcInventoryRecordPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcInventoryRecordDO> list = inventoryRecordService.getInventoryRecordPage(pageReqVO).getList();
+        List<ZcInventoryRecordRespVO> list = inventoryRecordService.getInventoryRecordPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "盘点记录.xls", "数据", ZcInventoryRecordRespVO.class,
-                        BeanUtils.toBean(list, ZcInventoryRecordRespVO.class));
+        ExcelUtils.write(response, "盘点记录.xls", "数据", ZcInventoryRecordRespVO.class, list);
     }
 
 }

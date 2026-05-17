@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
 import java.math.BigDecimal;
-import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDate;
 import cn.idev.excel.annotation.*;
 
 @Schema(description = "管理后台 - 盘点记录 Response VO")
@@ -33,9 +33,49 @@ public class ZcInventoryRecordRespVO {
     @ExcelProperty("盘点后数量")
     private BigDecimal newQuantity;
 
+    @Schema(description = "盘点差值")
+    @ExcelProperty("盘点差值")
+    private BigDecimal diffQuantity;
+
     @Schema(description = "备注")
     @ExcelProperty("备注")
     private String note;
+
+    @Schema(description = "产品名称")
+    @ExcelProperty("产品名称")
+    private String productName;
+
+    @Schema(description = "批次号")
+    @ExcelProperty("批次号")
+    private String batchNo;
+
+    @Schema(description = "仓库名称")
+    @ExcelProperty("仓库名称")
+    private String warehouseName;
+
+    @Schema(description = "仓库ID")
+    @ExcelProperty("仓库ID")
+    private Long warehouseId;
+
+    @Schema(description = "规格值")
+    @ExcelProperty("规格值")
+    private String specValue;
+
+    @Schema(description = "规格ID")
+    @ExcelProperty("规格ID")
+    private Long specId;
+
+    @Schema(description = "版本名称")
+    @ExcelProperty("版本名称")
+    private String versionName;
+
+    @Schema(description = "版本ID")
+    @ExcelProperty("版本ID")
+    private Long versionId;
+
+    @Schema(description = "操作人昵称")
+    @ExcelProperty("操作人昵称")
+    private String nickname;
 
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
@@ -43,6 +83,7 @@ public class ZcInventoryRecordRespVO {
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
-    private LocalDateTime createTime;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate createTime;
 
 }

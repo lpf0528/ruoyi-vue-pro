@@ -78,7 +78,7 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
     }
 
     @Override
-    public PageResult<ZcInventoryRecordDO> getInventoryRecordPage(ZcInventoryRecordPageReqVO pageReqVO) {
+    public PageResult<ZcInventoryRecordRespVO> getInventoryRecordPage(ZcInventoryRecordPageReqVO pageReqVO) {
         return inventoryRecordMapper.selectPage(pageReqVO);
     }
 

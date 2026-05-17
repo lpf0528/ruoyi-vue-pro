@@ -57,6 +57,6 @@ public interface ZcInventoryRecordService {
      * @param pageReqVO 分页查询
      * @return 盘点记录分页
      */
-    PageResult<ZcInventoryRecordDO> getInventoryRecordPage(ZcInventoryRecordPageReqVO pageReqVO);
+    PageResult<ZcInventoryRecordRespVO> getInventoryRecordPage(ZcInventoryRecordPageReqVO pageReqVO);
 
 }

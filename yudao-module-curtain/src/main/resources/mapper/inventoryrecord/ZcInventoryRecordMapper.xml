@@ -2,11 +2,51 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper">
 
-    <!--
-        一般情况下，尽可能使用 Mapper 进行 CRUD 增删改查即可。
-        无法满足的场景，例如说多表关联查询，才使用 XML 编写 SQL。
-        代码生成器暂时只生成 Mapper XML 文件本身，更多推荐 MybatisX 快速开发插件来生成查询。
-        文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
-     -->
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.ZcInventoryRecordRespVO">
+        SELECT
+            t2.`name`                          AS product_name,
+            t3.batch_no                        AS batch_no,
+            t31.`name`                         AS warehouse_name,
+            t3.warehouse_id,
+            t21.`value`                        AS spec_value,
+            t2.spec_id,
+            t22.`name`                         AS version_name,
+            t2.version_id,
+            t4.nickname,
+            t1.new_quantity - t1.old_quantity  AS diff_quantity,
+            t1.id, t1.product_id, t1.batch_id, t1.old_quantity, t1.new_quantity,
+            t1.note, t1.creator, t1.create_time
+        FROM zc_inventory_record t1
+        JOIN zc_product t2 ON t1.product_id = t2.id AND t2.deleted = 0
+        LEFT JOIN zc_product_spec t21 ON t2.spec_id = t21.id AND t21.deleted = 0
+        LEFT JOIN zc_product_version t22 ON t2.version_id = t22.id AND t22.deleted = 0
+        JOIN zc_product_batch t3 ON t1.batch_id = t3.id AND t3.deleted = 0
+        LEFT JOIN zc_warehouse t31 ON t3.warehouse_id = t31.id AND t31.deleted = 0
+        LEFT JOIN system_users t4 ON t1.creator = t4.id
+        WHERE t1.deleted = 0
+        <if test="reqVO.versionId != null">
+            AND t2.version_id = #{reqVO.versionId}
+        </if>
+        <if test="reqVO.productId != null">
+            AND t1.product_id = #{reqVO.productId}
+        </if>
+        <if test="reqVO.productName != null and reqVO.productName != ''">
+            AND t2.`name` LIKE CONCAT('%', #{reqVO.productName}, '%')
+        </if>
+        <if test="reqVO.batchId != null">
+            AND t1.batch_id = #{reqVO.batchId}
+        </if>
+        <if test="reqVO.batchNo != null and reqVO.batchNo != ''">
+            AND t3.batch_no LIKE CONCAT('%', #{reqVO.batchNo}, '%')
+        </if>
+        <if test="reqVO.warehouseId != null">
+            AND t3.warehouse_id = #{reqVO.warehouseId}
+        </if>
+        <if test="reqVO.createTime != null and reqVO.createTime.length == 2">
+            AND DATE(t1.create_time) BETWEEN #{reqVO.createTime[0]} AND #{reqVO.createTime[1]}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
 
 </mapper>
