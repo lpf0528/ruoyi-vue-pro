@@ -202,7 +202,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             ZcSalesOrderStructureDetailRespVO vo = BeanUtils.toBean(s, ZcSalesOrderStructureDetailRespVO.class);
                             vo.setStructureName(structureNameMap.get(s.getStructureId()));
                             vo.setInstallProcessName(installProcessNameMap.get(s.getInstallProcessId()));
-                            vo.setElements(materialsByStructureId.getOrDefault(s.getId(), Collections.emptyList()));
+                            vo.setMaterials(materialsByStructureId.getOrDefault(s.getId(), Collections.emptyList()));
                             return vo;
                         }, Collectors.toList())
                 ));

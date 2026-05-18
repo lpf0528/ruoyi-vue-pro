@@ -27,6 +27,6 @@ public class ZcSalesOrderStructureDetailRespVO extends ZcSalesOrderStructureResp
 
     /** 该结构行下的用料明细列表 */
     @Schema(description = "用料明细列表")
-    private List<ZCSalesOrderMaterialDetailRespVO> elements;
+    private List<ZCSalesOrderMaterialDetailRespVO> materials;
 
 }
