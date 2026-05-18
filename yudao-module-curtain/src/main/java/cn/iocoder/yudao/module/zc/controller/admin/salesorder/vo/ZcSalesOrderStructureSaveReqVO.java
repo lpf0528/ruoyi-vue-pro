@@ -50,7 +50,7 @@ public class ZcSalesOrderStructureSaveReqVO {
     private String processType;
 
     @Schema(description = "是否定型")
-    private Boolean shaping;
+    private Boolean isShaping;
 
     @Schema(description = "总褶数")
     private Integer pleatsNum;

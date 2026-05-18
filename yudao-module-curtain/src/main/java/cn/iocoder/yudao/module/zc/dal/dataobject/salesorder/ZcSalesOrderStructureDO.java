@@ -78,7 +78,7 @@ public class ZcSalesOrderStructureDO extends BaseDO {
     /**
      * 是否定型
      */
-    private Boolean shaping;
+    private Boolean isShaping;
     /**
      * 总褶数
      */

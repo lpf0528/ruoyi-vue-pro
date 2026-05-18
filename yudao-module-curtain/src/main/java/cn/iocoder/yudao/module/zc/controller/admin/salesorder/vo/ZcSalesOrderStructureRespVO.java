@@ -63,7 +63,7 @@ public class ZcSalesOrderStructureRespVO {
 
     @Schema(description = "是否定型")
     @ExcelProperty("是否定型")
-    private Boolean shaping;
+    private Boolean isShaping;
 
     @Schema(description = "总褶数")
     @ExcelProperty("总褶数")
