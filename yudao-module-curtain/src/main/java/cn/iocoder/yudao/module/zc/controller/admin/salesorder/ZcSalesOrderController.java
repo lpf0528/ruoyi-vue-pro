@@ -80,6 +80,15 @@ public class ZcSalesOrderController {
         return success(BeanUtils.toBean(salesOrder, ZcSalesOrderRespVO.class));
     }
 
+    @GetMapping("/detail")
+    @Operation(summary = "获得销售订单全量明细（窗帘→结构→用料 三层嵌套）")
+    @Parameter(name = "orderId", description = "销售订单编号", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<List<ZcSalesOrderCurtainDetailRespVO>> getSalesOrderDetail(
+            @RequestParam("orderId") Long orderId) {
+        return success(salesOrderService.getSalesOrderDetail(orderId));
+    }
+
     @GetMapping("/page")
     @Operation(summary = "获得销售订单分页")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")

@@ -24,4 +24,16 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
                 .orderByDesc(ZCSalesOrderMaterialDO::getId));
     }
 
+    /**
+     * 查询指定订单下的所有用料明细，按主键升序排列（保持录入顺序）
+     *
+     * @param orderId 销售订单 ID
+     * @return 用料明细列表
+     */
+    default List<ZCSalesOrderMaterialDO> selectListByOrderId(Long orderId) {
+        return selectList(new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
+                .eqIfPresent(ZCSalesOrderMaterialDO::getOrderId, orderId)
+                .orderByAsc(ZCSalesOrderMaterialDO::getId));
+    }
+
 }

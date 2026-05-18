@@ -59,4 +59,15 @@ public interface ZcSalesOrderService {
      */
     PageResult<ZcSalesOrderRespVO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO);
 
+    /**
+     * 获得销售订单全量明细（三层嵌套结构）
+     *
+     * <p>返回该订单下所有窗帘行，每行含若干结构行，每个结构行含若干用料明细，
+     * 并冗余各关联表的名称字段，避免前端多次请求。</p>
+     *
+     * @param orderId 销售订单 ID
+     * @return 窗帘行列表（含嵌套的结构行与用料明细）
+     */
+    List<ZcSalesOrderCurtainDetailRespVO> getSalesOrderDetail(Long orderId);
+
 }
