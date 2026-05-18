@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -39,6 +40,7 @@ public class ZcSalesOrderRespVO {
 
     @Schema(description = "下单日期", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("下单日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate orderDate;
 
     @Schema(description = "物流", example = "27080")
@@ -80,6 +82,7 @@ public class ZcSalesOrderRespVO {
 
     @Schema(description = "交付日期")
     @ExcelProperty("交付日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate deliveryDate;
 
     @Schema(description = "结算状态", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
