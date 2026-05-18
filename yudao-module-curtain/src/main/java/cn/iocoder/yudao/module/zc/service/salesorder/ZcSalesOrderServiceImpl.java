@@ -78,7 +78,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
-    public PageResult<ZcSalesOrderDO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO) {
+    public PageResult<ZcSalesOrderRespVO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO) {
         return salesOrderMapper.selectPage(pageReqVO);
     }
 

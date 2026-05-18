@@ -84,8 +84,7 @@ public class ZcSalesOrderController {
     @Operation(summary = "获得销售订单分页")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
     public CommonResult<PageResult<ZcSalesOrderRespVO>> getSalesOrderPage(@Valid ZcSalesOrderPageReqVO pageReqVO) {
-        PageResult<ZcSalesOrderDO> pageResult = salesOrderService.getSalesOrderPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcSalesOrderRespVO.class));
+        return success(salesOrderService.getSalesOrderPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +94,9 @@ public class ZcSalesOrderController {
     public void exportSalesOrderExcel(@Valid ZcSalesOrderPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcSalesOrderDO> list = salesOrderService.getSalesOrderPage(pageReqVO).getList();
+        List<ZcSalesOrderRespVO> list = salesOrderService.getSalesOrderPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "销售订单.xls", "数据", ZcSalesOrderRespVO.class,
-                        BeanUtils.toBean(list, ZcSalesOrderRespVO.class));
+        ExcelUtils.write(response, "销售订单.xls", "数据", ZcSalesOrderRespVO.class, list);
     }
 
 }

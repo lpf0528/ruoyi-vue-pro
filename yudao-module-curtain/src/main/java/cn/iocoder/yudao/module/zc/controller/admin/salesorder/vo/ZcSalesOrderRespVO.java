@@ -104,6 +104,18 @@ public class ZcSalesOrderRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "客户名称")
+    @ExcelProperty("客户名称")
+    private String customerName;
+
+    @Schema(description = "物流名称")
+    @ExcelProperty("物流名称")
+    private String logisticName;
+
+    @Schema(description = "创建人名称")
+    @ExcelProperty("创建人名称")
+    private String creatorName;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

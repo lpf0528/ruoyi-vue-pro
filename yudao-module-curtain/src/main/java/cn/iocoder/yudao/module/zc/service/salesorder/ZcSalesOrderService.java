@@ -55,8 +55,8 @@ public interface ZcSalesOrderService {
      * 获得销售订单分页
      *
      * @param pageReqVO 分页查询
-     * @return 销售订单分页
+     * @return 销售订单分页（含关联的客户名称、物流名称、创建人名称）
      */
-    PageResult<ZcSalesOrderDO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO);
+    PageResult<ZcSalesOrderRespVO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO);
 
 }
