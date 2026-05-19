@@ -10,20 +10,12 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import javax.validation.constraints.*;
 import javax.validation.*;
-import javax.servlet.http.*;
 import java.util.*;
-import java.io.IOException;
 
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
-
-import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
-
-import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
-import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.customerproductprice.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerproductprice.ZcCustomerProductPriceDO;
@@ -38,26 +30,11 @@ public class ZcCustomerProductPriceController {
     @Resource
     private ZcCustomerProductPriceService customerProductPriceService;
 
-    @PostMapping("/create")
-    @Operation(summary = "创建客户产品销售授权价")
-    @PreAuthorize("@ss.hasPermission('zc:customer-product-price:create')")
-    public CommonResult<Long> createCustomerProductPrice(@Valid @RequestBody ZcCustomerProductPriceSaveReqVO createReqVO) {
-        return success(customerProductPriceService.createCustomerProductPrice(createReqVO));
-    }
-
     @PostMapping("/create-batch")
     @Operation(summary = "批量创建客户产品销售授权价")
     @PreAuthorize("@ss.hasPermission('zc:customer-product-price:create')")
     public CommonResult<Boolean> createCustomerProductPriceList(@Valid @RequestBody List<ZcCustomerProductPriceSaveReqVO> createReqVOs) {
         customerProductPriceService.createCustomerProductPriceList(createReqVOs);
-        return success(true);
-    }
-
-    @PutMapping("/update")
-    @Operation(summary = "更新客户产品销售授权价")
-    @PreAuthorize("@ss.hasPermission('zc:customer-product-price:update')")
-    public CommonResult<Boolean> updateCustomerProductPrice(@Valid @RequestBody ZcCustomerProductPriceSaveReqVO updateReqVO) {
-        customerProductPriceService.updateCustomerProductPrice(updateReqVO);
         return success(true);
     }
 
@@ -73,7 +50,7 @@ public class ZcCustomerProductPriceController {
     @DeleteMapping("/delete-list")
     @Parameter(name = "ids", description = "编号", required = true)
     @Operation(summary = "批量删除客户产品销售授权价")
-                @PreAuthorize("@ss.hasPermission('zc:customer-product-price:delete')")
+    @PreAuthorize("@ss.hasPermission('zc:customer-product-price:delete')")
     public CommonResult<Boolean> deleteCustomerProductPriceList(@RequestParam("ids") List<Long> ids) {
         customerProductPriceService.deleteCustomerProductPriceListByIds(ids);
         return success(true);
@@ -93,18 +70,6 @@ public class ZcCustomerProductPriceController {
     @PreAuthorize("@ss.hasPermission('zc:customer-product-price:query')")
     public CommonResult<PageResult<ZcCustomerProductPriceRespVO>> getCustomerProductPricePage(@Valid ZcCustomerProductPricePageReqVO pageReqVO) {
         return success(customerProductPriceService.getCustomerProductPricePage(pageReqVO));
-    }
-
-    @GetMapping("/export-excel")
-    @Operation(summary = "导出客户产品销售授权价 Excel")
-    @PreAuthorize("@ss.hasPermission('zc:customer-product-price:export')")
-    @ApiAccessLog(operateType = EXPORT)
-    public void exportCustomerProductPriceExcel(@Valid ZcCustomerProductPricePageReqVO pageReqVO,
-              HttpServletResponse response) throws IOException {
-        pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCustomerProductPriceRespVO> list = customerProductPriceService.getCustomerProductPricePage(pageReqVO).getList();
-        // 导出 Excel
-        ExcelUtils.write(response, "客户产品销售授权价.xls", "数据", ZcCustomerProductPriceRespVO.class, list);
     }
 
 }
