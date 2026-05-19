@@ -3,7 +3,10 @@
     "allow": [
       "PowerShell(New-Item *)",
       "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\" -Directory)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)"
     ]
   }
 }

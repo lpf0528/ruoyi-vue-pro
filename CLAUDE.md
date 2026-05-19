@@ -38,6 +38,7 @@ ruoyi-vue-pro/
 ├── yudao-module-mp/           # 微信公众号：粉丝、消息、素材、菜单
 ├── yudao-module-report/       # 数据报表 & 大屏设计器
 ├── yudao-module-iot/          # IoT 物联网：设备、产品、消息
+├── yudao-module-curtain/      # 窗帘业务系统（智仓）：产品、客户、订单、工艺配置
 ├── sql/                       # 数据库初始化 SQL（MySQL / PostgreSQL 等）
 ├── script/                    # 运维脚本（Docker、部署等）
 └── yudao-ui/                  # 前端子项目引用（外部仓库）
@@ -60,6 +61,113 @@ yudao-module-system/
         ├── convert/                  # MapStruct 对象转换器
         └── enums/                    # 业务枚举
 ```
+
+---
+
+## yudao-module-curtain 窗帘业务模块
+
+> **智仓**（`zc`）是针对窗帘制造行业定制的业务模块，包含完整的产品管理、客户管理、窗帘工艺配置和销售订单履约体系。
+> 包名前缀：`cn.iocoder.yudao.module.zc`
+
+### 模块内部结构
+
+```
+yudao-module-curtain/
+└── src/main/java/cn/iocoder/yudao/module/zc/
+    ├── controller/admin/          # 22 个 Controller，路径前缀 /zc/
+    ├── service/                   # 22 个 Service 接口 + 实现
+    ├── dal/
+    │   ├── dataobject/           # 22 个 DO 类
+    │   └── mysql/                # 21 个 MyBatis Plus Mapper
+    └── resources/mapper/         # MyBatis XML 映射文件（含复杂 JOIN 查询）
+```
+
+### 业务领域划分
+
+| 领域 | 涉及实体 | 说明 |
+|------|---------|------|
+| **产品域** | `ZcProductDO`、`ZcProductVersionDO`、`ZcProductCategoryDO`、`ZcProductSpecDO`、`ZcProductBatchDO` | 产品定义、版本、分类、规格、库存批次管理 |
+| **客户域** | `ZcCustomerDO`、`ZcCustomerProductPriceDO` | 客户资料、送货地址、余额、客户专项定价 |
+| **窗帘工艺域** | `ZcCurtainDO`、`ZcCurtainStructureDO`、`ZcCurtainStructureElementDO`、`ZcCurtainPleatRatioDO`、`ZcCurtainInstallProcessDO`、`ZcCurtainTemplateDO` | 窗帘款式库、结构定义、组件库、褶倍配置、安装工艺、工艺模板 |
+| **订单履约域** | `ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO` | **核心域**：销售订单创建、交付、状态管理（三层嵌套数据结构） |
+| **基础配置域** | `ZcBrandDO`、`ZcSupplierDO`、`ZcWarehouseDO`、`ZcLogisticsDO`、`ZcInventoryRecordDO` | 品牌、供应商、仓库、物流、库存盘点 |
+
+### 核心数据模型（DO）
+
+| DO 类 | 表名 | 关键字段说明 |
+|-------|------|------------|
+| `ZcSalesOrderDO` | zc_sales_order | orderNo（自动生成）、customerId、payStatus（unpaid/partial/paid）、status（unconfirmed/pending/processing/completed/cancelled）、totalAmount、amount、amountReceived、freight、isExpedited |
+| `ZcSalesOrderCurtainDO` | zc_sales_order_curtain | orderId、curtainId（款式）、room（房间）、pleatRatioValue（褶倍快照）、mountings（配件 JSON）、discountRate、amount |
+| `ZcSalesOrderStructureDO` | zc_sales_order_structure | orderId、orderCurtainId、structureId、height、width、leftCorner、rightCorner、pasteDirection、installProcessId、openMethod、processType、isShaping、pleatsNum、pleatsDistance、skirtHeight |
+| `ZCSalesOrderMaterialDO` | zc_sales_order_material | orderId、orderStructureId、elementId（组件类型）、productId、batchId、price、quantity、unitValue、discountRate、amount |
+| `ZcProductDO` | zc_product | name、versionId、inboundPrice、specId、onePrice（一级售价）、supplierId |
+| `ZcProductBatchDO` | zc_product_batch | batchNo、inboundDate、productId、inboundPrice、inboundQuantity、quantity（剩余）、warehouseId、supplierId |
+| `ZcCustomerDO` | zc_customer | shortName、contactName、province/city/district、address、deliveryAddress、mobile、logisticId、brandId、balance |
+| `ZcCustomerProductPriceDO` | zc_customer_product_price | customerId、productId、authorizedPrice（客户专项授权价） |
+| `ZcCurtainDO` | zc_curtain | name（款式名称）、pleatRatioValue（默认褶倍）、pleatsDistance（褶距） |
+| `ZcCurtainStructureDO` | zc_curtain_structure | name、attributes（`List<String>` 存 JSON，动态属性如长/宽/高） |
+
+### 销售订单三层嵌套结构
+
+销售订单是本模块最核心的数据结构，四表形成层级关系：
+
+```
+ZcSalesOrder（订单主表）
+└── ZcSalesOrderCurtain（窗帘行，L2）      ← 按款式/房间分行
+    └── ZcSalesOrderStructure（结构行，L3） ← 含尺寸、工艺、褶数等加工参数
+        └── ZCSalesOrderMaterial（用料明细，L4） ← 具体物料、批次、用量、单价
+```
+
+**整单创建流程**（`ZcSalesOrderServiceImpl.createSalesOrder`）：
+1. 生成订单号：`ZC{租户ID}{yyyyMMdd}{5位序号}`，如 `ZC120260519000001`
+2. 保存订单主记录，初始状态 `payStatus=unpaid`、`status=unconfirmed`
+3. 遍历窗帘行 → 保存，配件列表（mountings）序列化为 JSON 字符串
+4. 遍历结构行 → 保存，关联 orderId + orderCurtainId
+5. 遍历用料明细 → 保存，关联 orderId + orderStructureId
+6. 全程在同一个 `@Transactional` 事务内，失败整体回滚
+
+**订单详情查询**（`getSalesOrderDetail`）的 N+1 优化：
+- 一次性查出所有窗帘行、结构行、用料行（按 orderId），不循环查询
+- 批量查询款式名称、结构名称、工艺名称、组件名称、产品名称、批次号
+- 在内存中组装嵌套 VO，冗余名称字段，前端无需二次请求
+
+### 关键技术特点
+
+**JSON 字段存储**
+- `ZcSalesOrderCurtainDO.mountings`：配件多选列表，存 JSON 字符串
+- `ZcCurtainStructureDO.attributes`：动态属性，用 `@TableField(typeHandler = JacksonTypeHandler.class)` 映射为 `List<String>`
+
+**复杂 JOIN 查询（Mapper XML）**
+- `ZcSalesOrderMapper`：LEFT JOIN `zc_customer`、`zc_logistics`、`system_users`，分页返回含客户名/物流名/创建人名
+- `ZcProductMapper`：LEFT JOIN `zc_product_version`、`zc_product_spec`、`zc_supplier`、`system_users`
+
+**窗帘行业专有概念**
+
+| 概念 | 字段 | 说明 |
+|------|------|------|
+| 褶倍（Pleat Ratio） | `pleatRatioValue` | 布料用量系数，窗口宽 × 褶倍 = 所需布宽 |
+| 褶距（Pleat Distance） | `pleatsDistance` | 褶与褶的间距（cm） |
+| 褶数 | `pleatsNum` | 总宽度 / 褶距 计算得出 |
+| 裙摆高度 | `skirtHeight` | 窗帘底部装饰高度 |
+| 安装工艺 | `installProcessId` | 墙装、顶装、罗马杆等方案 |
+| 配件（Mountings） | `mountings` | 铅块、磁条、铁钩等附件（多选 JSON） |
+
+**权限标识规范**：`zc:{资源}:{操作}`，如 `zc:product:create`、`zc:sales-order:query`
+
+**错误码范围**：`100001 ~ 100024`，定义于 `ZcErrorCodeConstants`
+
+### 模块依赖
+- 依赖 `yudao-module-system`：Mapper XML 中 JOIN `system_users` 表获取创建人名称
+- 依赖 `yudao-spring-boot-starter-biz-tenant`：订单号生成使用 `TenantContextHolder.getRequiredTenantId()`
+- 无对其他业务模块（如 ERP、CRM）的 Service 调用，业务域相对独立
+
+### 新增 ZC 模块功能时的注意事项
+
+1. **整单 API**：涉及订单创建/更新，优先考虑整单接口（一次请求处理多层嵌套），避免前端多次调用
+2. **N+1 防范**：查询含关联名称时，先批量查出 ID 集合，再 `selectBatchIds()` 一次性加载，不要在循环里查数据库
+3. **JSON 字段**：多选类字段（如 mountings、attributes）用 JSON 存储，DO 层用 `JacksonTypeHandler`，Service 层负责序列化/反序列化
+4. **订单号唯一性**：当前用 `selectCount + 1` 生成序号，高并发下存在竞争，如需改造请改用数据库序列或 Redis incr
+5. **级联删除**：删除订单时需级联删除窗帘行、结构行、用料明细，参考 `ZcSalesOrderServiceImpl.deleteSalesOrder`
 
 ---
 
