@@ -51,12 +51,13 @@ public interface ZcCustomerProductPriceService {
     void deleteCustomerProductPriceListByIds(List<Long> ids);
 
     /**
-     * 获得客户产品销售授权价
+     * 根据客户 ID 和产品 ID 获得唯一授权价
      *
-     * @param id 编号
-     * @return 客户产品销售授权价
+     * @param customerId 客户 ID
+     * @param productId  产品 ID
+     * @return 客户产品销售授权价，不存在时返回 null
      */
-    ZcCustomerProductPriceDO getCustomerProductPrice(Long id);
+    ZcCustomerProductPriceDO getCustomerProductPrice(Long customerId, Long productId);
 
     /**
      * 获得客户产品销售授权价分页

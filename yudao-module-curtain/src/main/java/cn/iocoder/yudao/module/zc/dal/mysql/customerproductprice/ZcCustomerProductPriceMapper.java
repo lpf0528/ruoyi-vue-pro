@@ -23,6 +23,18 @@ public interface ZcCustomerProductPriceMapper extends BaseMapperX<ZcCustomerProd
 
     void insertOrUpdateBatch(@Param("list") List<ZcCustomerProductPriceDO> list);
 
+    /**
+     * 根据客户 ID 和产品 ID 查询唯一授权价记录
+     *
+     * @param customerId 客户 ID
+     * @param productId  产品 ID
+     * @return 授权价记录，不存在时返回 null
+     */
+    default ZcCustomerProductPriceDO selectByCustomerIdAndProductId(Long customerId, Long productId) {
+        return selectOne(ZcCustomerProductPriceDO::getCustomerId, customerId,
+                ZcCustomerProductPriceDO::getProductId, productId);
+    }
+
     default PageResult<ZcCustomerProductPriceRespVO> selectPage(ZcCustomerProductPricePageReqVO reqVO) {
         IPage<ZcCustomerProductPriceRespVO> result = selectPageWithVO(
                 new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);

@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.Operation;
 
 import javax.validation.constraints.*;
@@ -57,11 +58,16 @@ public class ZcCustomerProductPriceController {
     }
 
     @GetMapping("/get")
-    @Operation(summary = "获得客户产品销售授权价")
-    @Parameter(name = "id", description = "编号", required = true, example = "1024")
+    @Operation(summary = "获得客户某产品的销售授权价")
+    @Parameters({
+            @Parameter(name = "customer_id", description = "客户 ID", required = true, example = "1"),
+            @Parameter(name = "product_id", description = "产品 ID", required = true, example = "1")
+    })
     @PreAuthorize("@ss.hasPermission('zc:customer-product-price:query')")
-    public CommonResult<ZcCustomerProductPriceRespVO> getCustomerProductPrice(@RequestParam("id") Long id) {
-        ZcCustomerProductPriceDO customerProductPrice = customerProductPriceService.getCustomerProductPrice(id);
+    public CommonResult<ZcCustomerProductPriceRespVO> getCustomerProductPrice(
+            @RequestParam("customer_id") Long customerId,
+            @RequestParam("product_id") Long productId) {
+        ZcCustomerProductPriceDO customerProductPrice = customerProductPriceService.getCustomerProductPrice(customerId, productId);
         return success(BeanUtils.toBean(customerProductPrice, ZcCustomerProductPriceRespVO.class));
     }
 

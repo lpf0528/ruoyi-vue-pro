@@ -87,8 +87,8 @@ public class ZcCustomerProductPriceServiceImpl implements ZcCustomerProductPrice
     }
 
     @Override
-    public ZcCustomerProductPriceDO getCustomerProductPrice(Long id) {
-        return customerProductPriceMapper.selectById(id);
+    public ZcCustomerProductPriceDO getCustomerProductPrice(Long customerId, Long productId) {
+        return customerProductPriceMapper.selectByCustomerIdAndProductId(customerId, productId);
     }
 
     @Override
