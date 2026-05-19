@@ -84,13 +84,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         Long tenantId = TenantContextHolder.getRequiredTenantId();
         long orderCount = salesOrderMapper.selectCount(Wrappers.emptyWrapper());
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String orderNo = String.format("ZC%d%s%05d", tenantId, date, orderCount + 1);
+        String orderNo = String.format("ZC%d%s-%05d", tenantId, date, orderCount + 1);
 
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
         salesOrder.setPayStatus("unpaid");   // 默认：未结算
-        salesOrder.setStatus("pending");     // 默认：待确认
+        salesOrder.setStatus("unconfirmed"); // 默认：待确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
         salesOrderMapper.insert(salesOrder);
         Long orderId = salesOrder.getId();
