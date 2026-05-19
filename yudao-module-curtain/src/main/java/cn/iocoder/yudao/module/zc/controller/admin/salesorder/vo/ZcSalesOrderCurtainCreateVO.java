@@ -6,6 +6,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 /**
  * 管理后台 - 销售订单窗帘行（嵌套创建）VO
@@ -18,8 +20,9 @@ import javax.validation.Valid;
 @Data
 public class ZcSalesOrderCurtainCreateVO {
 
-    /** 窗帘款式 ID */
-    @Schema(description = "款式", example = "26707")
+    /** 窗帘款式 ID，必填 */
+    @Schema(description = "款式", requiredMode = Schema.RequiredMode.REQUIRED, example = "26707")
+    @NotNull(message = "窗帘款式不能为空")
     private Long curtainId;
 
     /** 房间名称 */
@@ -62,8 +65,9 @@ public class ZcSalesOrderCurtainCreateVO {
     @Schema(description = "备注")
     private String note;
 
-    /** 结构列表 */
+    /** 结构列表，至少包含一个 */
     @Schema(description = "结构列表")
+    @NotEmpty(message = "结构列表不能为空，至少包含一个结构行")
     @Valid
     private List<ZcSalesOrderStructureCreateVO> structures;
 

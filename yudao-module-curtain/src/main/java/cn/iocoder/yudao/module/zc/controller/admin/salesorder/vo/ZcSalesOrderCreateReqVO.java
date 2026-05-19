@@ -83,8 +83,9 @@ public class ZcSalesOrderCreateReqVO {
     @Schema(description = "备注")
     private String note;
 
-    /** 窗帘行列表（含嵌套结构行与用料明细） */
+    /** 窗帘行列表（含嵌套结构行与用料明细），至少包含一个 */
     @Schema(description = "窗帘行列表")
+    @NotEmpty(message = "至少包含一个窗帘明细")
     @Valid
     private List<ZcSalesOrderCurtainCreateVO> curtains;
 

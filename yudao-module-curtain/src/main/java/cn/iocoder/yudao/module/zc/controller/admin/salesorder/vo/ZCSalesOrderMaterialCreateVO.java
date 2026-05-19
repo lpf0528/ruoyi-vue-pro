@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import javax.validation.constraints.NotNull;
 
 /**
  * 管理后台 - 销售订单用料明细（嵌套创建）VO
@@ -20,9 +19,8 @@ public class ZCSalesOrderMaterialCreateVO {
     @Schema(description = "组件类型", example = "4206")
     private Long elementId;
 
-    /** 货号（产品 ID），必填 */
-    @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "24015")
-    @NotNull(message = "货号不能为空")
+    /** 货号（产品 ID） */
+    @Schema(description = "货号", example = "24015")
     private Long productId;
 
     /** 批次 */
