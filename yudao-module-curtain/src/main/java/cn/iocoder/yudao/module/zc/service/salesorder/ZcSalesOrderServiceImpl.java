@@ -1,13 +1,19 @@
 package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONUtil;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtain.ZcCurtainDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaininstallprocess.ZcCurtainInstallProcessDO;
@@ -72,13 +78,61 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     private ZcProductBatchMapper productBatchMapper;
 
     @Override
-    public Long createSalesOrder(ZcSalesOrderSaveReqVO createReqVO) {
-        // 插入
-        ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
-        salesOrderMapper.insert(salesOrder);
+    @Transactional(rollbackFor = Exception.class)
+    public Long createSalesOrder(ZcSalesOrderCreateReqVO createReqVO) {
+        // 1. 生成订单号：ZC + 租户ID + yyyyMMdd + 5位累计序号
+        Long tenantId = TenantContextHolder.getRequiredTenantId();
+        long orderCount = salesOrderMapper.selectCount(Wrappers.emptyWrapper());
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String orderNo = String.format("ZC%d%s%05d", tenantId, date, orderCount + 1);
 
-        // 返回
-        return salesOrder.getId();
+        // 2. 保存订单主记录，设置自动生成/默认字段
+        ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
+        salesOrder.setOrderNo(orderNo);
+        salesOrder.setPayStatus("unpaid");   // 默认：未结算
+        salesOrder.setStatus("pending");     // 默认：待确认
+        salesOrder.setIsExpedited(false);    // 默认：非加急
+        salesOrderMapper.insert(salesOrder);
+        Long orderId = salesOrder.getId();
+
+        // 3. 级联保存窗帘行 → 结构行 → 用料明细
+        if (CollUtil.isEmpty(createReqVO.getCurtains())) {
+            return orderId;
+        }
+        for (ZcSalesOrderCurtainCreateVO curtainVO : createReqVO.getCurtains()) {
+            // 3.1 保存窗帘行，配件列表序列化为 JSON 字符串存储
+            ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
+            curtainDO.setOrderId(orderId);
+            if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
+                curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
+            }
+            salesOrderCurtainMapper.insert(curtainDO);
+            Long orderCurtainId = curtainDO.getId();
+
+            // 3.2 保存结构行
+            if (CollUtil.isEmpty(curtainVO.getStructures())) {
+                continue;
+            }
+            for (ZcSalesOrderStructureCreateVO structureVO : curtainVO.getStructures()) {
+                ZcSalesOrderStructureDO structureDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
+                structureDO.setOrderId(orderId);
+                structureDO.setOrderCurtainId(orderCurtainId);
+                salesOrderStructureMapper.insert(structureDO);
+                Long orderStructureId = structureDO.getId();
+
+                // 3.3 保存用料明细
+                if (CollUtil.isEmpty(structureVO.getMaterials())) {
+                    continue;
+                }
+                for (ZCSalesOrderMaterialCreateVO materialVO : structureVO.getMaterials()) {
+                    ZCSalesOrderMaterialDO materialDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
+                    materialDO.setOrderId(orderId);
+                    materialDO.setOrderStructureId(orderStructureId);
+                    salesOrderMaterialMapper.insert(materialDO);
+                }
+            }
+        }
+        return orderId;
     }
 
     @Override

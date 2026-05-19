@@ -39,9 +39,9 @@ public class ZcSalesOrderController {
     private ZcSalesOrderService salesOrderService;
 
     @PostMapping("/create")
-    @Operation(summary = "创建销售订单")
+    @Operation(summary = "创建销售订单（整单，含窗帘行→结构行→用料明细）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:create')")
-    public CommonResult<Long> createSalesOrder(@Valid @RequestBody ZcSalesOrderSaveReqVO createReqVO) {
+    public CommonResult<Long> createSalesOrder(@Valid @RequestBody ZcSalesOrderCreateReqVO createReqVO) {
         return success(salesOrderService.createSalesOrder(createReqVO));
     }
 

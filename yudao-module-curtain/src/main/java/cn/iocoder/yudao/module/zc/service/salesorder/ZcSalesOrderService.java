@@ -15,12 +15,16 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 public interface ZcSalesOrderService {
 
     /**
-     * 创建销售订单
+     * 整单创建销售订单（含嵌套窗帘行、结构行、用料明细）
      *
-     * @param createReqVO 创建信息
-     * @return 编号
+     * <p>订单号自动生成，格式：ZC + 租户ID + yyyyMMdd + 5位累计序号（如 ZC120260519000001）。
+     * 结算状态默认 unpaid，订单状态默认 pending，是否加急默认 false。
+     * 所有子表记录在同一事务内级联保存。</p>
+     *
+     * @param createReqVO 整单创建请求（含窗帘行→结构行→用料明细三层嵌套）
+     * @return 新订单 ID
      */
-    Long createSalesOrder(@Valid ZcSalesOrderSaveReqVO createReqVO);
+    Long createSalesOrder(@Valid ZcSalesOrderCreateReqVO createReqVO);
 
     /**
      * 更新销售订单
