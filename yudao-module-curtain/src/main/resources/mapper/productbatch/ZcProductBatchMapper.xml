@@ -6,7 +6,7 @@
             resultType="cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.ZcProductBatchRespVO">
         SELECT
             t2.`name`      AS product_name,
-            t2.price       AS product_price,
+            t2.one_price   AS product_price,
             t3.`value`     AS spec_value,
             t4.`name`      AS version_name,
             t5.short_name  AS supplier_name,
