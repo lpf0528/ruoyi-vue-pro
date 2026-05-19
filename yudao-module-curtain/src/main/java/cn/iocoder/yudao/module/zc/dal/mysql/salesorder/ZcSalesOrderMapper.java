@@ -28,4 +28,12 @@ public interface ZcSalesOrderMapper extends BaseMapperX<ZcSalesOrderDO> {
         return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
+    /**
+     * 按 ID 查询单条销售订单（含关联的客户名称、物流名称、创建人名称），用于 PDF 导出等场景。
+     *
+     * @param id 销售订单 ID
+     * @return 含名称冗余字段的 VO，不存在时返回 null
+     */
+    ZcSalesOrderRespVO selectVOById(@Param("id") Long id);
+
 }

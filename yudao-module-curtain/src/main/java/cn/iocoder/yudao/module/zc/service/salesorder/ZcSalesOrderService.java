@@ -93,6 +93,16 @@ public interface ZcSalesOrderService {
     void markExpedited(Long orderId);
 
     /**
+     * 生成销售订单 PDF 字节流
+     *
+     * <p>包含订单主信息、全量窗帘行→结构行→用料明细，使用 OpenPDF 输出 A4 横向 PDF。</p>
+     *
+     * @param orderId 销售订单 ID
+     * @return PDF 文件字节数组
+     */
+    byte[] generateSalesOrderPdf(Long orderId);
+
+    /**
      * 获得销售订单全量明细（三层嵌套结构）
      *
      * <p>返回该订单下所有窗帘行，每行含若干结构行，每个结构行含若干用料明细，

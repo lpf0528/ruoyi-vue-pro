@@ -2,15 +2,22 @@ package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -338,6 +345,310 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             vo.setStructures(structuresByCurtainId.getOrDefault(curtain.getId(), Collections.emptyList()));
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    // ======================== PDF 生成 ========================
+
+    @Override
+    public byte[] generateSalesOrderPdf(Long orderId) {
+        // 获取订单主信息（含关联客户名、物流名、创建人名）
+        ZcSalesOrderRespVO order = salesOrderMapper.selectVOById(orderId);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        // 获取三层嵌套明细（窗帘行→结构行→用料明细）
+        List<ZcSalesOrderCurtainDetailRespVO> curtains = getSalesOrderDetail(orderId);
+        try {
+            return buildSalesOrderPdf(order, curtains);
+        } catch (Exception e) {
+            throw new RuntimeException("销售订单 PDF 生成失败", e);
+        }
+    }
+
+    /**
+     * 使用 OpenPDF 构建 A4 横向销售订单 PDF。
+     *
+     * <p>布局：标题 → 订单基本信息区（6列网格）→ 窗帘明细区（逐层展开：窗帘行→结构行→用料明细）</p>
+     */
+    private byte[] buildSalesOrderPdf(ZcSalesOrderRespVO order,
+                                       List<ZcSalesOrderCurtainDetailRespVO> curtains) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // A4 横向，左右上下边距各 36pt
+        Document doc = new Document(PageSize.A4.rotate(), 36, 36, 40, 36);
+        PdfWriter.getInstance(doc, baos);
+        doc.open();
+
+        // 中文字体：STSong-Light 是 PDF 标准 CJK 字体，无需嵌入字体文件
+        BaseFont bfCn = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+        Font titleFont  = new Font(bfCn, 16, Font.BOLD);
+        Font headFont   = new Font(bfCn, 9,  Font.BOLD);
+        Font headWhite  = new Font(bfCn, 9,  Font.BOLD, Color.WHITE);
+        Font normalFont = new Font(bfCn, 9);
+        Font smallBold  = new Font(bfCn, 8,  Font.BOLD);
+        Font smallFont  = new Font(bfCn, 8);
+        Font tinyFont   = new Font(bfCn, 7);
+        Font tinyBold   = new Font(bfCn, 7,  Font.BOLD);
+
+        // ---- 标题区 ----
+        Paragraph titlePara = new Paragraph("销   售   订   单", titleFont);
+        titlePara.setAlignment(Element.ALIGN_CENTER);
+        titlePara.setSpacingAfter(4);
+        doc.add(titlePara);
+
+        String printTime = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        Paragraph subTitle = new Paragraph(
+            "订单号：" + pdfStr(order.getOrderNo()) + "          打印日期：" + printTime, headFont);
+        subTitle.setAlignment(Element.ALIGN_CENTER);
+        subTitle.setSpacingAfter(10);
+        doc.add(subTitle);
+
+        // ---- 订单基本信息（6 列：标签-值 × 3 组） ----
+        PdfPTable infoTable = new PdfPTable(new float[]{1.6f, 3f, 1.6f, 3f, 1.6f, 3f});
+        infoTable.setWidthPercentage(100);
+        infoTable.setSpacingAfter(10);
+
+        addInfoRow(infoTable, headFont, normalFont,
+            "客户",    pdfStr(order.getCustomerName()),
+            "下单日期", pdfDate(order.getOrderDate()),
+            "交付日期", pdfDate(order.getDeliveryDate()));
+        addInfoRow(infoTable, headFont, normalFont,
+            "手机",    pdfStr(order.getMobile()),
+            "物流",    pdfStr(order.getLogisticName()),
+            "收货人",  pdfStr(order.getReceiver()));
+        addInfoRow(infoTable, headFont, normalFont,
+            "订单状态", pdfStatus(order.getStatus()),
+            "结算状态", pdfPayStatus(order.getPayStatus()),
+            "是否加急", Boolean.TRUE.equals(order.getIsExpedited()) ? "是" : "否");
+        addInfoRow(infoTable, headFont, normalFont,
+            "总金额",   pdfMoney(order.getTotalAmount()),
+            "订单金额", pdfMoney(order.getAmount()),
+            "已收金额", pdfMoney(order.getAmountReceived()));
+        addInfoRow(infoTable, headFont, normalFont,
+            "运费",    pdfMoney(order.getFreight()),
+            "创建人",  pdfStr(order.getCreatorName()),
+            "送货地址", pdfStr(order.getDeliveryAddress()));
+
+        // 备注：标签 + 值跨 5 列
+        infoTable.addCell(pdfLabelCell("备注", headFont));
+        PdfPCell noteCell = pdfValueCell(pdfStr(order.getNote()), normalFont);
+        noteCell.setColspan(5);
+        infoTable.addCell(noteCell);
+
+        doc.add(infoTable);
+
+        // ---- 窗帘明细区 ----
+        if (CollUtil.isNotEmpty(curtains)) {
+            // 区块标题栏
+            PdfPTable sectionBar = new PdfPTable(1);
+            sectionBar.setWidthPercentage(100);
+            sectionBar.setSpacingAfter(6);
+            PdfPCell sectionCell = new PdfPCell(new Phrase("窗   帘   明   细", headWhite));
+            sectionCell.setBackgroundColor(new Color(41, 98, 142));
+            sectionCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            sectionCell.setPadding(5);
+            sectionBar.addCell(sectionCell);
+            doc.add(sectionBar);
+
+            int curtainNo = 1;
+            for (ZcSalesOrderCurtainDetailRespVO curtain : curtains) {
+                // -- 窗帘行标题（蓝色背景，白色字体） --
+                String curtainTitle = String.format(
+                    "【%d】 房间：%s    款式：%s    褶倍：%s    折扣率：%s    金额：%s    配件：%s",
+                    curtainNo++,
+                    pdfStr(curtain.getRoom()), pdfStr(curtain.getCurtainName()),
+                    pdfStr(curtain.getPleatRatioValue()), pdfStr(curtain.getDiscountRate()),
+                    pdfMoney(curtain.getAmount()), pdfStr(curtain.getMountings()));
+
+                PdfPTable curtainBar = new PdfPTable(1);
+                curtainBar.setWidthPercentage(100);
+                curtainBar.setSpacingBefore(4);
+                curtainBar.setSpacingAfter(1);
+                PdfPCell curtainCell = new PdfPCell(
+                    new Phrase(curtainTitle, new Font(bfCn, 9, Font.BOLD, Color.WHITE)));
+                curtainCell.setBackgroundColor(new Color(70, 130, 180));
+                curtainCell.setPadding(4);
+                curtainBar.addCell(curtainCell);
+                doc.add(curtainBar);
+
+                if (CollUtil.isEmpty(curtain.getStructures())) {
+                    continue;
+                }
+
+                for (ZcSalesOrderStructureDetailRespVO structure : curtain.getStructures()) {
+                    // -- 结构行（灰色背景，98% 宽度右对齐） --
+                    PdfPTable structTable = new PdfPTable(
+                        new float[]{2f, 1.2f, 1.2f, 2f, 1.5f, 1.5f, 1f, 1.2f, 1.2f, 2f});
+                    structTable.setWidthPercentage(98);
+                    structTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    structTable.setSpacingAfter(1);
+
+                    // 结构行表头
+                    String[] structHeaders = {"结构", "高(cm)", "宽(cm)", "安装工艺", "打开方式",
+                                              "加工类型", "定型", "褶数", "褶距", "备注"};
+                    for (String h : structHeaders) {
+                        PdfPCell hc = new PdfPCell(new Phrase(h, smallBold));
+                        hc.setBackgroundColor(new Color(215, 215, 215));
+                        hc.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        hc.setPadding(3);
+                        structTable.addCell(hc);
+                    }
+                    // 结构行数据
+                    pdfAddCell(structTable, pdfStr(structure.getStructureName()), smallFont, Element.ALIGN_LEFT);
+                    pdfAddCell(structTable, pdfStr(structure.getHeight()),        smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getWidth()),         smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getInstallProcessName()), smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getOpenMethod()),    smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getProcessType()),   smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, Boolean.TRUE.equals(structure.getIsShaping()) ? "是" : "否",
+                                           smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getPleatsNum()),     smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getPleatsDistance()), smallFont, Element.ALIGN_CENTER);
+                    pdfAddCell(structTable, pdfStr(structure.getNote()),           smallFont, Element.ALIGN_LEFT);
+                    doc.add(structTable);
+
+                    // -- 用料明细（94% 宽度，进一步右对齐） --
+                    if (CollUtil.isEmpty(structure.getMaterials())) {
+                        continue;
+                    }
+                    PdfPTable matTable = new PdfPTable(
+                        new float[]{2f, 3f, 2f, 1.5f, 1.5f, 1f, 1.2f, 1.5f});
+                    matTable.setWidthPercentage(94);
+                    matTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    matTable.setSpacingAfter(4);
+
+                    // 用料表头
+                    String[] matHeaders = {"组件类型", "产品名称", "批次号", "单价", "用量", "单位", "折扣率", "小计"};
+                    for (String h : matHeaders) {
+                        PdfPCell hc = new PdfPCell(new Phrase(h, tinyBold));
+                        hc.setBackgroundColor(new Color(235, 235, 235));
+                        hc.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        hc.setPadding(2);
+                        matTable.addCell(hc);
+                    }
+                    // 用料数据行
+                    for (ZCSalesOrderMaterialDetailRespVO mat : structure.getMaterials()) {
+                        pdfAddCell(matTable, pdfStr(mat.getElementName()),  tinyFont, Element.ALIGN_LEFT);
+                        pdfAddCell(matTable, pdfStr(mat.getProductName()),  tinyFont, Element.ALIGN_LEFT);
+                        pdfAddCell(matTable, pdfStr(mat.getBatchNo()),      tinyFont, Element.ALIGN_CENTER);
+                        pdfAddCell(matTable, pdfMoney(mat.getPrice()),      tinyFont, Element.ALIGN_RIGHT);
+                        pdfAddCell(matTable, pdfStr(mat.getQuantity()),     tinyFont, Element.ALIGN_CENTER);
+                        pdfAddCell(matTable, pdfStr(mat.getUnitValue()),    tinyFont, Element.ALIGN_CENTER);
+                        pdfAddCell(matTable, pdfStr(mat.getDiscountRate()), tinyFont, Element.ALIGN_CENTER);
+                        pdfAddCell(matTable, pdfMoney(mat.getAmount()),     tinyFont, Element.ALIGN_RIGHT);
+                    }
+                    doc.add(matTable);
+                }
+
+                // 窗帘行备注（若有）
+                if (curtain.getNote() != null && !curtain.getNote().isEmpty()) {
+                    Paragraph noteP = new Paragraph("    备注：" + curtain.getNote(), smallFont);
+                    noteP.setSpacingAfter(2);
+                    doc.add(noteP);
+                }
+            }
+
+            // ---- 合计行 ----
+            Paragraph totalPara = new Paragraph(
+                "订单合计：总金额 " + pdfMoney(order.getTotalAmount()) +
+                "    订单金额 " + pdfMoney(order.getAmount()) +
+                "    已收款 " + pdfMoney(order.getAmountReceived()) +
+                "    运费 " + pdfMoney(order.getFreight()), headFont);
+            totalPara.setSpacingBefore(10);
+            totalPara.setAlignment(Element.ALIGN_RIGHT);
+            doc.add(totalPara);
+        }
+
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    // ---- PDF 辅助方法 ----
+
+    /** 向信息网格表添加一行（3组：标签 + 值） */
+    private static void addInfoRow(PdfPTable table, Font labelFont, Font valueFont,
+                                   String l1, String v1, String l2, String v2, String l3, String v3) {
+        table.addCell(pdfLabelCell(l1, labelFont));
+        table.addCell(pdfValueCell(v1, valueFont));
+        table.addCell(pdfLabelCell(l2, labelFont));
+        table.addCell(pdfValueCell(v2, valueFont));
+        table.addCell(pdfLabelCell(l3, labelFont));
+        table.addCell(pdfValueCell(v3, valueFont));
+    }
+
+    /** 创建标签单元格（浅灰背景，右对齐） */
+    private static PdfPCell pdfLabelCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBackgroundColor(new Color(240, 240, 240));
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(4);
+        return cell;
+    }
+
+    /** 创建值单元格（白色背景，左对齐） */
+    private static PdfPCell pdfValueCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text == null ? "" : text, font));
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(4);
+        return cell;
+    }
+
+    /** 向普通数据表添加一个单元格 */
+    private static void pdfAddCell(PdfPTable table, String text, Font font, int hAlign) {
+        PdfPCell cell = new PdfPCell(new Phrase(text == null ? "" : text, font));
+        cell.setHorizontalAlignment(hAlign);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(3);
+        cell.setMinimumHeight(16f);
+        table.addCell(cell);
+    }
+
+    /** null → 空字符串 */
+    private static String pdfStr(Object val) {
+        return val == null ? "" : val.toString();
+    }
+
+    /** BigDecimal → ¥x.xx 格式，null 时返回 "0.00" */
+    private static String pdfMoney(BigDecimal val) {
+        if (val == null) {
+            return "0.00";
+        }
+        return "¥" + val.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    /** LocalDate → yyyy-MM-dd，null 时返回空字符串 */
+    private static String pdfDate(LocalDate date) {
+        return date == null ? "" : date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    /** 订单状态 code → 中文描述 */
+    private static String pdfStatus(String status) {
+        if (status == null) {
+            return "";
+        }
+        switch (status) {
+            case "unconfirmed": return "待确认";
+            case "confirmed":   return "已确认";
+            case "pending":     return "待生产";
+            case "processing":  return "生产中";
+            case "completed":   return "已完成";
+            case "cancelled":   return "已取消";
+            default:            return status;
+        }
+    }
+
+    /** 结算状态 code → 中文描述 */
+    private static String pdfPayStatus(String payStatus) {
+        if (payStatus == null) {
+            return "";
+        }
+        switch (payStatus) {
+            case "unpaid":  return "未结算";
+            case "partial": return "部分结算";
+            case "paid":    return "已结算";
+            default:        return payStatus;
+        }
     }
 
 }

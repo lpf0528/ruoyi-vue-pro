@@ -135,4 +135,20 @@ public class ZcSalesOrderController {
         ExcelUtils.write(response, "销售订单.xls", "数据", ZcSalesOrderRespVO.class, list);
     }
 
+    @GetMapping("/export-pdf")
+    @Operation(summary = "导出销售订单 PDF（含全量明细：窗帘行→结构行→用料明细）")
+    @Parameter(name = "id", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:export')")
+    @ApiAccessLog(operateType = EXPORT)
+    public void exportSalesOrderPdf(@RequestParam("id") Long id,
+                                    HttpServletResponse response) throws IOException {
+        byte[] pdfBytes = salesOrderService.generateSalesOrderPdf(id);
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition",
+            "attachment; filename=\"sales-order-" + id + ".pdf\"; filename*=UTF-8''sales-order-" + id + ".pdf\"");
+        response.setContentLength(pdfBytes.length);
+        response.getOutputStream().write(pdfBytes);
+        response.getOutputStream().flush();
+    }
+
 }
