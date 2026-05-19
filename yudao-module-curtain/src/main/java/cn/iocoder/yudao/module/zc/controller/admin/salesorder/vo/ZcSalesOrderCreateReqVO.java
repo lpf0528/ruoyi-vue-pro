@@ -54,9 +54,8 @@ public class ZcSalesOrderCreateReqVO {
     @NotEmpty(message = "送货地址不能为空")
     private String deliveryAddress;
 
-    /** 运费，必填 */
-    @Schema(description = "运费", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "运费不能为空")
+    /** 运费，不传默认为 0 */
+    @Schema(description = "运费")
     private BigDecimal freight;
 
     /** 订单类型，必填（如 chengpin、面料单等） */
@@ -68,9 +67,8 @@ public class ZcSalesOrderCreateReqVO {
     @Schema(description = "优惠金额")
     private BigDecimal discountAmount;
 
-    /** 总金额（含运费等），必填 */
-    @Schema(description = "总金额", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "总金额不能为空")
+    /** 总金额（含运费等），不传默认为 0 */
+    @Schema(description = "总金额")
     private BigDecimal totalAmount;
 
     /** 订单金额（优惠后实收） */

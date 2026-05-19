@@ -92,6 +92,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrder.setPayStatus("unpaid");   // 默认：未结算
         salesOrder.setStatus("unconfirmed"); // 默认：待确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
+        // 运费、总金额不传时默认为 0
+        if (salesOrder.getFreight() == null) {
+            salesOrder.setFreight(java.math.BigDecimal.ZERO);
+        }
+        if (salesOrder.getTotalAmount() == null) {
+            salesOrder.setTotalAmount(java.math.BigDecimal.ZERO);
+        }
         salesOrderMapper.insert(salesOrder);
         Long orderId = salesOrder.getId();
 
