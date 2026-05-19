@@ -24,8 +24,7 @@ public class ZCSalesOrderMaterialSaveReqVO {
     @Schema(description = "组件类型", example = "4206")
     private Long elementId;
 
-    @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "24015")
-    @NotNull(message = "货号不能为空")
+    @Schema(description = "货号", example = "24015")
     private Long productId;
 
     @Schema(description = "批次", example = "25324")
