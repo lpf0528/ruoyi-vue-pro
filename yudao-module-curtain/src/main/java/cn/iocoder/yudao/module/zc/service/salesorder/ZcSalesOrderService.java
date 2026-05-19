@@ -64,6 +64,26 @@ public interface ZcSalesOrderService {
     PageResult<ZcSalesOrderRespVO> getSalesOrderPage(ZcSalesOrderPageReqVO pageReqVO);
 
     /**
+     * 确认销售订单
+     *
+     * <p>将订单状态从 unconfirmed 变更为 confirmed，记录确认时间，
+     * 并从对应客户的账户余额中扣除订单金额（amount）。</p>
+     *
+     * @param id 销售订单 ID
+     */
+    void confirmSalesOrder(Long id);
+
+    /**
+     * 取消确认销售订单
+     *
+     * <p>将订单状态从 confirmed 变更回 unconfirmed，清空确认时间，
+     * 并将订单金额（amount）退回客户账户余额。</p>
+     *
+     * @param id 销售订单 ID
+     */
+    void cancelConfirmSalesOrder(Long id);
+
+    /**
      * 获得销售订单全量明细（三层嵌套结构）
      *
      * <p>返回该订单下所有窗帘行，每行含若干结构行，每个结构行含若干用料明细，

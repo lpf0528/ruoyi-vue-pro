@@ -6,6 +6,7 @@ import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
@@ -85,6 +86,19 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     @Override
     public List<ZcCustomerDO> getCustomerList(ZcCustomerListReqVO listReqVO) {
         return customerMapper.selectList(listReqVO);
+    }
+
+    @Override
+    public void adjustBalance(Long customerId, BigDecimal delta) {
+        ZcCustomerDO customer = customerMapper.selectById(customerId);
+        if (customer == null) {
+            throw exception(CUSTOMER_NOT_EXISTS);
+        }
+        BigDecimal current = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
+        ZcCustomerDO update = new ZcCustomerDO();
+        update.setId(customerId);
+        update.setBalance(current.add(delta));
+        customerMapper.updateById(update);
     }
 
 }

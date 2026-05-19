@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureMapper;
@@ -54,6 +56,9 @@ import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 @Service
 @Validated
 public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
+
+    @Resource
+    private ZcCustomerService customerService;
 
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
@@ -165,6 +170,54 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrderMapper.deleteByIds(ids);
         }
 
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmSalesOrder(Long id) {
+        // 1. 校验订单存在且当前状态为待确认
+        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        if (!"unconfirmed".equals(order.getStatus())) {
+            throw exception(SALES_ORDER_STATUS_NOT_UNCONFIRMED);
+        }
+
+        // 2. 更新状态为已确认，记录确认时间
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getStatus, "confirmed")
+                .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
+                .eq(ZcSalesOrderDO::getId, id));
+
+        // 3. 从客户账户余额中扣除订单金额
+        if (order.getCustomerId() != null && order.getAmount() != null) {
+            customerService.adjustBalance(order.getCustomerId(), order.getAmount().negate());
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelConfirmSalesOrder(Long id) {
+        // 1. 校验订单存在且当前状态为已确认
+        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        if (!"confirmed".equals(order.getStatus())) {
+            throw exception(SALES_ORDER_STATUS_NOT_CONFIRMED);
+        }
+
+        // 2. 更新状态回待确认，清空确认时间
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getStatus, "unconfirmed")
+                .set(ZcSalesOrderDO::getConfirmTime, null)
+                .eq(ZcSalesOrderDO::getId, id));
+
+        // 3. 将订单金额退回客户账户余额
+        if (order.getCustomerId() != null && order.getAmount() != null) {
+            customerService.adjustBalance(order.getCustomerId(), order.getAmount());
+        }
+    }
 
     private void validateSalesOrderExists(Long id) {
         if (salesOrderMapper.selectById(id) == null) {

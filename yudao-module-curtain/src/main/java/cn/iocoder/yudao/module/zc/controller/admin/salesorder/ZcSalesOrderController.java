@@ -45,31 +45,31 @@ public class ZcSalesOrderController {
         return success(salesOrderService.createSalesOrder(createReqVO));
     }
 
-    @PutMapping("/update")
-    @Operation(summary = "更新销售订单")
-    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
-    public CommonResult<Boolean> updateSalesOrder(@Valid @RequestBody ZcSalesOrderSaveReqVO updateReqVO) {
-        salesOrderService.updateSalesOrder(updateReqVO);
-        return success(true);
-    }
+//    @PutMapping("/update")
+//    @Operation(summary = "更新销售订单")
+//    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+//    public CommonResult<Boolean> updateSalesOrder(@Valid @RequestBody ZcSalesOrderSaveReqVO updateReqVO) {
+//        salesOrderService.updateSalesOrder(updateReqVO);
+//        return success(true);
+//    }
 
-    @DeleteMapping("/delete")
-    @Operation(summary = "删除销售订单")
-    @Parameter(name = "id", description = "编号", required = true)
-    @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
-    public CommonResult<Boolean> deleteSalesOrder(@RequestParam("id") Long id) {
-        salesOrderService.deleteSalesOrder(id);
-        return success(true);
-    }
+//    @DeleteMapping("/delete")
+//    @Operation(summary = "删除销售订单")
+//    @Parameter(name = "id", description = "编号", required = true)
+//    @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
+//    public CommonResult<Boolean> deleteSalesOrder(@RequestParam("id") Long id) {
+//        salesOrderService.deleteSalesOrder(id);
+//        return success(true);
+//    }
 
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除销售订单")
-                @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
-    public CommonResult<Boolean> deleteSalesOrderList(@RequestParam("ids") List<Long> ids) {
-        salesOrderService.deleteSalesOrderListByIds(ids);
-        return success(true);
-    }
+//    @DeleteMapping("/delete-list")
+//    @Parameter(name = "ids", description = "编号", required = true)
+//    @Operation(summary = "批量删除销售订单")
+//                @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
+//    public CommonResult<Boolean> deleteSalesOrderList(@RequestParam("ids") List<Long> ids) {
+//        salesOrderService.deleteSalesOrderListByIds(ids);
+//        return success(true);
+//    }
 
     @GetMapping("/get")
     @Operation(summary = "获得销售订单")
@@ -94,6 +94,24 @@ public class ZcSalesOrderController {
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
     public CommonResult<PageResult<ZcSalesOrderRespVO>> getSalesOrderPage(@Valid ZcSalesOrderPageReqVO pageReqVO) {
         return success(salesOrderService.getSalesOrderPage(pageReqVO));
+    }
+
+    @PutMapping("/confirm")
+    @Operation(summary = "确认销售订单（状态 unconfirmed → confirmed，扣减客户余额）")
+    @Parameter(name = "id", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> confirmSalesOrder(@RequestParam("id") Long id) {
+        salesOrderService.confirmSalesOrder(id);
+        return success(true);
+    }
+
+    @PutMapping("/cancel-confirm")
+    @Operation(summary = "取消确认销售订单（状态 confirmed → unconfirmed，退回客户余额）")
+    @Parameter(name = "id", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cancelConfirmSalesOrder(@RequestParam("id") Long id) {
+        salesOrderService.cancelConfirmSalesOrder(id);
+        return success(true);
     }
 
     @GetMapping("/export-excel")

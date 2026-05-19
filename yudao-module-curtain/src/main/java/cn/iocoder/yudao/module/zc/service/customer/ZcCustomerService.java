@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.customer;
 
+import java.math.BigDecimal;
 import java.util.*;
 import javax.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
@@ -66,5 +67,15 @@ public interface ZcCustomerService {
      * @return 客户资料列表
      */
     List<ZcCustomerDO> getCustomerList(ZcCustomerListReqVO listReqVO);
+
+    /**
+     * 调整客户账户余额
+     *
+     * <p>delta 为正数时增加余额（如取消确认退款），为负数时扣减余额（如确认订单）。</p>
+     *
+     * @param customerId 客户 ID
+     * @param delta      余额变动金额，正数增加，负数减少
+     */
+    void adjustBalance(Long customerId, BigDecimal delta);
 
 }
