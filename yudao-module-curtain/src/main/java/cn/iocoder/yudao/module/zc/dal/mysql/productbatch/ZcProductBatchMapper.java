@@ -35,6 +35,8 @@ public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
 
     IPage<ZcProductBatchRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcProductBatchPageReqVO reqVO);
 
+    ZcProductBatchRespVO selectBatchWithVOById(@Param("id") Long id);
+
     default PageResult<ZcProductBatchRespVO> selectPage(ZcProductBatchPageReqVO reqVO) {
         IPage<ZcProductBatchRespVO> result = selectPageWithVO(
                 new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);

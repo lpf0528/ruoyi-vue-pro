@@ -85,8 +85,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
     @Override
-    public ZcProductBatchDO getProductBatch(Long id) {
-        return productBatchMapper.selectById(id);
+    public ZcProductBatchRespVO getProductBatch(Long id) {
+        return productBatchMapper.selectBatchWithVOById(id);
     }
 
     @Override

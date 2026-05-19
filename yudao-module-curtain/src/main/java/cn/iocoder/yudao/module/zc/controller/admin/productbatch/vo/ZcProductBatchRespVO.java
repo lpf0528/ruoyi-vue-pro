@@ -79,6 +79,10 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("仓库名称")
     private String warehouseName;
 
+    @Schema(description = "单位（来自产品版本）")
+    @ExcelProperty("单位")
+    private String unitValue;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

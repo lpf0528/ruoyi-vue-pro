@@ -17,7 +17,6 @@ import java.io.IOException;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
@@ -26,7 +25,6 @@ import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
 import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
-import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.service.productbatch.ZcProductBatchService;
 
 @Tag(name = "管理后台 - 产品批次")
@@ -76,12 +74,7 @@ public class ZcProductBatchController {
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('zc:product-batch:query')")
     public CommonResult<ZcProductBatchRespVO> getProductBatch(@RequestParam("id") Long id) {
-        ZcProductBatchDO productBatch = productBatchService.getProductBatch(id);
-        ZcProductBatchRespVO respVO = BeanUtils.toBean(productBatch, ZcProductBatchRespVO.class);
-        if (productBatch != null && productBatch.getInboundDate() != null) {
-            respVO.setInboundDate(productBatch.getInboundDate().toString());
-        }
-        return success(respVO);
+        return success(productBatchService.getProductBatch(id));
     }
 
     @GetMapping("/page")

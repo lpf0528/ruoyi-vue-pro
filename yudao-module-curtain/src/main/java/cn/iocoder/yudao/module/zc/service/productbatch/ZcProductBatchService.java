@@ -3,7 +3,6 @@ package cn.iocoder.yudao.module.zc.service.productbatch;
 import java.util.*;
 import javax.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
-import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 
@@ -57,7 +56,7 @@ public interface ZcProductBatchService {
      * @param id 编号
      * @return 产品批次
      */
-    ZcProductBatchDO getProductBatch(Long id);
+    ZcProductBatchRespVO getProductBatch(Long id);
 
     /**
      * 获得产品批次分页
