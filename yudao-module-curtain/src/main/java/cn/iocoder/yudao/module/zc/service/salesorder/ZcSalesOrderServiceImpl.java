@@ -219,6 +219,16 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
     }
 
+    @Override
+    public void markExpedited(Long orderId) {
+        // 校验订单存在
+        validateSalesOrderExists(orderId);
+        // 将加急标志设置为 true
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getIsExpedited, true)
+                .eq(ZcSalesOrderDO::getId, orderId));
+    }
+
     private void validateSalesOrderExists(Long id) {
         if (salesOrderMapper.selectById(id) == null) {
             throw exception(SALES_ORDER_NOT_EXISTS);

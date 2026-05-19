@@ -84,6 +84,15 @@ public interface ZcSalesOrderService {
     void cancelConfirmSalesOrder(Long id);
 
     /**
+     * 标记销售订单为加急
+     *
+     * <p>将订单的 is_expedited 设置为 true，不限当前订单状态。</p>
+     *
+     * @param orderId 销售订单 ID
+     */
+    void markExpedited(Long orderId);
+
+    /**
      * 获得销售订单全量明细（三层嵌套结构）
      *
      * <p>返回该订单下所有窗帘行，每行含若干结构行，每个结构行含若干用料明细，

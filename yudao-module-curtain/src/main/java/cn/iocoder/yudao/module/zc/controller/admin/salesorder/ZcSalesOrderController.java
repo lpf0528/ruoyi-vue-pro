@@ -96,6 +96,15 @@ public class ZcSalesOrderController {
         return success(salesOrderService.getSalesOrderPage(pageReqVO));
     }
 
+    @PutMapping("/expedited")
+    @Operation(summary = "标记销售订单为加急")
+    @Parameter(name = "orderId", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> markExpedited(@RequestParam("orderId") Long orderId) {
+        salesOrderService.markExpedited(orderId);
+        return success(true);
+    }
+
     @PutMapping("/confirm")
     @Operation(summary = "确认销售订单（状态 unconfirmed → confirmed，扣减客户余额）")
     @Parameter(name = "id", description = "销售订单 ID", required = true)
