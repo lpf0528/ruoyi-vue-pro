@@ -26,9 +26,15 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_STRUCTURE_NOT_EXISTS = new ErrorCode(100022, "成品订单-结构不存在");
     ErrorCode ZC_SALES_ORDER_MATERIAL_NOT_EXISTS = new ErrorCode(100023, "成品订单-用料明细不存在");
     ErrorCode SALES_ORDER_CURTAIN_NOT_EXISTS = new ErrorCode(100024, "成品订单-窗帘行不存在");
-    /** 确认订单时，订单状态不是待确认 */
+    /**
+     * 确认订单时，订单状态不是待确认
+     */
     ErrorCode SALES_ORDER_STATUS_NOT_UNCONFIRMED = new ErrorCode(100025, "订单状态不是待确认，无法执行确认操作");
-    /** 取消确认时，订单状态不是已确认 */
+    /**
+     * 取消确认时，订单状态不是已确认
+     */
     ErrorCode SALES_ORDER_STATUS_NOT_CONFIRMED = new ErrorCode(100026, "订单状态不是已确认，无法取消确认");
+    ErrorCode BILLS_NOT_EXISTS = new ErrorCode(100027, "收支账单不存在");
+    ErrorCode BILL_METHODS_NOT_EXISTS = new ErrorCode(100028, "收款方式不存在");
 }
 
