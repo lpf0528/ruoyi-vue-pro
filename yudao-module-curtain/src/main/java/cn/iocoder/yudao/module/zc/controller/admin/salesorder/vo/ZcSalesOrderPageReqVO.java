@@ -37,11 +37,14 @@ public class ZcSalesOrderPageReqVO extends PageParam {
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDate[] deliveryDate;
 
-    @Schema(description = "结算状态", example = "2")
-    private String payStatus;
+    @Schema(description = "结算状态（多选），可选值：paid / unpaid / partialpaid", example = "[\"paid\",\"unpaid\"]")
+    private List<String> payStatus;
 
     @Schema(description = "状态", example = "2")
     private String status;
+
+    @Schema(description = "是否已确认：true=已确认（confirm_time 不为空），false=未确认（confirm_time 为空）")
+    private Boolean isConfirm;
 
     @Schema(description = "是否加急")
     private Boolean isExpedited;

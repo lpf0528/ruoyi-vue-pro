@@ -20,7 +20,7 @@
         LEFT JOIN system_users  t4 ON t1.creator      = t4.id AND t4.deleted = 0
         WHERE t1.deleted = 0
         <if test="reqVO.orderNo != null and reqVO.orderNo != ''">
-            AND t1.order_no = #{reqVO.orderNo}
+            AND t1.order_no LIKE CONCAT('%', #{reqVO.orderNo}, '%')
         </if>
         <if test="reqVO.customerId != null">
             AND t1.customer_id = #{reqVO.customerId}
@@ -40,11 +40,24 @@
         <if test="reqVO.deliveryDate != null and reqVO.deliveryDate.length == 2">
             AND t1.delivery_date BETWEEN #{reqVO.deliveryDate[0]} AND #{reqVO.deliveryDate[1]}
         </if>
-        <if test="reqVO.payStatus != null and reqVO.payStatus != ''">
-            AND t1.pay_status = #{reqVO.payStatus}
+        <if test="reqVO.payStatus != null and reqVO.payStatus.size() > 0">
+            AND t1.pay_status IN
+            <foreach collection="reqVO.payStatus" item="ps" open="(" separator="," close=")">
+                #{ps}
+            </foreach>
         </if>
         <if test="reqVO.status != null and reqVO.status != ''">
             AND t1.status = #{reqVO.status}
+        </if>
+        <if test="reqVO.isConfirm != null">
+            <choose>
+                <when test="reqVO.isConfirm == true">
+                    AND t1.confirm_time IS NOT NULL
+                </when>
+                <otherwise>
+                    AND t1.confirm_time IS NULL
+                </otherwise>
+            </choose>
         </if>
         <if test="reqVO.isExpedited != null">
             AND t1.is_expedited = #{reqVO.isExpedited}
