@@ -51,21 +51,6 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
         billMethodsMapper.updateById(updateObj);
     }
 
-    @Override
-    public void deleteBillMethods(Long id) {
-        // 校验存在
-        validateBillMethodsExists(id);
-        // 删除
-        billMethodsMapper.deleteById(id);
-    }
-
-    @Override
-        public void deleteBillMethodsListByIds(List<Long> ids) {
-        // 删除
-        billMethodsMapper.deleteByIds(ids);
-        }
-
-
     private void validateBillMethodsExists(Long id) {
         if (billMethodsMapper.selectById(id) == null) {
             throw exception(BILL_METHODS_NOT_EXISTS);

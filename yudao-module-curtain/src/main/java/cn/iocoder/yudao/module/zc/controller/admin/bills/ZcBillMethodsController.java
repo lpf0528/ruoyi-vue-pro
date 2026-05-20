@@ -53,24 +53,6 @@ public class ZcBillMethodsController {
         return success(true);
     }
 
-    @DeleteMapping("/delete")
-    @Operation(summary = "删除收款方式")
-    @Parameter(name = "id", description = "编号", required = true)
-    @PreAuthorize("@ss.hasPermission('zc:bill-methods:delete')")
-    public CommonResult<Boolean> deleteBillMethods(@RequestParam("id") Long id) {
-        billMethodsService.deleteBillMethods(id);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除收款方式")
-                @PreAuthorize("@ss.hasPermission('zc:bill-methods:delete')")
-    public CommonResult<Boolean> deleteBillMethodsList(@RequestParam("ids") List<Long> ids) {
-        billMethodsService.deleteBillMethodsListByIds(ids);
-        return success(true);
-    }
-
     @GetMapping("/get")
     @Operation(summary = "获得收款方式")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")

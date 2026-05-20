@@ -30,20 +30,6 @@ public interface ZcBillMethodsService {
     void updateBillMethods(@Valid ZcBillMethodsSaveReqVO updateReqVO);
 
     /**
-     * 删除收款方式
-     *
-     * @param id 编号
-     */
-    void deleteBillMethods(Long id);
-
-    /**
-    * 批量删除收款方式
-    *
-    * @param ids 编号
-    */
-    void deleteBillMethodsListByIds(List<Long> ids);
-
-    /**
      * 获得收款方式
      *
      * @param id 编号
