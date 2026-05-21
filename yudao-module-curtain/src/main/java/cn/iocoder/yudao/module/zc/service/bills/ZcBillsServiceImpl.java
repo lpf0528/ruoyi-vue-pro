@@ -115,15 +115,18 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             totalAllocated = totalAllocated.add(item.getAllocatedAmount());
         }
 
-        // 5. 更新客户余额（将本次全部分摊金额累加至余额）
-        if (createReqVO.getCustomerId() != null && totalAllocated.compareTo(BigDecimal.ZERO) > 0) {
+        // 5. 更新客户余额：balance += actualAmount + discountAmount
+        // actualAmount 为本次实收，discountAmount 为本次优惠，两者合计为本次结算总价值
+        if (createReqVO.getCustomerId() != null) {
             ZcCustomerDO customer = customerMapper.selectById(createReqVO.getCustomerId());
             if (customer != null) {
                 BigDecimal currentBalance = customer.getBalance() == null
                         ? BigDecimal.ZERO : customer.getBalance();
+                BigDecimal discount = createReqVO.getDiscountAmount() == null
+                        ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
                 ZcCustomerDO updateCustomer = new ZcCustomerDO();
                 updateCustomer.setId(customer.getId());
-                updateCustomer.setBalance(currentBalance.add(totalAllocated));
+                updateCustomer.setBalance(currentBalance.add(createReqVO.getActualAmount()).add(discount));
                 customerMapper.updateById(updateCustomer);
             }
         }
