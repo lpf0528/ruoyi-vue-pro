@@ -1,0 +1,658 @@
+# 智仓（ZC）模块 —— 系统分析与工序追踪功能设计
+
+> 文档日期：2026-05-22  
+> 作者：01Coder  
+> 范围：`yudao-module-curtain`（包名前缀 `cn.iocoder.yudao.module.zc`）
+
+---
+
+## 一、现有系统问题分析
+
+### 1.1 财务逻辑隐患（中高优先级）
+
+#### 1.1.1 客户余额语义模糊
+
+**当前逻辑：**
+- 确认订单时：`balance -= order.amount`（扣减）
+- 收款时：`balance += actualAmount + discountAmount`（增加）
+
+**语义推导：** 余额为负数时代表欠款，正数时代表预存/超额付款。这个模型本身是合理的，但**缺乏文档说明**，容易在后续维护中被误改。
+
+**建议：** 在 `ZcCustomerDO.balance` 字段注释中明确说明：`余额为正表示客户预存款（或已多付），为负表示欠款，订单确认时扣减，收款时增加`。
+
+#### 1.1.2 收款金额与分摊金额缺乏一致性校验
+
+**问题代码（`ZcBillsServiceImpl.createBills`）：**
+```java
+// 5. 更新客户余额：balance += actualAmount + discountAmount
+updateCustomer.setBalance(currentBalance.add(createReqVO.getActualAmount()).add(discount));
+```
+
+`actualAmount`（加到余额）和 `orderItems[].allocatedAmount`（分摊到各订单的已收金额）是两套独立的数字，代码没有校验两者合计是否一致。如果分摊金额合计 ≠ actualAmount + discountAmount，会导致：
+- 订单 `amountReceived` 累计值与客户账目不一致
+- 对账时出现差额
+
+**修复建议：** 在 `createBills` 开头加一步校验：
+```java
+BigDecimal totalAllocated = orderItems.stream()
+    .map(ZcBillOrderItemReqVO::getAllocatedAmount)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+BigDecimal totalSettled = actualAmount.add(discountAmount);
+if (totalAllocated.compareTo(totalSettled) != 0) {
+    throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH); // 分摊金额与实收+优惠不一致
+}
+```
+
+#### 1.1.3 删除收款单未回滚余额与订单状态（严重）
+
+**问题代码（`ZcBillsServiceImpl.deleteBills`）：**
+```java
+public void deleteBills(Long id) {
+    validateBillsExists(id);
+    billsMapper.deleteById(id);  // 只删主表，没有任何回滚
+}
+```
+
+删除收款单时**没有执行**：
+- 客户余额回滚（减掉当时加上的 `actualAmount + discountAmount`）
+- 各关联订单 `amountReceived` 回滚，支付状态重新计算
+- 级联删除附件（`zc_bill_attachments`）和分摊明细（`zc_bill_order_items`）
+
+**修复建议：** 参照创建逻辑的逆操作，在删除前先查询出账单及关联数据，逐步回滚。
+
+#### 1.1.4 更新收款单逻辑不完整
+
+**问题代码（`ZcBillsServiceImpl.updateBills`）：**
+```java
+public void updateBills(ZcBillsSaveReqVO updateReqVO) {
+    validateBillsExists(updateReqVO.getId());
+    BeanUtils.toBean(updateReqVO, ZcBillsDO.class);
+    billsMapper.updateById(updateObj);  // 只更新主表
+}
+```
+
+更新时没有处理：附件的增删、订单分摊的调整、客户余额的差额计算。  
+**建议：** 更新操作实现为「先删后建」（delete + re-create），保持逻辑简单一致。
+
+#### 1.1.5 取消确认订单应禁止有已收款记录的情况
+
+**问题场景：**
+1. 客户初始余额 0，确认 100 元订单 → 余额变 -100
+2. 收款 60 元 → 余额变 -40，订单 `amountReceived = 60`
+3. 此时取消确认 → 余额退回 +100 - 40 = **+60**（客户不欠款反而多了 60）
+
+**修复建议：** 在 `cancelConfirmSalesOrder` 中增加校验：
+```java
+if (order.getAmountReceived() != null && order.getAmountReceived().compareTo(BigDecimal.ZERO) > 0) {
+    throw exception(SALES_ORDER_HAS_RECEIVED_AMOUNT); // 已有收款记录，不能取消确认
+}
+```
+
+---
+
+### 1.2 并发安全问题（高优先级）
+
+#### 1.2.1 订单号/账单号生成存在并发冲突
+
+**问题代码：**
+```java
+// 订单号
+long orderCount = salesOrderMapper.selectCount(Wrappers.emptyWrapper());
+String orderNo = String.format("ZC%d%s-%05d", tenantId, date, orderCount + 1);
+
+// 账单号
+long billCount = billsMapper.selectCount(Wrappers.emptyWrapper());
+String billNo = String.format("SK%s-%06d", date, billCount + 1);
+```
+
+两个并发请求拿到相同 `count` 值，会生成**重复单号**，违反唯一性。此外：
+- 删除记录后再新建，序号可能与已删除记录重复
+- 日期变更后序号不重置，序号会无限增长直至超出位数
+
+**修复建议（推荐 Redis incr 方案）：**
+```java
+// 使用 Redis INCR 保证原子性，key 包含日期确保跨日重置
+String key = String.format("zc:order_seq:%s:%d", date, tenantId);
+long seq = redisTemplate.opsForValue().increment(key);
+redisTemplate.expire(key, Duration.ofDays(2));
+String orderNo = String.format("ZC%d%s%05d", tenantId, date, seq);
+```
+
+#### 1.2.2 客户余额调整缺乏并发保护
+
+**问题代码（`ZcCustomerServiceImpl.adjustBalance`）：**
+```java
+ZcCustomerDO customer = customerMapper.selectById(customerId); // 先读
+BigDecimal newBalance = current.add(delta);
+update.setBalance(newBalance);
+customerMapper.updateById(update);  // 后写（无版本号/乐观锁）
+```
+
+高并发下（如多个收款单同时提交）会出现「后写覆盖先写」问题，导致余额错误。
+
+**修复建议（使用数据库原子更新）：**
+```sql
+UPDATE zc_customer SET balance = balance + #{delta}
+WHERE id = #{customerId} AND tenant_id = #{tenantId}
+```
+
+在 Mapper 中新增此原子操作方法，替换先读后写模式。
+
+---
+
+### 1.3 数据完整性问题（中优先级）
+
+#### 1.3.1 删除订单未级联删除子表数据
+
+**问题代码（`ZcSalesOrderServiceImpl.deleteSalesOrder`）：**
+```java
+public void deleteSalesOrder(Long id) {
+    validateSalesOrderExists(id);
+    salesOrderMapper.deleteById(id);  // 只删主表
+}
+```
+
+删除订单后，`zc_sales_order_curtain`、`zc_sales_order_structure`、`zc_sales_order_material` 中的关联数据成为**孤立记录**。
+
+**修复建议：** 改为级联删除：
+```java
+salesOrderCurtainMapper.deleteByOrderId(id);
+salesOrderStructureMapper.deleteByOrderId(id);
+salesOrderMaterialMapper.deleteByOrderId(id);
+salesOrderMapper.deleteById(id);
+```
+
+#### 1.3.2 库存批次数量从未扣减
+
+下单或确认订单时，均未从 `ZcProductBatchDO.quantity`（剩余数量）中扣减 `ZCSalesOrderMaterialDO.quantity`（用料数量）。批次的剩余数量永远等于入库数量，除非手动盘点。
+
+**建议处理时机：** 订单确认时扣减库存（`confirmSalesOrder` 中）；取消确认时归还库存。这是生产订单的标准做法，可防止超卖（多个订单使用同一批次）。
+
+#### 1.3.3 库存盘点未更新批次数量
+
+`ZcInventoryRecordDO` 记录了盘点前后的数量，但代码中没有在创建盘点记录时同步更新对应 `ZcProductBatchDO.quantity`，盘点记录形同虚设。
+
+**修复建议：** 在 `ZcInventoryRecordServiceImpl.createInventoryRecord` 中，创建记录的同时更新批次数量。
+
+---
+
+### 1.4 状态流转不完整（中优先级）
+
+当前订单状态枚举已设计为：
+```
+unconfirmed → confirmed → pending → processing → completed
+                                                ↘ cancelled
+```
+
+但代码中**只实现了** `unconfirmed ↔ confirmed` 的转换（`confirmSalesOrder` / `cancelConfirmSalesOrder`）。
+
+`pending`、`processing`、`completed`、`cancelled` 状态的触发逻辑均缺失，这些状态实际上无法被程序触发（只能直接改数据库）。
+
+**这正是需要设计「工序追踪」功能的原因**，详见第二章。
+
+---
+
+### 1.5 payStatus 字符串不一致（低优先级）
+
+收款时写入的 `payStatus` 值为 `"partialpaid"`，但 PDF 生成的 `pdfPayStatus` 方法中的判断逻辑为：
+```java
+case "partial": return "部分结算";  // 与实际写入值不一致
+```
+导致「部分收款」状态在 PDF 中显示为原始字符串 `"partialpaid"` 而非中文。
+
+**修复建议：** 统一改为 `"partialpaid"`，或引入枚举类管理所有状态码。
+
+---
+
+### 1.6 批次号生成存在并发问题（低优先级）
+
+`ZcProductBatchServiceImpl.createProductBatch` 使用 `countTodayBatchSeqByProductId` 查询当日该产品的批次数再加一，同样存在并发冲突问题，建议同样改用 Redis incr 方案。
+
+---
+
+## 二、工序追踪功能设计
+
+### 2.1 业务背景
+
+订单确认后进入加工环节，工厂需要对布料进行**裁剪、缝制、定型、质检、包装**等多道工序。目前系统中订单状态 `pending`（待生产）和 `processing`（生产中）没有任何操作入口，客户和管理员都无法了解具体加工进度。
+
+**目标：**
+1. 工厂员工可以按工序推进，记录每道工序的完成情况
+2. 客户可通过订单号查看实时加工进度（时间线视图）
+3. 管理员可灵活配置工序节点，适应不同产品线的生产流程
+
+---
+
+### 2.2 工序流转与订单状态联动
+
+```
+unconfirmed（待确认）
+    ↓ confirmSalesOrder()
+confirmed（已确认）
+    ↓ dispatchOrder()  [新增] 派发到加工仓库
+pending（待生产）
+    ↓ 新增第一条工序记录时，自动触发
+processing（生产中）
+    ↓ completeOrder()  [新增] 管理员手动完成
+completed（已完成）
+
+cancelled（已取消）← 仅允许从 unconfirmed 或 confirmed（且无收款）取消
+```
+
+---
+
+### 2.3 数据库设计
+
+#### 2.3.1 工序节点配置表 `zc_process_node`
+
+用于管理员配置加工流程中的工序类型（如"裁剪"、"缝制"等），支持灵活增减。
+
+```sql
+CREATE TABLE zc_process_node
+(
+    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    name        VARCHAR(50)  NOT NULL COMMENT '工序名称，如：备料、裁剪、缝制、定型、质检、包装',
+    sort        INT          NOT NULL DEFAULT 0 COMMENT '排序号，数字越小越靠前',
+    description VARCHAR(200)          COMMENT '工序描述/操作说明',
+    creator     VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '创建者',
+    create_time DATETIME     NOT NULL COMMENT '创建时间',
+    updater     VARCHAR(64)           DEFAULT '' COMMENT '更新者',
+    update_time DATETIME     NOT NULL COMMENT '更新时间',
+    deleted     BIT(1)       NOT NULL DEFAULT b'0' COMMENT '是否删除',
+    tenant_id   BIGINT       NOT NULL DEFAULT 0 COMMENT '租户编号',
+    PRIMARY KEY (id)
+) COMMENT = '工序节点配置';
+
+-- 初始化默认工序节点（可根据实际需要调整）
+INSERT INTO zc_process_node (name, sort, description, creator, create_time, updater, update_time, deleted, tenant_id)
+VALUES ('备料',   10, '根据订单物料清单，从仓库领取对应批次的布料和配件', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('裁剪',   20, '按照订单结构行的高度、宽度规格进行布料裁剪', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('缝制',   30, '对裁剪好的布料进行主体缝制加工', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('定型',   40, '对需要定型的窗帘进行熨烫定型处理（isShaping=true 的结构行需此工序）', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('穿杆装褶', 50, '穿入窗帘杆、安装褶皱和配件（铅块、铁钩等）', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('质检',   60, '对成品进行质量检验，核对尺寸、工艺是否符合订单要求', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('包装',   70, '将成品装袋/装箱，标注客户信息和订单号', 'admin', NOW(), 'admin', NOW(), 0, 1),
+       ('待发货', 80, '成品已打包，等待安排物流发货', 'admin', NOW(), 'admin', NOW(), 0, 1);
+```
+
+#### 2.3.2 订单工序记录表 `zc_order_process_record`
+
+记录每个订单每道工序的执行情况（流水账式记录，不覆盖）。
+
+```sql
+CREATE TABLE zc_order_process_record
+(
+    id               BIGINT        NOT NULL AUTO_INCREMENT COMMENT '主键',
+    order_id         BIGINT        NOT NULL COMMENT '关联销售订单 ID（zc_sales_order.id）',
+    node_id          BIGINT                 COMMENT '工序节点 ID（zc_process_node.id），为 NULL 表示自定义工序',
+    node_name        VARCHAR(50)   NOT NULL COMMENT '工序名称快照（冗余存储，防止节点名被修改后历史记录变化）',
+    status           TINYINT       NOT NULL DEFAULT 1 COMMENT '状态：1=进行中，2=已完成',
+    operator_user_id BIGINT                 COMMENT '操作人员 ID（system_users.id）',
+    note             VARCHAR(500)           COMMENT '备注（如质检不通过原因、特殊情况说明等）',
+    image_urls       VARCHAR(2000)          COMMENT '现场照片 URL 列表，JSON 字符串，如：["url1","url2"]',
+    creator          VARCHAR(64)   NOT NULL DEFAULT '' COMMENT '创建者',
+    create_time      DATETIME      NOT NULL COMMENT '创建时间（即工序开始时间）',
+    updater          VARCHAR(64)            DEFAULT '' COMMENT '更新者',
+    update_time      DATETIME      NOT NULL COMMENT '更新时间',
+    deleted          BIT(1)        NOT NULL DEFAULT b'0' COMMENT '是否删除',
+    tenant_id        BIGINT        NOT NULL DEFAULT 0 COMMENT '租户编号',
+    PRIMARY KEY (id),
+    KEY idx_order_id (order_id, deleted) COMMENT '按订单查询工序记录'
+) COMMENT = '订单工序记录';
+```
+
+#### 2.3.3 销售订单主表新增字段
+
+```sql
+ALTER TABLE zc_sales_order
+    ADD COLUMN current_node_name VARCHAR(50) COMMENT '当前所处工序名称（冗余，用于列表快速展示）' AFTER status;
+```
+
+---
+
+### 2.4 Java 代码设计
+
+#### 2.4.1 DO 类
+
+**`ZcProcessNodeDO`**（工序节点配置）
+
+```java
+/**
+ * 工序节点配置 DO
+ *
+ * <p>管理员可灵活增减工序类型，支持按 sort 字段排序展示</p>
+ */
+@TableName("zc_process_node")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ZcProcessNodeDO extends BaseDO {
+
+    /** 主键 */
+    private Long id;
+    /** 工序名称，如"裁剪"、"缝制" */
+    private String name;
+    /** 排序号，数字越小越靠前 */
+    private Integer sort;
+    /** 工序描述/操作说明 */
+    private String description;
+}
+```
+
+**`ZcOrderProcessRecordDO`**（订单工序记录）
+
+```java
+/**
+ * 订单工序记录 DO
+ *
+ * <p>以流水账形式记录订单每道工序的执行情况，支持附图和备注。
+ * node_name 采用快照存储，防止历史记录因节点名称变更而失真。</p>
+ */
+@TableName("zc_order_process_record")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ZcOrderProcessRecordDO extends BaseDO {
+
+    /** 主键 */
+    private Long id;
+    /** 关联销售订单 ID */
+    private Long orderId;
+    /** 工序节点 ID，null 时表示自定义工序 */
+    private Long nodeId;
+    /** 工序名称快照（冗余，防止节点名被修改后历史记录变化） */
+    private String nodeName;
+    /**
+     * 状态：1=进行中，2=已完成
+     *
+     * @see ProcessRecordStatusEnum
+     */
+    private Integer status;
+    /** 操作人员 ID */
+    private Long operatorUserId;
+    /** 备注（质检不通过原因、特殊情况说明等） */
+    private String note;
+    /** 现场照片 URL 列表，JSON 格式存储，用 JacksonTypeHandler 映射 */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> imageUrls;
+}
+```
+
+#### 2.4.2 状态枚举
+
+```java
+/**
+ * 工序记录状态枚举
+ */
+public enum ProcessRecordStatusEnum {
+
+    IN_PROGRESS(1, "进行中"),
+    COMPLETED(2, "已完成");
+
+    private final Integer status;
+    private final String name;
+}
+```
+
+#### 2.4.3 Service 接口设计
+
+**`ZcProcessNodeService`**（工序节点配置管理）
+
+```java
+/**
+ * 工序节点配置 Service 接口
+ *
+ * <p>管理员通过此 Service 维护加工流程的工序类型，
+ * 工序节点的增删改查均在此处理。</p>
+ */
+public interface ZcProcessNodeService {
+
+    /**
+     * 创建工序节点
+     *
+     * @param reqVO 创建请求
+     * @return 新节点 ID
+     */
+    Long createProcessNode(ZcProcessNodeSaveReqVO reqVO);
+
+    /**
+     * 更新工序节点
+     *
+     * @param reqVO 更新请求（必须包含 id）
+     */
+    void updateProcessNode(ZcProcessNodeSaveReqVO reqVO);
+
+    /**
+     * 删除工序节点
+     *
+     * @param id 节点 ID
+     */
+    void deleteProcessNode(Long id);
+
+    /**
+     * 获取工序节点列表（全量，按 sort 排序）
+     *
+     * @return 工序节点列表
+     */
+    List<ZcProcessNodeDO> getProcessNodeList();
+}
+```
+
+**`ZcOrderProcessRecordService`**（订单工序记录操作）
+
+```java
+/**
+ * 订单工序记录 Service 接口
+ *
+ * <p>工厂员工通过此 Service 推进订单工序进度，支持上传现场照片。
+ * 第一条工序记录创建时，系统自动将订单状态从 pending → processing。</p>
+ */
+public interface ZcOrderProcessRecordService {
+
+    /**
+     * 新增工序记录（开始某道工序）
+     *
+     * <p>若订单当前状态为 pending，自动变更为 processing 并记录当前工序名称。</p>
+     *
+     * @param reqVO 创建请求，必须包含 orderId 和 nodeName
+     * @return 新记录 ID
+     */
+    Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO);
+
+    /**
+     * 标记某工序已完成
+     *
+     * @param id     工序记录 ID
+     * @param note   完成备注（可选）
+     */
+    void completeProcessRecord(Long id, String note);
+
+    /**
+     * 删除工序记录（仅允许删除状态为"进行中"的记录）
+     *
+     * @param id 记录 ID
+     */
+    void deleteProcessRecord(Long id);
+
+    /**
+     * 获取订单的全部工序记录，按创建时间升序排列
+     *
+     * @param orderId 订单 ID
+     * @return 工序记录列表（含操作人姓名）
+     */
+    List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId);
+}
+```
+
+**`ZcSalesOrderService` 新增方法：**
+
+```java
+/**
+ * 派发订单到加工仓库（confirmed → pending）
+ *
+ * <p>仅允许已确认（confirmed）状态的订单执行派发操作。
+ * 派发后订单进入待生产队列，工厂端可见该订单。</p>
+ *
+ * @param id 订单 ID
+ */
+void dispatchOrder(Long id);
+
+/**
+ * 完成订单（processing → completed）
+ *
+ * <p>所有工序均已完成后，管理员调用此接口标记订单为已完成。</p>
+ *
+ * @param id 订单 ID
+ */
+void completeOrder(Long id);
+
+/**
+ * 取消订单（仅允许 unconfirmed 或未收款的 confirmed 状态）
+ *
+ * @param id   订单 ID
+ * @param note 取消原因
+ */
+void cancelOrder(Long id, String note);
+```
+
+#### 2.4.4 Service 实现关键逻辑
+
+**`ZcOrderProcessRecordServiceImpl.createProcessRecord` 核心逻辑：**
+
+```java
+@Override
+@Transactional(rollbackFor = Exception.class)
+public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
+    // 1. 校验订单存在，且状态为 pending 或 processing
+    ZcSalesOrderDO order = salesOrderMapper.selectById(reqVO.getOrderId());
+    if (order == null) {
+        throw exception(SALES_ORDER_NOT_EXISTS);
+    }
+    if (!"pending".equals(order.getStatus()) && !"processing".equals(order.getStatus())) {
+        throw exception(SALES_ORDER_STATUS_NOT_IN_PRODUCTION); // 订单不在生产流程中
+    }
+
+    // 2. 若节点ID存在，从节点配置中读取名称快照
+    String nodeName = reqVO.getNodeName();
+    if (reqVO.getNodeId() != null) {
+        ZcProcessNodeDO node = processNodeMapper.selectById(reqVO.getNodeId());
+        if (node != null) {
+            nodeName = node.getName();
+        }
+    }
+
+    // 3. 保存工序记录
+    ZcOrderProcessRecordDO record = BeanUtils.toBean(reqVO, ZcOrderProcessRecordDO.class);
+    record.setNodeName(nodeName);
+    record.setStatus(ProcessRecordStatusEnum.IN_PROGRESS.getStatus());
+    record.setOperatorUserId(SecurityFrameworkUtils.getLoginUserId());
+    processRecordMapper.insert(record);
+
+    // 4. 若订单当前为 pending，自动变更为 processing
+    if ("pending".equals(order.getStatus())) {
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getStatus, "processing")
+                .set(ZcSalesOrderDO::getCurrentNodeName, nodeName)
+                .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
+    } else {
+        // 仅更新当前工序名称，方便列表展示
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getCurrentNodeName, nodeName)
+                .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
+    }
+
+    return record.getId();
+}
+```
+
+---
+
+### 2.5 REST API 设计
+
+#### 2.5.1 工序节点配置（管理员）
+
+| 方法   | 路径                          | 功能           | 权限标识                     |
+|------|-------------------------------|--------------|--------------------------|
+| POST | /zc/process-node/create       | 创建工序节点      | `zc:process-node:create` |
+| PUT  | /zc/process-node/update       | 更新工序节点      | `zc:process-node:update` |
+| DELETE | /zc/process-node/delete     | 删除工序节点      | `zc:process-node:delete` |
+| GET  | /zc/process-node/simple-list  | 获取全部工序节点列表  | `zc:process-node:query`  |
+
+#### 2.5.2 订单生产状态操作
+
+| 方法   | 路径                               | 功能                          | 权限标识                      |
+|------|-----------------------------------|-----------------------------|-----------------------------|
+| PUT  | /zc/sales-order/dispatch          | 派发订单到加工仓库（confirmed→pending）| `zc:sales-order:update`     |
+| PUT  | /zc/sales-order/complete          | 完成订单（processing→completed） | `zc:sales-order:update`     |
+| PUT  | /zc/sales-order/cancel            | 取消订单                        | `zc:sales-order:update`     |
+
+#### 2.5.3 订单工序记录
+
+| 方法   | 路径                                    | 功能              | 权限标识                              |
+|------|----------------------------------------|-----------------|-------------------------------------|
+| POST | /zc/order-process/create              | 新增工序记录（开始工序）    | `zc:order-process:create`           |
+| PUT  | /zc/order-process/complete            | 标记工序完成          | `zc:order-process:update`           |
+| DELETE | /zc/order-process/delete            | 删除工序记录          | `zc:order-process:delete`           |
+| GET  | /zc/order-process/list?orderId={id}   | 获取订单工序时间线       | `zc:order-process:query`            |
+
+---
+
+### 2.6 前端展示设计（工序时间线）
+
+建议在订单详情页新增「加工进度」标签页，以时间线组件展示：
+
+```
+订单状态：生产中   当前工序：缝制
+
+工序进度时间线：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅  备料          已完成   2026-05-21 09:15   操作人：张工
+✅  裁剪          已完成   2026-05-21 11:30   操作人：李工  [查看照片]
+🔄  缝制          进行中   2026-05-22 08:00   操作人：王工
+─────────────────────────────
+⏸  定型          待开始
+⏸  穿杆装褶       待开始
+⏸  质检          待开始
+⏸  包装          待开始
+⏸  待发货        待开始
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**展示逻辑：**
+1. 调用 `GET /zc/process-node/simple-list` 获取全部工序节点（按 sort 排序）
+2. 调用 `GET /zc/order-process/list?orderId=xxx` 获取该订单的工序记录
+3. 将两个列表合并展示：有记录的工序显示实际操作时间和状态，无记录的工序显示为"待开始"
+
+---
+
+### 2.7 开发任务拆解
+
+| 优先级 | 任务 | 估算 |
+|------|------|------|
+| P0 | 新建 `zc_process_node` 和 `zc_order_process_record` 表，主表加 `current_node_name` 字段 | 0.5天 |
+| P0 | 实现 `ZcProcessNodeService` 及 Controller（CRUD + simple-list）| 1天 |
+| P0 | 实现 `ZcOrderProcessRecordService` 及 Controller（含订单状态联动）| 1天 |
+| P0 | `ZcSalesOrderService` 新增 `dispatchOrder`、`completeOrder`、`cancelOrder` | 0.5天 |
+| P1 | 前端订单详情页「加工进度」时间线组件 | 1.5天 |
+| P1 | 工序记录支持上传现场照片（复用现有 OSS/文件上传）| 0.5天 |
+| P2 | 修复账单删除回滚问题（参考 1.1.3）| 1天 |
+| P2 | 修复订单号并发冲突问题（参考 1.2.1）| 0.5天 |
+| P2 | 确认订单时扣减库存批次数量（参考 1.3.2）| 1天 |
+
+---
+
+## 三、优化建议汇总
+
+| 编号 | 问题描述 | 优先级 | 影响范围 |
+|-----|---------|-------|--------|
+| B1 | 删除收款单未回滚客户余额和订单收款状态 | 高 | 财务数据一致性 |
+| B2 | 取消确认订单应禁止有收款记录的情况 | 高 | 财务数据一致性 |
+| B3 | 删除销售订单未级联删除子表数据（窗帘行/结构行/用料明细） | 高 | 数据一致性 |
+| B4 | 库存批次数量从未扣减，库存数据不准确 | 高 | 库存管理 |
+| O1 | 订单号/账单号生成存在并发冲突，改用 Redis incr | 中 | 系统稳定性 |
+| O2 | 客户余额调整改为数据库原子操作，防止并发写入丢失 | 中 | 财务数据一致性 |
+| O3 | 收款金额与分摊金额加一致性校验 | 中 | 财务准确性 |
+| O4 | 更新收款单需处理附件/分摊/余额的差额，改为「先删后建」 | 中 | 功能完整性 |
+| O5 | 库存盘点创建时同步更新批次数量 | 中 | 库存管理 |
+| O6 | payStatus "partialpaid" 与 PDF 展示 "partial" 不一致 | 低 | 显示问题 |
+| O7 | 引入订单状态/支付状态枚举类，替换分散的字符串常量 | 低 | 代码质量 |
+| N1 | **新功能：工序追踪**（见第二章完整设计） | 新功能 | 生产管理 |
+| N2 | 考虑增加订单统计报表（按客户、按时间段的营收汇总）| 新功能（低优先级）| 经营分析 |

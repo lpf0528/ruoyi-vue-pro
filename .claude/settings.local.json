@@ -6,7 +6,8 @@
       "Bash(Select-Object Name)",
       "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\" -Recurse -Directory)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\" -Recurse -Filter \"*.java\")"
     ]
   }
 }
