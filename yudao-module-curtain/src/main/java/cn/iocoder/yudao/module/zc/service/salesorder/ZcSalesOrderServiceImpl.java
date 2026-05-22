@@ -164,18 +164,27 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteSalesOrder(Long id) {
-        // 校验存在
         validateSalesOrderExists(id);
-        // 删除
+        // 级联删除三层子表，再删主记录，防止孤立数据
+        salesOrderCurtainMapper.deleteByOrderId(id);
+        salesOrderStructureMapper.deleteByOrderId(id);
+        salesOrderMaterialMapper.deleteByOrderId(id);
         salesOrderMapper.deleteById(id);
     }
 
     @Override
-        public void deleteSalesOrderListByIds(List<Long> ids) {
-        // 删除
-        salesOrderMapper.deleteByIds(ids);
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteSalesOrderListByIds(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
         }
+        salesOrderCurtainMapper.deleteByOrderIds(ids);
+        salesOrderStructureMapper.deleteByOrderIds(ids);
+        salesOrderMaterialMapper.deleteByOrderIds(ids);
+        salesOrderMapper.deleteByIds(ids);
+    }
 
 
     @Override
@@ -214,13 +223,18 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             throw exception(SALES_ORDER_STATUS_NOT_CONFIRMED);
         }
 
-        // 2. 更新状态回待确认，清空确认时间
+        // 2. 禁止有收款记录时取消确认：取消确认会将订单金额退回余额，若已收款则余额会虚增
+        if (order.getAmountReceived() != null && order.getAmountReceived().compareTo(BigDecimal.ZERO) > 0) {
+            throw exception(SALES_ORDER_HAS_RECEIVED_AMOUNT);
+        }
+
+        // 3. 更新状态回待确认，清空确认时间
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getStatus, "unconfirmed")
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 3. 将订单金额退回客户账户余额
+        // 4. 将订单金额退回客户账户余额
         if (order.getCustomerId() != null && order.getAmount() != null) {
             customerService.adjustBalance(order.getCustomerId(), order.getAmount());
         }
@@ -644,10 +658,10 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             return "";
         }
         switch (payStatus) {
-            case "unpaid":  return "未结算";
-            case "partial": return "部分结算";
-            case "paid":    return "已结算";
-            default:        return payStatus;
+            case "unpaid":      return "未结算";
+            case "partialpaid": return "部分结算";
+            case "paid":        return "已结算";
+            default:            return payStatus;
         }
     }
 

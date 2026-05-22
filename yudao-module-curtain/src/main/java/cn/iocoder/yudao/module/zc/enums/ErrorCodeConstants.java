@@ -44,5 +44,13 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_STATUS_CANNOT_PROCESS = new ErrorCode(100032, "订单不在生产流程中，无法新增工序记录");
     /** 工序记录已完成，不允许删除，防止历史数据被篡改 */
     ErrorCode ORDER_PROCESS_RECORD_ALREADY_COMPLETED = new ErrorCode(100033, "工序记录已完成，不允许删除");
+    /**
+     * 取消确认时，订单已存在收款记录，不允许取消：否则客户余额会凭空增加
+     */
+    ErrorCode SALES_ORDER_HAS_RECEIVED_AMOUNT = new ErrorCode(100034, "订单已有收款记录，取消确认将导致账目异常，请先撤销相关收款单");
+    /**
+     * 创建/更新收款单时，分摊到各订单的金额合计与实收+优惠不一致
+     */
+    ErrorCode BILL_ALLOCATED_AMOUNT_NOT_MATCH = new ErrorCode(100035, "分摊到各订单的金额合计与实收金额+优惠金额不一致，请检查后重试");
 }
 

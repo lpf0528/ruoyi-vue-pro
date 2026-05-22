@@ -77,7 +77,8 @@ public class ZcCustomerDO extends BaseDO {
      */
     private Long brandId;
     /**
-     * 账户余额
+     * 账户余额：正值表示客户预存款（或已多付），负值表示欠款。
+     * 订单确认时扣减（balance -= 订单金额），收款时增加（balance += 实收 + 优惠金额）。
      */
     private BigDecimal balance;
     /**

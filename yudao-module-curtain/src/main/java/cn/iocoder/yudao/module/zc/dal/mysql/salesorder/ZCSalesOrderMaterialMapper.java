@@ -6,6 +6,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 
@@ -34,6 +35,18 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
         return selectList(new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
                 .eqIfPresent(ZCSalesOrderMaterialDO::getOrderId, orderId)
                 .orderByAsc(ZCSalesOrderMaterialDO::getId));
+    }
+
+    /** 删除指定订单下的所有用料明细（用于删除订单时级联清理） */
+    default void deleteByOrderId(Long orderId) {
+        delete(Wrappers.<ZCSalesOrderMaterialDO>lambdaQuery()
+                .eq(ZCSalesOrderMaterialDO::getOrderId, orderId));
+    }
+
+    /** 批量删除多个订单下的所有用料明细（用于批量删除订单时级联清理） */
+    default void deleteByOrderIds(List<Long> orderIds) {
+        delete(Wrappers.<ZCSalesOrderMaterialDO>lambdaQuery()
+                .in(ZCSalesOrderMaterialDO::getOrderId, orderIds));
     }
 
 }

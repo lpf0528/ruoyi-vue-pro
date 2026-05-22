@@ -6,6 +6,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderStructureDO;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 
@@ -35,6 +36,18 @@ public interface ZcSalesOrderStructureMapper extends BaseMapperX<ZcSalesOrderStr
         return selectList(new LambdaQueryWrapperX<ZcSalesOrderStructureDO>()
                 .eqIfPresent(ZcSalesOrderStructureDO::getOrderId, orderId)
                 .orderByAsc(ZcSalesOrderStructureDO::getId));
+    }
+
+    /** 删除指定订单下的所有结构行（用于删除订单时级联清理） */
+    default void deleteByOrderId(Long orderId) {
+        delete(Wrappers.<ZcSalesOrderStructureDO>lambdaQuery()
+                .eq(ZcSalesOrderStructureDO::getOrderId, orderId));
+    }
+
+    /** 批量删除多个订单下的所有结构行（用于批量删除订单时级联清理） */
+    default void deleteByOrderIds(List<Long> orderIds) {
+        delete(Wrappers.<ZcSalesOrderStructureDO>lambdaQuery()
+                .in(ZcSalesOrderStructureDO::getOrderId, orderIds));
     }
 
 }

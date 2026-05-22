@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.customer;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -90,15 +91,13 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Override
     public void adjustBalance(Long customerId, BigDecimal delta) {
-        ZcCustomerDO customer = customerMapper.selectById(customerId);
-        if (customer == null) {
+        if (customerMapper.selectById(customerId) == null) {
             throw exception(CUSTOMER_NOT_EXISTS);
         }
-        BigDecimal current = customer.getBalance() != null ? customer.getBalance() : BigDecimal.ZERO;
-        ZcCustomerDO update = new ZcCustomerDO();
-        update.setId(customerId);
-        update.setBalance(current.add(delta));
-        customerMapper.updateById(update);
+        // 使用数据库原子加减，避免并发「后写覆盖先写」导致余额计算错误
+        customerMapper.update(null, Wrappers.<ZcCustomerDO>lambdaUpdate()
+                .setSql("balance = COALESCE(balance, 0) + " + delta.toPlainString())
+                .eq(ZcCustomerDO::getId, customerId));
     }
 
 }
