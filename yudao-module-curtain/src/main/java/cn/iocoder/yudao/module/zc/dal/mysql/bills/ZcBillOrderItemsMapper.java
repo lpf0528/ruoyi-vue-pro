@@ -20,4 +20,10 @@ public interface ZcBillOrderItemsMapper extends BaseMapperX<ZcBillOrderItemsDO> 
                 .eq(ZcBillOrderItemsDO::getBillId, billId));
     }
 
+    /** 删除指定收款单下的所有分摊明细（用于删除/更新收款单时级联清理） */
+    default void deleteByBillId(Long billId) {
+        delete(Wrappers.<ZcBillOrderItemsDO>lambdaQuery()
+                .eq(ZcBillOrderItemsDO::getBillId, billId));
+    }
+
 }

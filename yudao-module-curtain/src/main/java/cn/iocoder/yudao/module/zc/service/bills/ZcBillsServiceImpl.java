@@ -2,7 +2,6 @@ package cn.iocoder.yudao.module.zc.service.bills;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +23,9 @@ import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillAttachmentsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillOrderItemsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
@@ -48,6 +49,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -62,10 +65,10 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH);
         }
 
-        // 2. 自动生成单号：SK{yyyyMMdd}-{6位累计序号}
+        // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}，Redis INCR 保证并发唯一
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long billCount = billsMapper.selectCount(Wrappers.emptyWrapper());
-        String billNo = String.format("SK%s-%06d", date, billCount + 1);
+        long seq = noGeneratorRedisDAO.nextBillSeq(TenantContextHolder.getRequiredTenantId(), date);
+        String billNo = String.format("SK%s-%06d", date, seq);
 
         // 3. 保存账单主记录，billUserId 取当前登录用户
         ZcBillsDO bills = BeanUtils.toBean(createReqVO, ZcBillsDO.class);

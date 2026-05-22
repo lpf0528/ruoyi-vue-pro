@@ -16,6 +16,8 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
+import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
+import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
@@ -33,13 +35,17 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
 
     @Resource
     private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
     @Override
     public Long createProductBatch(ZcProductBatchSaveReqVO createReqVO) {
         ZcProductBatchDO productBatch = BeanUtils.toBean(createReqVO, ZcProductBatchDO.class);
-        // 生成批号：YYYYMMDD-XX（当日该产品的第N条入库记录，从01开始）
-        Integer seq = productBatchMapper.countTodayBatchSeqByProductId(createReqVO.getProductId());
-        productBatch.setBatchNo(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + String.format("%02d", seq));
+        // 生成批号：{yyyyMMdd}-{2位序号}，Redis INCR 保证并发唯一（按产品隔离，跨日从 01 重置）
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        long seq = noGeneratorRedisDAO.nextBatchSeq(
+                TenantContextHolder.getRequiredTenantId(), createReqVO.getProductId(), date);
+        productBatch.setBatchNo(date + "-" + String.format("%02d", seq));
         productBatchMapper.insert(productBatch);
         return productBatch.getId();
     }

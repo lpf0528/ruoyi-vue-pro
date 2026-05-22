@@ -20,4 +20,10 @@ public interface ZcBillAttachmentsMapper extends BaseMapperX<ZcBillAttachmentsDO
                 .eq(ZcBillAttachmentsDO::getBillId, billId));
     }
 
+    /** 删除指定收款单下的所有附件（用于删除/更新收款单时级联清理） */
+    default void deleteByBillId(Long billId) {
+        delete(Wrappers.<ZcBillAttachmentsDO>lambdaQuery()
+                .eq(ZcBillAttachmentsDO::getBillId, billId));
+    }
+
 }

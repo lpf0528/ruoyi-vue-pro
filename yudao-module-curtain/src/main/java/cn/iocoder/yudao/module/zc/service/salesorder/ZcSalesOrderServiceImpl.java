@@ -37,6 +37,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
@@ -66,6 +67,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
@@ -92,11 +95,11 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createSalesOrder(ZcSalesOrderCreateReqVO createReqVO) {
-        // 1. 生成订单号：ZC + 租户ID + yyyyMMdd + 5位累计序号
+        // 1. 生成订单号：ZC{租户ID}{yyyyMMdd}{5位序号}，Redis INCR 保证并发唯一
         Long tenantId = TenantContextHolder.getRequiredTenantId();
-        long orderCount = salesOrderMapper.selectCount(Wrappers.emptyWrapper());
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String orderNo = String.format("ZC%d%s-%05d", tenantId, date, orderCount + 1);
+        long seq = noGeneratorRedisDAO.nextOrderSeq(tenantId, date);
+        String orderNo = String.format("ZC%d%s%05d", tenantId, date, seq);
 
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
