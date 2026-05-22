@@ -37,5 +37,12 @@ public interface ErrorCodeConstants {
     ErrorCode BILLS_NOT_EXISTS = new ErrorCode(100027, "收支账单不存在");
     ErrorCode BILL_METHODS_NOT_EXISTS = new ErrorCode(100028, "收款方式不存在");
     ErrorCode PROCESS_NODE_NOT_EXISTS = new ErrorCode(100029, "工序节点配置不存在");
+    ErrorCode ORDER_PROCESS_RECORD_NOT_EXISTS = new ErrorCode(100030, "工序记录不存在");
+    /** 员工未绑定该工序节点，无权操作 */
+    ErrorCode USER_PROCESS_NODE_NOT_AUTHORIZED = new ErrorCode(100031, "您没有操作该工序节点的权限，请联系管理员分配");
+    /** 订单不处于生产流程中（非 pending/processing），不能新增工序记录 */
+    ErrorCode SALES_ORDER_STATUS_CANNOT_PROCESS = new ErrorCode(100032, "订单不在生产流程中，无法新增工序记录");
+    /** 工序记录已完成，不允许删除，防止历史数据被篡改 */
+    ErrorCode ORDER_PROCESS_RECORD_ALREADY_COMPLETED = new ErrorCode(100033, "工序记录已完成，不允许删除");
 }
 

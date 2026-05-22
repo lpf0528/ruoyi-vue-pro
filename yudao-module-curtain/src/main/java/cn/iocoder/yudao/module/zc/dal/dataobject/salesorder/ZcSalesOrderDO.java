@@ -118,6 +118,10 @@ public class ZcSalesOrderDO extends BaseDO {
      */
     private Boolean isExpedited;
     /**
+     * 当前所处工序名称（工序记录写入时同步更新，便于列表快速展示生产进度）
+     */
+    private String currentNodeName;
+    /**
      * 备注
      */
     private String note;
