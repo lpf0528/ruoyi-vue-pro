@@ -59,4 +59,12 @@ public interface ZcProcessNodeService {
      */
     PageResult<ZcProcessNodeDO> getProcessNodePage(ZcProcessNodePageReqVO pageReqVO);
 
+    /**
+     * 获得工序节点配置列表，用于前端下拉选项
+     *
+     * @param listReqVO 列表查询条件
+     * @return 工序节点配置列表
+     */
+    List<ZcProcessNodeDO> getProcessNodeList(ZcProcessNodeListReqVO listReqVO);
+
 }

@@ -24,4 +24,15 @@ public interface ZcProcessNodeMapper extends BaseMapperX<ZcProcessNodeDO> {
                 .orderByDesc(ZcProcessNodeDO::getId));
     }
 
+    /**
+     * 查询工序节点配置列表，按排序号升序排列
+     *
+     * @param reqVO 列表查询条件
+     * @return 工序节点配置列表
+     */
+    default List<ZcProcessNodeDO> selectList(ZcProcessNodeListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcProcessNodeDO>()
+                .orderByAsc(ZcProcessNodeDO::getSort));
+    }
+
 }

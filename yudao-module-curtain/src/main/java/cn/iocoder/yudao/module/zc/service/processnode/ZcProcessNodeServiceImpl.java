@@ -82,4 +82,9 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
         return processNodeMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcProcessNodeDO> getProcessNodeList(ZcProcessNodeListReqVO listReqVO) {
+        return processNodeMapper.selectList(listReqVO);
+    }
+
 }
