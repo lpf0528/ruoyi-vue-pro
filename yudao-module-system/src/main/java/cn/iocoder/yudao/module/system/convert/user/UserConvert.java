@@ -25,7 +25,16 @@ public interface UserConvert {
     UserConvert INSTANCE = Mappers.getMapper(UserConvert.class);
 
     default List<UserRespVO> convertList(List<AdminUserDO> list, Map<Long, DeptDO> deptMap) {
-        return CollectionUtils.convertList(list, user -> convert(user, deptMap.get(user.getDeptId())));
+        return convertList(list, deptMap, java.util.Collections.emptyMap());
+    }
+
+    default List<UserRespVO> convertList(List<AdminUserDO> list, Map<Long, DeptDO> deptMap,
+                                         Map<Long, java.util.List<String>> processNodeNamesMap) {
+        return CollectionUtils.convertList(list, user -> {
+            UserRespVO vo = convert(user, deptMap.get(user.getDeptId()));
+            vo.setProcessNodeNames(processNodeNamesMap.get(user.getId()));
+            return vo;
+        });
     }
 
     default UserRespVO convert(AdminUserDO user, DeptDO dept) {

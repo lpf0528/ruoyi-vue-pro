@@ -5,6 +5,7 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcUserProcessNodeDO
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,6 +22,14 @@ public interface ZcUserProcessNodeMapper extends BaseMapperX<ZcUserProcessNodeDO
     default List<ZcUserProcessNodeDO> selectListByUserId(Long userId) {
         return selectList(Wrappers.<ZcUserProcessNodeDO>lambdaQuery()
                 .eq(ZcUserProcessNodeDO::getUserId, userId));
+    }
+
+    /**
+     * 批量查询多个员工的绑定关系（用于分页列表展示，避免 N+1）
+     */
+    default List<ZcUserProcessNodeDO> selectListByUserIds(Collection<Long> userIds) {
+        return selectList(Wrappers.<ZcUserProcessNodeDO>lambdaQuery()
+                .in(ZcUserProcessNodeDO::getUserId, userIds));
     }
 
     /**

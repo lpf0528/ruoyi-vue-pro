@@ -23,6 +23,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import cn.iocoder.yudao.module.system.service.user.UserProcessNodeExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -47,6 +50,9 @@ public class UserController {
     private AdminUserService userService;
     @Resource
     private DeptService deptService;
+    /** curtain 模块可选扩展，未启动时自动降级（processNodeNames 返回 null） */
+    @Autowired(required = false)
+    private UserProcessNodeExtension processNodeExtension;
 
     @PostMapping("/create")
     @Operation(summary = "新增用户")
@@ -107,10 +113,16 @@ public class UserController {
         if (CollUtil.isEmpty(pageResult.getList())) {
             return success(new PageResult<>(pageResult.getTotal()));
         }
-        // 拼接数据
+        // 拼接部门数据
         Map<Long, DeptDO> deptMap = deptService.getDeptMap(
                 convertList(pageResult.getList(), AdminUserDO::getDeptId));
-        return success(new PageResult<>(UserConvert.INSTANCE.convertList(pageResult.getList(), deptMap),
+        // 批量查询工序节点名称（curtain 模块未启动时降级为空 Map）
+        Map<Long, List<String>> processNodeNamesMap = processNodeExtension != null
+                ? processNodeExtension.getProcessNodeNamesByUserIds(
+                        convertSet(pageResult.getList(), AdminUserDO::getId))
+                : Collections.emptyMap();
+        return success(new PageResult<>(
+                UserConvert.INSTANCE.convertList(pageResult.getList(), deptMap, processNodeNamesMap),
                 pageResult.getTotal()));
     }
 

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Schema(description = "管理后台 - 用户信息 Response VO")
@@ -71,5 +72,9 @@ public class UserRespVO{
 
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED, example = "时间戳格式")
     private LocalDateTime createTime;
+
+    /** 已绑定的工序节点名称列表，按排序号升序；未绑定时为 null */
+    @Schema(description = "工序节点名称列表", example = "[\"备料\", \"裁剪\", \"缝制\"]")
+    private List<String> processNodeNames;
 
 }
