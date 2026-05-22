@@ -36,5 +36,6 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_STATUS_NOT_CONFIRMED = new ErrorCode(100026, "订单状态不是已确认，无法取消确认");
     ErrorCode BILLS_NOT_EXISTS = new ErrorCode(100027, "收支账单不存在");
     ErrorCode BILL_METHODS_NOT_EXISTS = new ErrorCode(100028, "收款方式不存在");
+    ErrorCode PROCESS_NODE_NOT_EXISTS = new ErrorCode(100029, "工序节点配置不存在");
 }
 
