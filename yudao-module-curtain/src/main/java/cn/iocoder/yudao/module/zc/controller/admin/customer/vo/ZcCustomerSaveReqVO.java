@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
 import javax.validation.constraints.*;
-import java.math.BigDecimal;
 
 @Schema(description = "管理后台 - 客户资料新增/修改 Request VO")
 @Data
@@ -42,9 +41,6 @@ public class ZcCustomerSaveReqVO {
 
     @Schema(description = "关联品牌", example = "22168")
     private Long brandId;
-
-    @Schema(description = "账户余额")
-    private BigDecimal balance;
 
     @Schema(description = "备注")
     private String note;

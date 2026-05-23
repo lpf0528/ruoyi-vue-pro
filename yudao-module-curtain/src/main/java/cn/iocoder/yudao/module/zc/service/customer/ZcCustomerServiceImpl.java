@@ -42,8 +42,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Override
     public Long createCustomer(ZcCustomerSaveReqVO createReqVO) {
-        // 插入
+        // 插入，余额强制初始化为 0，不允许前端传入
         ZcCustomerDO customer = BeanUtils.toBean(createReqVO, ZcCustomerDO.class);
+        customer.setBalance(BigDecimal.ZERO);
         customerMapper.insert(customer);
 
         // 返回
