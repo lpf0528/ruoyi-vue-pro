@@ -77,16 +77,16 @@ public class ZcWarehouseController {
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('zc:warehouse:query')")
     public CommonResult<ZcWarehouseRespVO> getWarehouse(@RequestParam("id") Long id) {
-        ZcWarehouseDO warehouse = warehouseService.getWarehouse(id);
-        return success(BeanUtils.toBean(warehouse, ZcWarehouseRespVO.class));
+        // 使用 JOIN 查询，返回含负责人昵称的 VO
+        return success(warehouseService.getWarehouseVO(id));
     }
 
     @GetMapping("/page")
     @Operation(summary = "获得仓库分页")
     @PreAuthorize("@ss.hasPermission('zc:warehouse:query')")
     public CommonResult<PageResult<ZcWarehouseRespVO>> getWarehousePage(@Valid ZcWarehousePageReqVO pageReqVO) {
-        PageResult<ZcWarehouseDO> pageResult = warehouseService.getWarehousePage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcWarehouseRespVO.class));
+        // 使用 JOIN 查询，返回含负责人昵称的分页 VO
+        return success(warehouseService.getWarehousePageVO(pageReqVO));
     }
 
     @GetMapping("/simple-list")

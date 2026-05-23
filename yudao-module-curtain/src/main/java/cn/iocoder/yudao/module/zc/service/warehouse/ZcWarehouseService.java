@@ -52,12 +52,28 @@ public interface ZcWarehouseService {
     ZcWarehouseDO getWarehouse(Long id);
 
     /**
+     * 获得仓库（含负责人昵称）
+     *
+     * @param id 编号
+     * @return 仓库 VO（含 managerName）
+     */
+    ZcWarehouseRespVO getWarehouseVO(Long id);
+
+    /**
      * 获得仓库分页
      *
      * @param pageReqVO 分页查询
      * @return 仓库分页
      */
     PageResult<ZcWarehouseDO> getWarehousePage(ZcWarehousePageReqVO pageReqVO);
+
+    /**
+     * 获得仓库分页（含负责人昵称）
+     *
+     * @param pageReqVO 分页查询
+     * @return 仓库分页 VO（含 managerName）
+     */
+    PageResult<ZcWarehouseRespVO> getWarehousePageVO(ZcWarehousePageReqVO pageReqVO);
 
     /**
      * 获得仓库列表

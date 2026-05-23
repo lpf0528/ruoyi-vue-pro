@@ -78,8 +78,18 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
     }
 
     @Override
+    public ZcWarehouseRespVO getWarehouseVO(Long id) {
+        return warehouseMapper.selectByIdWithVO(id);
+    }
+
+    @Override
     public PageResult<ZcWarehouseDO> getWarehousePage(ZcWarehousePageReqVO pageReqVO) {
         return warehouseMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public PageResult<ZcWarehouseRespVO> getWarehousePageVO(ZcWarehousePageReqVO pageReqVO) {
+        return warehouseMapper.selectPageVO(pageReqVO);
     }
 
     @Override

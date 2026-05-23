@@ -20,9 +20,13 @@ public class ZcWarehouseRespVO {
     @ExcelProperty("仓库名称")
     private String name;
 
-    @Schema(description = "负责人", example = "29011")
-    @ExcelProperty("负责人")
+    @Schema(description = "负责人 ID", example = "29011")
+    @ExcelProperty("负责人ID")
     private Long managerId;
+
+    @Schema(description = "负责人昵称")
+    @ExcelProperty("负责人")
+    private String managerName;
 
     @Schema(description = "备注")
     @ExcelProperty("备注")
