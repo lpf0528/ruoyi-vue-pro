@@ -56,5 +56,9 @@ public interface ErrorCodeConstants {
      * 删除客户时，该客户下存在销售订单，禁止删除
      */
     ErrorCode CUSTOMER_HAS_ORDERS = new ErrorCode(100036, "该客户存在销售订单，禁止删除");
+    /**
+     * 删除客户时，该客户下存在收支账单，禁止删除
+     */
+    ErrorCode CUSTOMER_HAS_BILLS = new ErrorCode(100037, "该客户存在收支账单，禁止删除");
 }
 

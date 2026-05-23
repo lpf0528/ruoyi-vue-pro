@@ -16,6 +16,8 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillsDO;
+import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.customer.ZcCustomerMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -39,6 +41,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
+
+    @Resource
+    private ZcBillsMapper billsMapper;
 
     @Override
     public Long createCustomer(ZcCustomerSaveReqVO createReqVO) {
@@ -69,6 +74,12 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
                 new LambdaQueryWrapper<ZcSalesOrderDO>().eq(ZcSalesOrderDO::getCustomerId, id));
         if (orderCount != null && orderCount > 0) {
             throw exception(CUSTOMER_HAS_ORDERS);
+        }
+        // 校验客户下是否存在收支账单，存在则禁止删除
+        Long billCount = billsMapper.selectCount(
+                new LambdaQueryWrapper<ZcBillsDO>().eq(ZcBillsDO::getCustomerId, id));
+        if (billCount != null && billCount > 0) {
+            throw exception(CUSTOMER_HAS_BILLS);
         }
         // 删除
         customerMapper.deleteById(id);
