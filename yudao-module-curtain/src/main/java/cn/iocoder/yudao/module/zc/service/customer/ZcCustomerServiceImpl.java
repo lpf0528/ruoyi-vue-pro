@@ -15,7 +15,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.customer.ZcCustomerMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
@@ -33,6 +36,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Resource
     private ZcCustomerMapper customerMapper;
+
+    @Resource
+    private ZcSalesOrderMapper salesOrderMapper;
 
     @Override
     public Long createCustomer(ZcCustomerSaveReqVO createReqVO) {
@@ -57,16 +63,15 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     public void deleteCustomer(Long id) {
         // 校验存在
         validateCustomerExists(id);
+        // 校验客户下是否存在销售订单，存在则禁止删除
+        Long orderCount = salesOrderMapper.selectCount(
+                new LambdaQueryWrapper<ZcSalesOrderDO>().eq(ZcSalesOrderDO::getCustomerId, id));
+        if (orderCount != null && orderCount > 0) {
+            throw exception(CUSTOMER_HAS_ORDERS);
+        }
         // 删除
         customerMapper.deleteById(id);
     }
-
-    @Override
-        public void deleteCustomerListByIds(List<Long> ids) {
-        // 删除
-        customerMapper.deleteByIds(ids);
-        }
-
 
     private void validateCustomerExists(Long id) {
         if (customerMapper.selectById(id) == null) {

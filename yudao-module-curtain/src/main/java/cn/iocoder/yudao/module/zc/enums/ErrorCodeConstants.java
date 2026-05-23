@@ -52,5 +52,9 @@ public interface ErrorCodeConstants {
      * 创建/更新收款单时，分摊到各订单的金额合计与实收+优惠不一致
      */
     ErrorCode BILL_ALLOCATED_AMOUNT_NOT_MATCH = new ErrorCode(100035, "分摊到各订单的金额合计与实收金额+优惠金额不一致，请检查后重试");
+    /**
+     * 删除客户时，该客户下存在销售订单，禁止删除
+     */
+    ErrorCode CUSTOMER_HAS_ORDERS = new ErrorCode(100036, "该客户存在销售订单，禁止删除");
 }
 

@@ -33,16 +33,11 @@ public interface ZcCustomerService {
     /**
      * 删除客户资料
      *
+     * <p>若客户下存在销售订单，则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#CUSTOMER_HAS_ORDERS} 异常。</p>
+     *
      * @param id 编号
      */
     void deleteCustomer(Long id);
-
-    /**
-    * 批量删除客户资料
-    *
-    * @param ids 编号
-    */
-    void deleteCustomerListByIds(List<Long> ids);
 
     /**
      * 获得客户资料

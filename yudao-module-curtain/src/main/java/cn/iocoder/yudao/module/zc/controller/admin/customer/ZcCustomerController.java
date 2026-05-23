@@ -63,15 +63,6 @@ public class ZcCustomerController {
         return success(true);
     }
 
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除客户资料")
-                @PreAuthorize("@ss.hasPermission('zc:customer:delete')")
-    public CommonResult<Boolean> deleteCustomerList(@RequestParam("ids") List<Long> ids) {
-        customerService.deleteCustomerListByIds(ids);
-        return success(true);
-    }
-
     @GetMapping("/get")
     @Operation(summary = "获得客户资料")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
