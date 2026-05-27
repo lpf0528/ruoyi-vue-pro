@@ -19,8 +19,7 @@ public class ZcCurtainStructureElementSaveReqVO {
     @Schema(description = "备注")
     private String note;
 
-    @Schema(description = "版本", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "版本不能为空")
+    @Schema(description = "版本")
     private Long versionId;
 
 }
