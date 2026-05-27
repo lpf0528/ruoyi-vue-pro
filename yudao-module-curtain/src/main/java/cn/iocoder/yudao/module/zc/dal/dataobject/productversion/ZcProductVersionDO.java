@@ -53,10 +53,12 @@ public class ZcProductVersionDO extends BaseDO {
     /**
      * 进货价
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal inboundPrice;
     /**
      * 一级类销售价
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal onePrice;
     /**
      * 分类
