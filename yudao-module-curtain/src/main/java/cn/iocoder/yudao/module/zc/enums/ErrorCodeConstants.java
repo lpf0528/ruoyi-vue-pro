@@ -60,5 +60,9 @@ public interface ErrorCodeConstants {
      * 删除客户时，该客户下存在收支账单，禁止删除
      */
     ErrorCode CUSTOMER_HAS_BILLS = new ErrorCode(100037, "该客户存在收支账单，禁止删除");
+    /**
+     * 删除产品版本时，该版本下存在绑定产品，禁止删除
+     */
+    ErrorCode PRODUCT_VERSION_HAS_PRODUCTS = new ErrorCode(100038, "该产品版本下存在绑定产品，禁止删除");
 }
 

@@ -35,4 +35,10 @@ public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
                 .orderByDesc(ZcProductDO::getId));
     }
 
+    /** 统计指定版本下的产品数量 */
+    default long countByVersionId(Long versionId) {
+        return selectCount(new LambdaQueryWrapperX<ZcProductDO>()
+                .eq(ZcProductDO::getVersionId, versionId));
+    }
+
 }

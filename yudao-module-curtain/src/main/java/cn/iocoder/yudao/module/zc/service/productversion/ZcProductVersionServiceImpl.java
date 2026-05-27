@@ -13,6 +13,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionMapper;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -31,6 +32,8 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
 
     @Resource
     private ZcProductVersionMapper productVersionMapper;
+    @Resource
+    private ZcProductMapper productMapper;
 
     @Override
     public Long createProductVersion(ZcProductVersionSaveReqVO createReqVO) {
@@ -55,15 +58,25 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
     public void deleteProductVersion(Long id) {
         // 校验存在
         validateProductVersionExists(id);
+        // 校验该版本下是否存在绑定产品，存在则禁止删除
+        if (productMapper.countByVersionId(id) > 0) {
+            throw exception(PRODUCT_VERSION_HAS_PRODUCTS);
+        }
         // 删除
         productVersionMapper.deleteById(id);
     }
 
     @Override
-        public void deleteProductVersionListByIds(List<Long> ids) {
+    public void deleteProductVersionListByIds(List<Long> ids) {
+        // 校验每个版本是否存在绑定产品
+        ids.forEach(id -> {
+            if (productMapper.countByVersionId(id) > 0) {
+                throw exception(PRODUCT_VERSION_HAS_PRODUCTS);
+            }
+        });
         // 删除
         productVersionMapper.deleteByIds(ids);
-        }
+    }
 
 
     private void validateProductVersionExists(Long id) {
