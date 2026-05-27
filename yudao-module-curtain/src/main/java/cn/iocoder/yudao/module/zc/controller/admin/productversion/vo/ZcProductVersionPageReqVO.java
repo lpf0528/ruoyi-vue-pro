@@ -27,7 +27,7 @@ public class ZcProductVersionPageReqVO extends PageParam {
     private String sellingPriceType;
 
     @Schema(description = "分类", example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
-    private Integer classify;
+    private String classify;
 
     @Schema(description = "供应商", example = "7521")
     private Long supplierId;

@@ -34,8 +34,8 @@ public class ZcProductVersionSaveReqVO {
     private BigDecimal onePrice;
 
     @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
-    @NotNull(message = "分类不能为空")
-    private Integer classify;
+    @NotEmpty(message = "分类不能为空")
+    private String classify;
 
     @Schema(description = "供应商", example = "7521")
     private Long supplierId;

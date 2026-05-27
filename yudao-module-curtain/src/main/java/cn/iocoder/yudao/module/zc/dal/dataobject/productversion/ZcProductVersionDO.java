@@ -63,7 +63,7 @@ public class ZcProductVersionDO extends BaseDO {
      *
      * 枚举 {@link TODO zc_product_classify 对应的类}
      */
-    private Integer classify;
+    private String classify;
     /**
      * 供应商
      */

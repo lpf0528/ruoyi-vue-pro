@@ -26,7 +26,7 @@
         <if test="reqVO.sellingPriceType != null and reqVO.sellingPriceType != ''">
             AND t1.selling_price_type = #{reqVO.sellingPriceType}
         </if>
-        <if test="reqVO.classify != null">
+        <if test="reqVO.classify != null and reqVO.classify != ''">
             AND t1.classify = #{reqVO.classify}
         </if>
         <if test="reqVO.supplierId != null">

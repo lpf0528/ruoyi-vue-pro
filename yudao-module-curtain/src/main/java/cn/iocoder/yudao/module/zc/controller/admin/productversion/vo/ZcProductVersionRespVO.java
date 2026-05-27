@@ -48,7 +48,7 @@ public class ZcProductVersionRespVO {
     @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
     @ExcelProperty(value = "分类", converter = DictConvert.class)
     @DictFormat("zc_product_classify") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
-    private Integer classify;
+    private String classify;
 
     @Schema(description = "供应商", example = "7521")
     @ExcelProperty("供应商")
