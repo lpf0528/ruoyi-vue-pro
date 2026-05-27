@@ -40,6 +40,7 @@ public class ZcProductDO extends BaseDO {
     /**
      * 进货价
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal inboundPrice;
     /**
      * 规格
@@ -49,6 +50,7 @@ public class ZcProductDO extends BaseDO {
     /**
      * 一级销售价
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal onePrice;
     /**
      * 供应商
