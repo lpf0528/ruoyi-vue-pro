@@ -49,4 +49,10 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
                 .in(ZCSalesOrderMaterialDO::getOrderId, orderIds));
     }
 
+    /** 统计指定批次被订单用料明细引用的数量 */
+    default long countByBatchId(Long batchId) {
+        return selectCount(new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
+                .eq(ZCSalesOrderMaterialDO::getBatchId, batchId));
+    }
+
 }

@@ -64,5 +64,9 @@ public interface ErrorCodeConstants {
      * 删除产品版本时，该版本下存在绑定产品，禁止删除
      */
     ErrorCode PRODUCT_VERSION_HAS_PRODUCTS = new ErrorCode(100038, "该产品版本下存在绑定产品，禁止删除");
+    /**
+     * 删除产品批次时，该批次已被订单用料明细引用，禁止删除
+     */
+    ErrorCode PRODUCT_BATCH_HAS_ORDER_MATERIALS = new ErrorCode(100039, "该批次已被订单引用，禁止删除");
 }
 

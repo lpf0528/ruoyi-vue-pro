@@ -16,6 +16,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 
@@ -35,6 +36,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
 
     @Resource
     private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZCSalesOrderMaterialMapper salesOrderMaterialMapper;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
@@ -73,15 +76,25 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     public void deleteProductBatch(Long id) {
         // 校验存在
         validateProductBatchExists(id);
+        // 校验该批次是否已被订单用料明细引用，有则禁止删除
+        if (salesOrderMaterialMapper.countByBatchId(id) > 0) {
+            throw exception(PRODUCT_BATCH_HAS_ORDER_MATERIALS);
+        }
         // 删除
         productBatchMapper.deleteById(id);
     }
 
     @Override
-        public void deleteProductBatchListByIds(List<Long> ids) {
+    public void deleteProductBatchListByIds(List<Long> ids) {
+        // 校验每个批次是否已被订单用料明细引用
+        ids.forEach(id -> {
+            if (salesOrderMaterialMapper.countByBatchId(id) > 0) {
+                throw exception(PRODUCT_BATCH_HAS_ORDER_MATERIALS);
+            }
+        });
         // 删除
         productBatchMapper.deleteByIds(ids);
-        }
+    }
 
 
     private void validateProductBatchExists(Long id) {
