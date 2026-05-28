@@ -68,5 +68,9 @@ public interface ErrorCodeConstants {
      * 删除产品批次时，该批次已被订单用料明细引用，禁止删除
      */
     ErrorCode PRODUCT_BATCH_HAS_ORDER_MATERIALS = new ErrorCode(100039, "该批次已被订单引用，禁止删除");
+    /**
+     * 产品类销售订单行不存在
+     */
+    ErrorCode SALES_ORDER_PRODUCT_NOT_EXISTS = new ErrorCode(100040, "销售订单产品行不存在");
 }
 
