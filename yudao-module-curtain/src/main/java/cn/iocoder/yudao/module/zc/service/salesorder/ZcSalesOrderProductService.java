@@ -29,6 +29,13 @@ public interface ZcSalesOrderProductService {
     Long createSalesOrderProduct(@Valid ZcSalesOrderProductCreateReqVO createReqVO);
 
     /**
+     * 删除产品类销售订单（级联删除产品行）
+     *
+     * @param id 订单 ID
+     */
+    void deleteSalesOrderProduct(Long id);
+
+    /**
      * 整单更新产品类销售订单
      *
      * <p>订单主记录覆盖写入，产品行先全量删除再重新插入，与创建接口保持相同的整单风格。

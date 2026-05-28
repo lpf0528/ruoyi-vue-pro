@@ -47,6 +47,18 @@ public class ZcSalesOrderProductController {
     }
 
     /**
+     * 删除产品类销售订单（级联删除产品行）
+     */
+    @DeleteMapping("/delete")
+    @Operation(summary = "删除产品类销售订单")
+    @Parameter(name = "id", description = "订单 ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
+    public CommonResult<Boolean> deleteSalesOrderProduct(@RequestParam("id") Long id) {
+        salesOrderProductService.deleteSalesOrderProduct(id);
+        return success(true);
+    }
+
+    /**
      * 更新产品类销售订单（整单，含产品批次行）
      */
     @PutMapping("/update")

@@ -72,5 +72,9 @@ public interface ErrorCodeConstants {
      * 产品类销售订单行不存在
      */
     ErrorCode SALES_ORDER_PRODUCT_NOT_EXISTS = new ErrorCode(100040, "销售订单产品行不存在");
+    /**
+     * 已确认的订单禁止删除（confirm_time 不为空）
+     */
+    ErrorCode SALES_ORDER_CONFIRMED_CANNOT_DELETE = new ErrorCode(100041, "已确认的订单禁止删除");
 }
 

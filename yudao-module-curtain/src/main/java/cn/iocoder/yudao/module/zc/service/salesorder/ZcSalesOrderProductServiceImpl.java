@@ -24,6 +24,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_DELETE;
 
 /**
  * 产品类销售订单 Service 实现类
@@ -69,6 +70,23 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
             salesOrderProductMapper.insert(productDO);
         }
         return orderId;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteSalesOrderProduct(Long id) {
+        // 1. 校验订单存在
+        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        // 2. 已确认（confirm_time 不为空）的订单禁止删除
+        if (order.getConfirmTime() != null) {
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_DELETE);
+        }
+        // 3. 先删产品行，再删主记录，防止孤立数据
+        salesOrderProductMapper.deleteByOrderId(id);
+        salesOrderMapper.deleteById(id);
     }
 
     @Override
