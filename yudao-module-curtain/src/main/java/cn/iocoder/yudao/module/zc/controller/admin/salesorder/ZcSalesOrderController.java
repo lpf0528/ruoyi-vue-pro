@@ -53,14 +53,14 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
-//    @DeleteMapping("/delete")
-//    @Operation(summary = "删除销售订单")
-//    @Parameter(name = "id", description = "编号", required = true)
-//    @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
-//    public CommonResult<Boolean> deleteSalesOrder(@RequestParam("id") Long id) {
-//        salesOrderService.deleteSalesOrder(id);
-//        return success(true);
-//    }
+    @DeleteMapping("/delete")
+    @Operation(summary = "删除销售订单（已确认的订单禁止删除）")
+    @Parameter(name = "id", description = "编号", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:delete')")
+    public CommonResult<Boolean> deleteSalesOrder(@RequestParam("id") Long id) {
+        salesOrderService.deleteSalesOrder(id);
+        return success(true);
+    }
 
 //    @DeleteMapping("/delete-list")
 //    @Parameter(name = "ids", description = "编号", required = true)

@@ -241,7 +241,15 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSalesOrder(Long id) {
-        validateSalesOrderExists(id);
+        // 校验订单存在
+        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        // confirm_time 不为空表示已确认，禁止删除
+        if (order.getConfirmTime() != null) {
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_DELETE);
+        }
         // 级联删除三层子表，再删主记录，防止孤立数据
         salesOrderCurtainMapper.deleteByOrderId(id);
         salesOrderStructureMapper.deleteByOrderId(id);
