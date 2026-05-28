@@ -32,4 +32,7 @@ public class ZcProductSimpleRespVO {
     @Schema(description = "供应商", example = "25473")
     private Long supplierId;
 
+    @Schema(description = "规格值")
+    private String specValue;
+
 }
