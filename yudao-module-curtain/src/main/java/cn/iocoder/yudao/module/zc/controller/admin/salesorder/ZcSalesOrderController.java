@@ -45,13 +45,13 @@ public class ZcSalesOrderController {
         return success(salesOrderService.createSalesOrder(createReqVO));
     }
 
-//    @PutMapping("/update")
-//    @Operation(summary = "更新销售订单")
-//    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
-//    public CommonResult<Boolean> updateSalesOrder(@Valid @RequestBody ZcSalesOrderSaveReqVO updateReqVO) {
-//        salesOrderService.updateSalesOrder(updateReqVO);
-//        return success(true);
-//    }
+    @PutMapping("/update")
+    @Operation(summary = "整单更新销售订单（含窗帘行→结构行→用料明细，已确认订单禁止修改）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> updateSalesOrder(@Valid @RequestBody ZcSalesOrderUpdateReqVO updateReqVO) {
+        salesOrderService.updateSalesOrder(updateReqVO);
+        return success(true);
+    }
 
 //    @DeleteMapping("/delete")
 //    @Operation(summary = "删除销售订单")

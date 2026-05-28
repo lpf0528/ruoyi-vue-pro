@@ -76,5 +76,9 @@ public interface ErrorCodeConstants {
      * 已确认的订单禁止删除（confirm_time 不为空）
      */
     ErrorCode SALES_ORDER_CONFIRMED_CANNOT_DELETE = new ErrorCode(100041, "已确认的订单禁止删除");
+    /**
+     * 已确认的订单禁止修改（status 不为 unconfirmed）
+     */
+    ErrorCode SALES_ORDER_CONFIRMED_CANNOT_UPDATE = new ErrorCode(100042, "已确认的订单禁止修改，如需修改请先取消确认");
 }
 

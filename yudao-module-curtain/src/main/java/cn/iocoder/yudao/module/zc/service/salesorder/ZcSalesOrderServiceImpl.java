@@ -158,12 +158,73 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
-    public void updateSalesOrder(ZcSalesOrderSaveReqVO updateReqVO) {
-        // 校验存在
-        validateSalesOrderExists(updateReqVO.getId());
-        // 更新
-        ZcSalesOrderDO updateObj = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
-        salesOrderMapper.updateById(updateObj);
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSalesOrder(ZcSalesOrderUpdateReqVO updateReqVO) {
+        Long orderId = updateReqVO.getId();
+
+        // 1. 校验订单存在
+        ZcSalesOrderDO existing = salesOrderMapper.selectById(orderId);
+        if (existing == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+
+        // 2. 已确认的订单禁止修改（只有 unconfirmed 状态才可编辑）
+        if (!"unconfirmed".equals(existing.getStatus())) {
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
+        }
+
+        // 3. 更新订单主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
+        ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+        updateDO.setOrderNo(null);           // 不允许修改
+        updateDO.setPayStatus(null);         // 不允许修改
+        updateDO.setStatus(null);            // 不允许修改
+        updateDO.setIsExpedited(null);       // 不允许修改
+        updateDO.setAmountReceived(null);    // 不允许修改
+        updateDO.setConfirmTime(null);       // 不允许修改
+        salesOrderMapper.updateById(updateDO);
+
+        // 4. 删除旧的三层子表数据，再重新插入（全量替换保证一致性）
+        salesOrderCurtainMapper.deleteByOrderId(orderId);
+        salesOrderStructureMapper.deleteByOrderId(orderId);
+        salesOrderMaterialMapper.deleteByOrderId(orderId);
+
+        // 5. 级联插入新窗帘行 → 结构行 → 用料明细（逻辑与创建相同）
+        if (CollUtil.isEmpty(updateReqVO.getCurtains())) {
+            return;
+        }
+        for (ZcSalesOrderCurtainCreateVO curtainVO : updateReqVO.getCurtains()) {
+            // 5.1 保存窗帘行，配件列表序列化为 JSON 字符串
+            ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
+            curtainDO.setOrderId(orderId);
+            if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
+                curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
+            }
+            salesOrderCurtainMapper.insert(curtainDO);
+            Long orderCurtainId = curtainDO.getId();
+
+            // 5.2 保存结构行
+            if (CollUtil.isEmpty(curtainVO.getStructures())) {
+                continue;
+            }
+            for (ZcSalesOrderStructureCreateVO structureVO : curtainVO.getStructures()) {
+                ZcSalesOrderStructureDO structureDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
+                structureDO.setOrderId(orderId);
+                structureDO.setOrderCurtainId(orderCurtainId);
+                salesOrderStructureMapper.insert(structureDO);
+                Long orderStructureId = structureDO.getId();
+
+                // 5.3 保存用料明细
+                if (CollUtil.isEmpty(structureVO.getMaterials())) {
+                    continue;
+                }
+                for (ZCSalesOrderMaterialCreateVO materialVO : structureVO.getMaterials()) {
+                    ZCSalesOrderMaterialDO materialDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
+                    materialDO.setOrderId(orderId);
+                    materialDO.setOrderStructureId(orderStructureId);
+                    salesOrderMaterialMapper.insert(materialDO);
+                }
+            }
+        }
     }
 
     @Override
