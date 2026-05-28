@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
 
 import javax.validation.Valid;
 
@@ -26,6 +27,16 @@ public interface ZcSalesOrderProductService {
      * @return 新订单 ID
      */
     Long createSalesOrderProduct(@Valid ZcSalesOrderProductCreateReqVO createReqVO);
+
+    /**
+     * 整单更新产品类销售订单
+     *
+     * <p>订单主记录覆盖写入，产品行先全量删除再重新插入，与创建接口保持相同的整单风格。
+     * 订单号、结算状态、订单状态、是否加急等系统字段不允许通过此接口修改。</p>
+     *
+     * @param updateReqVO 整单更新请求（含产品批次行列表）
+     */
+    void updateSalesOrderProduct(@Valid ZcSalesOrderProductUpdateReqVO updateReqVO);
 
     /**
      * 查询面料单详情（含产品批次行列表）

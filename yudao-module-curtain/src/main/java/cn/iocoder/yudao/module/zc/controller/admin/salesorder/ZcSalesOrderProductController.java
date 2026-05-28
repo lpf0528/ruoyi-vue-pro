@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.zc.controller.admin.salesorder;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,6 +44,18 @@ public class ZcSalesOrderProductController {
     public CommonResult<Long> createSalesOrderProduct(
             @Valid @RequestBody ZcSalesOrderProductCreateReqVO createReqVO) {
         return success(salesOrderProductService.createSalesOrderProduct(createReqVO));
+    }
+
+    /**
+     * 更新产品类销售订单（整单，含产品批次行）
+     */
+    @PutMapping("/update")
+    @Operation(summary = "更新产品类销售订单（整单，含产品批次行）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> updateSalesOrderProduct(
+            @Valid @RequestBody ZcSalesOrderProductUpdateReqVO updateReqVO) {
+        salesOrderProductService.updateSalesOrderProduct(updateReqVO);
+        return success(true);
     }
 
     /**

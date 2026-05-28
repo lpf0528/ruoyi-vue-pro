@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderPro
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductLineRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderProductDO;
@@ -68,6 +69,38 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
             salesOrderProductMapper.insert(productDO);
         }
         return orderId;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSalesOrderProduct(ZcSalesOrderProductUpdateReqVO updateReqVO) {
+        Long orderId = updateReqVO.getId();
+
+        // 1. 校验订单存在
+        ZcSalesOrderDO existing = salesOrderMapper.selectById(orderId);
+        if (existing == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+
+        // 2. 更新订单主记录，保留系统字段（订单号、状态、结算状态、是否加急不允许覆盖）
+        ZcSalesOrderDO updateOrder = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+        updateOrder.setOrderNo(existing.getOrderNo());
+        updateOrder.setStatus(existing.getStatus());
+        updateOrder.setPayStatus(existing.getPayStatus());
+        updateOrder.setIsExpedited(existing.getIsExpedited());
+        updateOrder.setConfirmTime(existing.getConfirmTime());
+        if (updateOrder.getFreight() == null) {
+            updateOrder.setFreight(java.math.BigDecimal.ZERO);
+        }
+        salesOrderMapper.updateById(updateOrder);
+
+        // 3. 整单替换产品行：先全量删除旧行，再重新插入新行
+        salesOrderProductMapper.deleteByOrderId(orderId);
+        for (ZcSalesOrderProductBatchCreateVO batchVO : updateReqVO.getBatchs()) {
+            ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);
+            productDO.setOrderId(orderId);
+            salesOrderProductMapper.insert(productDO);
+        }
     }
 
     @Override
