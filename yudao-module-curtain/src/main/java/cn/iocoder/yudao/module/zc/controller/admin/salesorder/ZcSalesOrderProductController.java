@@ -2,15 +2,14 @@ package cn.iocoder.yudao.module.zc.controller.admin.salesorder;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -44,6 +43,18 @@ public class ZcSalesOrderProductController {
     public CommonResult<Long> createSalesOrderProduct(
             @Valid @RequestBody ZcSalesOrderProductCreateReqVO createReqVO) {
         return success(salesOrderProductService.createSalesOrderProduct(createReqVO));
+    }
+
+    /**
+     * 查询面料单详情（含产品批次行列表）
+     */
+    @GetMapping("/get")
+    @Operation(summary = "查询面料单详情（含产品批次行列表）")
+    @Parameter(name = "id", description = "订单 ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<ZcSalesOrderProductDetailRespVO> getSalesOrderProductDetail(
+            @RequestParam("id") Long id) {
+        return success(salesOrderProductService.getSalesOrderProductDetail(id));
     }
 
 }

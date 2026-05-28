@@ -2,9 +2,11 @@ package cn.iocoder.yudao.module.zc.dal.mysql.salesorder;
 
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductLineRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderProductDO;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -27,6 +29,14 @@ public interface ZcSalesOrderProductMapper extends BaseMapperX<ZcSalesOrderProdu
                 .eq(ZcSalesOrderProductDO::getOrderId, orderId)
                 .orderByAsc(ZcSalesOrderProductDO::getId));
     }
+
+    /**
+     * 按订单 ID 查询产品行列表（JOIN 产品表取名称、JOIN 批次表取批次号），结果直接映射到 VO
+     *
+     * @param orderId 销售订单 ID
+     * @return 含产品名称、批次号的产品行 VO 列表
+     */
+    List<ZcSalesOrderProductLineRespVO> selectProductLinesWithVOByOrderId(@Param("orderId") Long orderId);
 
     /** 删除指定订单下的所有产品行（用于删除订单时级联清理） */
     default void deleteByOrderId(Long orderId) {

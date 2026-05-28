@@ -4,6 +4,9 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductBatchCreateVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductLineRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderProductDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
@@ -16,6 +19,10 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
 
 /**
  * 产品类销售订单 Service 实现类
@@ -61,6 +68,23 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
             salesOrderProductMapper.insert(productDO);
         }
         return orderId;
+    }
+
+    @Override
+    public ZcSalesOrderProductDetailRespVO getSalesOrderProductDetail(Long id) {
+        // 1. SQL JOIN 查订单主记录（含客户名称、物流名称），不存在则抛异常
+        ZcSalesOrderRespVO orderVO = salesOrderMapper.selectVOById(id);
+        if (orderVO == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+
+        // 2. SQL JOIN 查产品行（含产品名称、批次号），结果直接映射到 VO
+        List<ZcSalesOrderProductLineRespVO> lines = salesOrderProductMapper.selectProductLinesWithVOByOrderId(id);
+
+        // 3. 组装返回 VO
+        ZcSalesOrderProductDetailRespVO respVO = BeanUtils.toBean(orderVO, ZcSalesOrderProductDetailRespVO.class);
+        respVO.setBatchs(lines);
+        return respVO;
     }
 
 }

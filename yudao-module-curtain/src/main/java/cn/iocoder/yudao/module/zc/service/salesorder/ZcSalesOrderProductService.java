@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 
 import javax.validation.Valid;
 
@@ -25,5 +26,16 @@ public interface ZcSalesOrderProductService {
      * @return 新订单 ID
      */
     Long createSalesOrderProduct(@Valid ZcSalesOrderProductCreateReqVO createReqVO);
+
+    /**
+     * 查询面料单详情（含产品批次行列表）
+     *
+     * <p>一次性返回订单主信息及所有产品行，行内冗余产品名称、批次号，
+     * 前端无需二次请求。</p>
+     *
+     * @param id 订单 ID
+     * @return 面料单详情 VO；若订单不存在则抛出业务异常
+     */
+    ZcSalesOrderProductDetailRespVO getSalesOrderProductDetail(Long id);
 
 }

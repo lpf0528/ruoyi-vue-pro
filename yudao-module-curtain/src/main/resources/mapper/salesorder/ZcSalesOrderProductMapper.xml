@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderProductMapper">
+
+    <!--
+        按订单 ID 查询产品行列表，JOIN zc_product 取产品名称，JOIN zc_product_batch 取批次号。
+        结果映射到 ZcSalesOrderProductLineRespVO。
+    -->
+    <select id="selectProductLinesWithVOByOrderId"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductLineRespVO">
+        SELECT
+            t1.id,
+            t1.order_id,
+            t1.product_id,
+            t2.`name`    AS product_name,
+            t1.batch_id,
+            t3.batch_no,
+            t1.quantity,
+            t1.price,
+            t1.amount,
+            t1.note
+        FROM zc_sales_order_product t1
+            LEFT JOIN zc_product       t2 ON t1.product_id = t2.id AND t2.deleted = 0
+            LEFT JOIN zc_product_batch t3 ON t1.batch_id   = t3.id AND t3.deleted = 0
+        WHERE t1.deleted = 0
+          AND t1.order_id = #{orderId}
+        ORDER BY t1.id ASC
+    </select>
+
+</mapper>
