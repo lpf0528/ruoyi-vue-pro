@@ -73,7 +73,7 @@ public class ZcSalesOrderProductController {
     /**
      * 查询面料单详情（含产品批次行列表）
      */
-    @GetMapping("/get")
+    @GetMapping("/detail")
     @Operation(summary = "查询面料单详情（含产品批次行列表）")
     @Parameter(name = "id", description = "订单 ID", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
