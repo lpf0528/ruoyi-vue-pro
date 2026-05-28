@@ -270,18 +270,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
-    public List<ZcSalesOrderCurtainDetailRespVO> getSalesOrderDetail(Long orderId) {
-        // 1. 查询该订单下所有窗帘行
-        List<ZcSalesOrderCurtainDO> curtainList = salesOrderCurtainMapper.selectListByOrderId(orderId);
-        if (CollUtil.isEmpty(curtainList)) {
-            return Collections.emptyList();
+    public ZcSalesOrderDetailRespVO getSalesOrderDetail(Long orderId) {
+        // 1. 查询订单主表信息（含客户名、物流名、创建人名等关联字段）
+        ZcSalesOrderRespVO orderVO = salesOrderMapper.selectVOById(orderId);
+        if (orderVO == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
         }
 
-        // 2. 查询该订单下所有结构行与用料明细（一次性批量取出，避免 N+1）
+        // 3. 查询该订单下所有窗帘行
+        List<ZcSalesOrderCurtainDO> curtainList = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        if (CollUtil.isEmpty(curtainList)) {
+            ZcSalesOrderDetailRespVO emptyResult = BeanUtils.toBean(orderVO, ZcSalesOrderDetailRespVO.class);
+            emptyResult.setCurtains(Collections.emptyList());
+            return emptyResult;
+        }
+
+        // 4. 查询该订单下所有结构行与用料明细（一次性批量取出，避免 N+1）
         List<ZcSalesOrderStructureDO> structureList = salesOrderStructureMapper.selectListByOrderId(orderId);
         List<ZCSalesOrderMaterialDO> materialList = salesOrderMaterialMapper.selectListByOrderId(orderId);
 
-        // 3. 构建窗帘款式名称 Map
+        // 5. 构建窗帘款式名称 Map
         Set<Long> curtainIds = curtainList.stream()
                 .map(ZcSalesOrderCurtainDO::getCurtainId)
                 .filter(Objects::nonNull)
@@ -290,7 +298,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 ? convertMap(curtainMapper.selectBatchIds(curtainIds), ZcCurtainDO::getId, ZcCurtainDO::getName)
                 : Collections.emptyMap();
 
-        // 4. 构建结构名称与安装工艺名称 Map
+        // 6. 构建结构名称与安装工艺名称 Map
         Set<Long> structureIds = structureList.stream()
                 .map(ZcSalesOrderStructureDO::getStructureId)
                 .filter(Objects::nonNull)
@@ -306,7 +314,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 ? convertMap(curtainInstallProcessMapper.selectBatchIds(installProcessIds), ZcCurtainInstallProcessDO::getId, ZcCurtainInstallProcessDO::getName)
                 : Collections.emptyMap();
 
-        // 5. 构建组件类型名称、产品名称、批次号 Map
+        // 7. 构建组件类型名称、产品名称、批次号 Map
         Set<Long> elementIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getElementId)
                 .filter(Objects::nonNull)
@@ -329,7 +337,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 ? convertMap(productBatchMapper.selectBatchIds(batchIds), ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo)
                 : Collections.emptyMap();
 
-        // 6. 按结构行 ID 分组用料明细
+        // 8. 按结构行 ID 分组用料明细
         Map<Long, List<ZCSalesOrderMaterialDetailRespVO>> materialsByStructureId = materialList.stream()
                 .collect(Collectors.groupingBy(
                         ZCSalesOrderMaterialDO::getOrderStructureId,
@@ -342,7 +350,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                         }, Collectors.toList())
                 ));
 
-        // 7. 按窗帘行 ID 分组结构行
+        // 9. 按窗帘行 ID 分组结构行
         Map<Long, List<ZcSalesOrderStructureDetailRespVO>> structuresByCurtainId = structureList.stream()
                 .collect(Collectors.groupingBy(
                         ZcSalesOrderStructureDO::getOrderCurtainId,
@@ -355,28 +363,29 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                         }, Collectors.toList())
                 ));
 
-        // 8. 组装最终结果
-        return curtainList.stream().map(curtain -> {
+        // 10. 组装窗帘行列表
+        List<ZcSalesOrderCurtainDetailRespVO> curtains = curtainList.stream().map(curtain -> {
             ZcSalesOrderCurtainDetailRespVO vo = BeanUtils.toBean(curtain, ZcSalesOrderCurtainDetailRespVO.class);
             vo.setCurtainName(curtainNameMap.get(curtain.getCurtainId()));
             vo.setStructures(structuresByCurtainId.getOrDefault(curtain.getId(), Collections.emptyList()));
             return vo;
         }).collect(Collectors.toList());
+
+        // 11. 将订单主表信息与窗帘明细合并为完整详情 VO
+        ZcSalesOrderDetailRespVO result = BeanUtils.toBean(orderVO, ZcSalesOrderDetailRespVO.class);
+        result.setCurtains(curtains);
+        return result;
     }
 
     // ======================== PDF 生成 ========================
 
     @Override
     public byte[] generateSalesOrderPdf(Long orderId) {
-        // 获取订单主信息（含关联客户名、物流名、创建人名）
-        ZcSalesOrderRespVO order = salesOrderMapper.selectVOById(orderId);
-        if (order == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
-        // 获取三层嵌套明细（窗帘行→结构行→用料明细）
-        List<ZcSalesOrderCurtainDetailRespVO> curtains = getSalesOrderDetail(orderId);
+        // 复用 getSalesOrderDetail，一次获取订单主表信息及三层嵌套明细
+        ZcSalesOrderDetailRespVO detail = getSalesOrderDetail(orderId);
+        List<ZcSalesOrderCurtainDetailRespVO> curtains = detail.getCurtains();
         try {
-            return buildSalesOrderPdf(order, curtains);
+            return buildSalesOrderPdf(detail, curtains);
         } catch (Exception e) {
             throw new RuntimeException("销售订单 PDF 生成失败", e);
         }

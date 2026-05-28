@@ -103,14 +103,14 @@ public interface ZcSalesOrderService {
     byte[] generateSalesOrderPdf(Long orderId);
 
     /**
-     * 获得销售订单全量明细（三层嵌套结构）
+     * 获得销售订单完整详情（主表信息 + 三层嵌套明细）
      *
-     * <p>返回该订单下所有窗帘行，每行含若干结构行，每个结构行含若干用料明细，
-     * 并冗余各关联表的名称字段，避免前端多次请求。</p>
+     * <p>返回订单主表全部字段，并在 curtains 节点下包含该订单的所有窗帘行，
+     * 每行含若干结构行，每个结构行含若干用料明细，并冗余关联表名称字段，避免前端多次请求。</p>
      *
      * @param orderId 销售订单 ID
-     * @return 窗帘行列表（含嵌套的结构行与用料明细）
+     * @return 销售订单完整详情（含 curtains 嵌套节点）
      */
-    List<ZcSalesOrderCurtainDetailRespVO> getSalesOrderDetail(Long orderId);
+    ZcSalesOrderDetailRespVO getSalesOrderDetail(Long orderId);
 
 }
