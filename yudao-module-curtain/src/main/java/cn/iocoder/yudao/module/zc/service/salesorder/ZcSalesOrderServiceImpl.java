@@ -168,19 +168,30 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             throw exception(SALES_ORDER_NOT_EXISTS);
         }
 
-        // 2. 已确认的订单禁止修改（只有 unconfirmed 状态才可编辑）
-        if (!"unconfirmed".equals(existing.getStatus())) {
-            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
+        // 2. confirm_time 不为空表示已确认：只允许修改品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains
+        if (existing.getConfirmTime() != null) {
+            salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                    .set(ZcSalesOrderDO::getBrandId, updateReqVO.getBrandId())
+                    .set(ZcSalesOrderDO::getLogisticId, updateReqVO.getLogisticId())
+                    .set(ZcSalesOrderDO::getReceiver, updateReqVO.getReceiver())
+                    .set(ZcSalesOrderDO::getDeliveryDate, updateReqVO.getDeliveryDate())
+                    .set(ZcSalesOrderDO::getDeliveryAddress, updateReqVO.getDeliveryAddress())
+                    .set(ZcSalesOrderDO::getFreight, updateReqVO.getFreight())
+                    .set(ZcSalesOrderDO::getDiscountAmount, updateReqVO.getDiscountAmount())
+                    .set(ZcSalesOrderDO::getAmount, updateReqVO.getAmount())
+                    .set(ZcSalesOrderDO::getNote, updateReqVO.getNote())
+                    .eq(ZcSalesOrderDO::getId, orderId));
+            return;
         }
 
-        // 3. 更新订单主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
+        // 3. 未确认的订单：整单更新主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
-        updateDO.setOrderNo(null);           // 不允许修改
-        updateDO.setPayStatus(null);         // 不允许修改
-        updateDO.setStatus(null);            // 不允许修改
-        updateDO.setIsExpedited(null);       // 不允许修改
-        updateDO.setAmountReceived(null);    // 不允许修改
-        updateDO.setConfirmTime(null);       // 不允许修改
+        updateDO.setOrderNo(null);
+        updateDO.setPayStatus(null);
+        updateDO.setStatus(null);
+        updateDO.setIsExpedited(null);
+        updateDO.setAmountReceived(null);
+        updateDO.setConfirmTime(null);
         salesOrderMapper.updateById(updateDO);
 
         // 4. 删除旧的三层子表数据，再重新插入（全量替换保证一致性）

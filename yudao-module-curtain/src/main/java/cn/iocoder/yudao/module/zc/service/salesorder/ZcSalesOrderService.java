@@ -29,12 +29,13 @@ public interface ZcSalesOrderService {
     /**
      * 整单更新销售订单（含嵌套窗帘行、结构行、用料明细）
      *
-     * <p>更新策略：先删除原有三层子表数据，再根据请求体重新插入，保证数据完整一致。
-     * 已确认（status != unconfirmed）的订单禁止修改，orderNo、payStatus、status、
-     * isExpedited、amountReceived、confirmTime 等系统字段不受此接口影响。</p>
+     * <p>以 confirm_time 是否为空判断确认状态：
+     * confirm_time 不为空（已确认）：仅更新品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains；
+     * confirm_time 为空（未确认）：先删除原有三层子表数据再重新插入，整单全量替换。
+     * orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 等系统字段不受此接口影响。</p>
      *
      * @param updateReqVO 整单更新请求（含窗帘行→结构行→用料明细三层嵌套）
-     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 若订单不存在或已确认则抛出异常
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 若订单不存在则抛出异常
      */
     void updateSalesOrder(@Valid ZcSalesOrderUpdateReqVO updateReqVO);
 
