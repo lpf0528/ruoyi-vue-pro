@@ -9,7 +9,8 @@
       "Bash(Sort-Object)",
       "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\" -Recurse -Filter \"*.java\")",
       "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\"\\))",
-      "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\\\\service\"\\))"
+      "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\\\\service\"\\))",
+      "Bash(Remove-Item *)"
     ]
   }
 }
