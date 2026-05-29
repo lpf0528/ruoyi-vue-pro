@@ -68,7 +68,7 @@ yudao-module-system/
 
 ## yudao-module-curtain 窗帘业务模块
 
-> **智仓**（`zc`）是针对窗帘制造行业定制的业务模块，包含完整的产品管理、客户管理、窗帘工艺配置和销售订单履约体系。
+> **智仓**（`zc`）是针对窗帘制造行业定制的业务模块，包含完整的产品管理、客户管理、窗帘工艺配置、销售订单履约、收支账单和生产工序追踪体系。
 > 包名前缀：`cn.iocoder.yudao.module.zc`
 
 ### 模块内部结构
@@ -76,11 +76,12 @@ yudao-module-system/
 ```
 yudao-module-curtain/
 └── src/main/java/cn/iocoder/yudao/module/zc/
-    ├── controller/admin/          # 22 个 Controller，路径前缀 /zc/
-    ├── service/                   # 22 个 Service 接口 + 实现
+    ├── controller/admin/          # 28 个 Controller，路径前缀 /zc/
+    ├── service/                   # 28 个 Service 接口 + 实现
     ├── dal/
-    │   ├── dataobject/           # 22 个 DO 类
-    │   └── mysql/                # 21 个 MyBatis Plus Mapper
+    │   ├── dataobject/           # 30 个 DO 类
+    │   └── mysql/                # 30 个 MyBatis Plus Mapper
+    ├── dal/redis/                 # ZcNoGeneratorRedisDAO（Redis INCR 单号生成）
     └── resources/mapper/         # MyBatis XML 映射文件（含复杂 JOIN 查询）
 ```
 
@@ -91,17 +92,25 @@ yudao-module-curtain/
 | **产品域** | `ZcProductDO`、`ZcProductVersionDO`、`ZcProductCategoryDO`、`ZcProductSpecDO`、`ZcProductBatchDO` | 产品定义、版本、分类、规格、库存批次管理 |
 | **客户域** | `ZcCustomerDO`、`ZcCustomerProductPriceDO` | 客户资料、送货地址、余额、客户专项定价 |
 | **窗帘工艺域** | `ZcCurtainDO`、`ZcCurtainStructureDO`、`ZcCurtainStructureElementDO`、`ZcCurtainPleatRatioDO`、`ZcCurtainInstallProcessDO`、`ZcCurtainTemplateDO` | 窗帘款式库、结构定义、组件库、褶倍配置、安装工艺、工艺模板 |
-| **订单履约域** | `ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO` | **核心域**：销售订单创建、交付、状态管理（三层嵌套数据结构） |
+| **订单履约域** | `ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO`、`ZcSalesOrderProductDO` | **核心域**：成品订单（三层嵌套）+ 产品类订单（面料单，两层扁平）|
+| **收支账单域** | `ZcBillsDO`、`ZcBillOrderItemsDO`、`ZcBillMethodsDO`、`ZcBillAttachmentsDO` | 客户收款单、按订单分摊金额、收款方式配置、附件凭证 |
+| **生产工序域** | `ZcProcessNodeDO`、`ZcOrderProcessRecordDO`、`ZcUserProcessNodeDO` | 工序节点配置（备料/裁剪/缝制/定型/质检/包装等）、订单工序流水记录、员工工序授权 |
 | **基础配置域** | `ZcBrandDO`、`ZcSupplierDO`、`ZcWarehouseDO`、`ZcLogisticsDO`、`ZcInventoryRecordDO` | 品牌、供应商、仓库、物流、库存盘点 |
 
 ### 核心数据模型（DO）
 
 | DO 类 | 表名 | 关键字段说明 |
 |-------|------|------------|
-| `ZcSalesOrderDO` | zc_sales_order | orderNo（自动生成）、customerId、payStatus（unpaid/partial/paid）、status（unconfirmed/pending/processing/completed/cancelled）、totalAmount、amount、amountReceived、freight、isExpedited |
+| `ZcSalesOrderDO` | zc_sales_order | orderNo（自动生成）、customerId、payStatus（unpaid/partial/paid）、status（unconfirmed/pending/processing/completed/cancelled）、confirmTime（非空即已确认）、totalAmount、amount、amountReceived、freight、isExpedited |
 | `ZcSalesOrderCurtainDO` | zc_sales_order_curtain | orderId、curtainId（款式）、room（房间）、pleatRatioValue（褶倍快照）、mountings（配件 JSON）、discountRate、amount |
 | `ZcSalesOrderStructureDO` | zc_sales_order_structure | orderId、orderCurtainId、structureId、height、width、leftCorner、rightCorner、pasteDirection、installProcessId、openMethod、processType、isShaping、pleatsNum、pleatsDistance、skirtHeight |
 | `ZCSalesOrderMaterialDO` | zc_sales_order_material | orderId、orderStructureId、elementId（组件类型）、productId、batchId、price、quantity、unitValue、discountRate、amount |
+| `ZcSalesOrderProductDO` | zc_sales_order_product | orderId、productId、batchId、quantity、price、amount、note（产品类订单/面料单的产品批次行） |
+| `ZcBillsDO` | zc_bills | billNo（自动生成）、billDate、billUserId（财务人员）、customerId、discountAmount（优惠）、actualAmount（实收）、billMethodId |
+| `ZcBillOrderItemsDO` | zc_bill_order_items | billId、orderId、allocatedAmount（本次分摊金额） |
+| `ZcProcessNodeDO` | zc_process_node | name（工序名称）、sort（排序号）、description |
+| `ZcOrderProcessRecordDO` | zc_order_process_record | orderId、nodeId、nodeName（快照）、status（1=进行中/2=已完成）、operatorUserId、note、imageUrls（JSON 图片列表） |
+| `ZcUserProcessNodeDO` | zc_user_process_node | userId、nodeId（员工授权的工序节点） |
 | `ZcProductDO` | zc_product | name、versionId、inboundPrice、specId、onePrice（一级售价）、supplierId |
 | `ZcProductBatchDO` | zc_product_batch | batchNo、inboundDate、productId、inboundPrice、inboundQuantity、quantity（剩余）、warehouseId、supplierId |
 | `ZcCustomerDO` | zc_customer | shortName、contactName、province/city/district、address、deliveryAddress、mobile、logisticId、brandId、balance |
@@ -109,10 +118,11 @@ yudao-module-curtain/
 | `ZcCurtainDO` | zc_curtain | name（款式名称）、pleatRatioValue（默认褶倍）、pleatsDistance（褶距） |
 | `ZcCurtainStructureDO` | zc_curtain_structure | name、attributes（`List<String>` 存 JSON，动态属性如长/宽/高） |
 
-### 销售订单三层嵌套结构
+### 销售订单类型说明
 
-销售订单是本模块最核心的数据结构，四表形成层级关系：
+ZC 模块存在两类销售订单，共用 `zc_sales_order` 主表，但子行结构不同：
 
+**成品订单（窗帘订单）**：四表三层嵌套，通过 `/zc/sales-order` 接口操作
 ```
 ZcSalesOrder（订单主表）
 └── ZcSalesOrderCurtain（窗帘行，L2）      ← 按款式/房间分行
@@ -120,8 +130,14 @@ ZcSalesOrder（订单主表）
         └── ZCSalesOrderMaterial（用料明细，L4） ← 具体物料、批次、用量、单价
 ```
 
-**整单创建流程**（`ZcSalesOrderServiceImpl.createSalesOrder`）：
-1. 生成订单号：`ZC{租户ID}{yyyyMMdd}{5位序号}`，如 `ZC120260519000001`
+**产品类订单（面料单）**：两层扁平结构，通过 `/zc/sales-order-product` 接口操作
+```
+ZcSalesOrder（订单主表）
+└── ZcSalesOrderProduct（产品批次行）  ← 直接购买产品批次，无工艺配置
+```
+
+**成品订单整单创建流程**（`ZcSalesOrderServiceImpl.createSalesOrder`）：
+1. 生成订单号：`ZC{租户ID}{yyyyMMdd}{5位序号}`，如 `ZC120260519000001`（由 `ZcNoGeneratorRedisDAO.nextOrderSeq()` Redis INCR 保证并发唯一）
 2. 保存订单主记录，初始状态 `payStatus=unpaid`、`status=unconfirmed`
 3. 遍历窗帘行 → 保存，配件列表（mountings）序列化为 JSON 字符串
 4. 遍历结构行 → 保存，关联 orderId + orderCurtainId
@@ -156,7 +172,7 @@ ZcSalesOrder（订单主表）
 
 **权限标识规范**：`zc:{资源}:{操作}`，如 `zc:product:create`、`zc:sales-order:query`
 
-**错误码范围**：`100001 ~ 100024`，定义于 `ZcErrorCodeConstants`
+**错误码范围**：`100001 ~ 100041`，定义于 `ZcErrorCodeConstants`
 
 ### 模块依赖
 - 依赖 `yudao-module-system`：Mapper XML 中 JOIN `system_users` 表获取创建人名称
@@ -167,9 +183,11 @@ ZcSalesOrder（订单主表）
 
 1. **整单 API**：涉及订单创建/更新，优先考虑整单接口（一次请求处理多层嵌套），避免前端多次调用
 2. **N+1 防范**：查询含关联名称时，先批量查出 ID 集合，再 `selectBatchIds()` 一次性加载，不要在循环里查数据库
-3. **JSON 字段**：多选类字段（如 mountings、attributes）用 JSON 存储，DO 层用 `JacksonTypeHandler`，Service 层负责序列化/反序列化
-4. **订单号唯一性**：当前用 `selectCount + 1` 生成序号，高并发下存在竞争，如需改造请改用数据库序列或 Redis incr
-5. **级联删除**：删除订单时需级联删除窗帘行、结构行、用料明细，参考 `ZcSalesOrderServiceImpl.deleteSalesOrder`
+3. **JSON 字段**：多选类字段（如 mountings、attributes、imageUrls）用 JSON 存储，DO 层用 `JacksonTypeHandler`，Service 层负责序列化/反序列化
+4. **订单号唯一性**：统一使用 `ZcNoGeneratorRedisDAO`（Redis INCR）生成序号，订单用 `nextOrderSeq()`，收款单用 `nextBillSeq()`，批次用 `nextBatchSeq()`，不要再用 `selectCount + 1`
+5. **级联删除**：删除订单前必须校验 `confirmTime == null`（已确认订单禁止删除）；成品订单级联删窗帘行/结构行/用料明细，产品类订单级联删产品行
+6. **工序权限**：员工操作工序记录前需校验 `ZcUserProcessNodeDO` 授权，参考 `ZcOrderProcessRecordServiceImpl`
+7. **收款分摊**：创建/更新收款单时，需校验分摊金额合计 = 实收 + 优惠，参考错误码 `BILL_ALLOCATED_AMOUNT_NOT_MATCH`
 
 ---
 

@@ -10,7 +10,9 @@
       "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\" -Recurse -Filter \"*.java\")",
       "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\"\\))",
       "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\\\\service\"\\))",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(xargs grep -l \"SalesOrderProduct\")",
+      "Bash(xargs grep -l \"SalesOrderDetail\\\\|SalesOrderController\\\\|salesOrderController\")"
     ]
   }
 }
