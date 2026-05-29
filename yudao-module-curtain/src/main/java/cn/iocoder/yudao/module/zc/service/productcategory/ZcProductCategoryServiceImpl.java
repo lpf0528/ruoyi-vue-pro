@@ -34,11 +34,11 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
 
     @Override
     public Long createProductCategory(ZcProductCategorySaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateProductCategoryValueUnique(null, createReqVO.getValue());
         // 插入
         ZcProductCategoryDO productCategory = BeanUtils.toBean(createReqVO, ZcProductCategoryDO.class);
         productCategoryMapper.insert(productCategory);
-
-        // 返回
         return productCategory.getId();
     }
 
@@ -46,6 +46,8 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
     public void updateProductCategory(ZcProductCategorySaveReqVO updateReqVO) {
         // 校验存在
         validateProductCategoryExists(updateReqVO.getId());
+        // 校验名称唯一性（排除自身）
+        validateProductCategoryValueUnique(updateReqVO.getId(), updateReqVO.getValue());
         // 更新
         ZcProductCategoryDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductCategoryDO.class);
         productCategoryMapper.updateById(updateObj);
@@ -70,6 +72,17 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
         if (productCategoryMapper.selectById(id) == null) {
             throw exception(PRODUCT_CATEGORY_NOT_EXISTS);
         }
+    }
+
+    private void validateProductCategoryValueUnique(Long id, String value) {
+        ZcProductCategoryDO existing = productCategoryMapper.selectByValue(value);
+        if (existing == null) {
+            return;
+        }
+        if (existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(PRODUCT_CATEGORY_VALUE_EXISTS);
     }
 
     @Override

@@ -34,11 +34,11 @@ public class ZcProductSpecServiceImpl implements ZcProductSpecService {
 
     @Override
     public Long createProductSpec(ZcProductSpecSaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateProductSpecValueUnique(null, createReqVO.getValue());
         // 插入
         ZcProductSpecDO productSpec = BeanUtils.toBean(createReqVO, ZcProductSpecDO.class);
         productSpecMapper.insert(productSpec);
-
-        // 返回
         return productSpec.getId();
     }
 
@@ -46,6 +46,8 @@ public class ZcProductSpecServiceImpl implements ZcProductSpecService {
     public void updateProductSpec(ZcProductSpecSaveReqVO updateReqVO) {
         // 校验存在
         validateProductSpecExists(updateReqVO.getId());
+        // 校验名称唯一性（排除自身）
+        validateProductSpecValueUnique(updateReqVO.getId(), updateReqVO.getValue());
         // 更新
         ZcProductSpecDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductSpecDO.class);
         productSpecMapper.updateById(updateObj);
@@ -70,6 +72,17 @@ public class ZcProductSpecServiceImpl implements ZcProductSpecService {
         if (productSpecMapper.selectById(id) == null) {
             throw exception(PRODUCT_SPEC_NOT_EXISTS);
         }
+    }
+
+    private void validateProductSpecValueUnique(Long id, String value) {
+        ZcProductSpecDO existing = productSpecMapper.selectByValue(value);
+        if (existing == null) {
+            return;
+        }
+        if (existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(PRODUCT_SPEC_VALUE_EXISTS);
     }
 
     @Override

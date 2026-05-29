@@ -31,4 +31,10 @@ public interface ZcProductCategoryMapper extends BaseMapperX<ZcProductCategoryDO
                 .orderByDesc(ZcProductCategoryDO::getId));
     }
 
+    default ZcProductCategoryDO selectByValue(String value) {
+        return selectOne(new LambdaQueryWrapperX<ZcProductCategoryDO>()
+                .eq(ZcProductCategoryDO::getValue, value)
+                .last("LIMIT 1"));
+    }
+
 }

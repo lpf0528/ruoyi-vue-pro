@@ -29,4 +29,10 @@ public interface ZcProductSpecMapper extends BaseMapperX<ZcProductSpecDO> {
                 .orderByDesc(ZcProductSpecDO::getId));
     }
 
+    default ZcProductSpecDO selectByValue(String value) {
+        return selectOne(new LambdaQueryWrapperX<ZcProductSpecDO>()
+                .eq(ZcProductSpecDO::getValue, value)
+                .last("LIMIT 1"));
+    }
+
 }
