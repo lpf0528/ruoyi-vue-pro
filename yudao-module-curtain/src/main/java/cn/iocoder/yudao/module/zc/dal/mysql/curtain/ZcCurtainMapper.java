@@ -29,4 +29,10 @@ public interface ZcCurtainMapper extends BaseMapperX<ZcCurtainDO> {
                 .orderByDesc(ZcCurtainDO::getId));
     }
 
+    default ZcCurtainDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcCurtainDO>()
+                .eq(ZcCurtainDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

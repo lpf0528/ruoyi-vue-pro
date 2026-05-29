@@ -33,4 +33,10 @@ public interface ZcCurtainStructureElementMapper extends BaseMapperX<ZcCurtainSt
                 .orderByDesc(ZcCurtainStructureElementDO::getId));
     }
 
+    default ZcCurtainStructureElementDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcCurtainStructureElementDO>()
+                .eq(ZcCurtainStructureElementDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

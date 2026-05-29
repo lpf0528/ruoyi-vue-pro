@@ -28,4 +28,10 @@ public interface ZcCurtainPleatRatioMapper extends BaseMapperX<ZcCurtainPleatRat
                 .orderByDesc(ZcCurtainPleatRatioDO::getId));
     }
 
+    default ZcCurtainPleatRatioDO selectByValue(java.math.BigDecimal value) {
+        return selectOne(new LambdaQueryWrapperX<ZcCurtainPleatRatioDO>()
+                .eq(ZcCurtainPleatRatioDO::getValue, value)
+                .last("LIMIT 1"));
+    }
+
 }

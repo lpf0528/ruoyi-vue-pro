@@ -34,11 +34,10 @@ public class ZcCurtainPleatRatioServiceImpl implements ZcCurtainPleatRatioServic
 
     @Override
     public Long createCurtainPleatRatio(ZcCurtainPleatRatioSaveReqVO createReqVO) {
+        validateCurtainPleatRatioValueUnique(null, createReqVO.getValue());
         // 插入
         ZcCurtainPleatRatioDO curtainPleatRatio = BeanUtils.toBean(createReqVO, ZcCurtainPleatRatioDO.class);
         curtainPleatRatioMapper.insert(curtainPleatRatio);
-
-        // 返回
         return curtainPleatRatio.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcCurtainPleatRatioServiceImpl implements ZcCurtainPleatRatioServic
     public void updateCurtainPleatRatio(ZcCurtainPleatRatioSaveReqVO updateReqVO) {
         // 校验存在
         validateCurtainPleatRatioExists(updateReqVO.getId());
+        validateCurtainPleatRatioValueUnique(updateReqVO.getId(), updateReqVO.getValue());
         // 更新
         ZcCurtainPleatRatioDO updateObj = BeanUtils.toBean(updateReqVO, ZcCurtainPleatRatioDO.class);
         curtainPleatRatioMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcCurtainPleatRatioServiceImpl implements ZcCurtainPleatRatioServic
         if (curtainPleatRatioMapper.selectById(id) == null) {
             throw exception(CURTAIN_PLEAT_RATIO_NOT_EXISTS);
         }
+    }
+
+    private void validateCurtainPleatRatioValueUnique(Long id, java.math.BigDecimal value) {
+        ZcCurtainPleatRatioDO existing = curtainPleatRatioMapper.selectByValue(value);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(CURTAIN_PLEAT_RATIO_VALUE_EXISTS);
     }
 
     @Override

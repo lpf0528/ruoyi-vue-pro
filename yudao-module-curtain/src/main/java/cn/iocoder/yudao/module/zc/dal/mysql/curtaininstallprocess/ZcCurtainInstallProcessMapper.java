@@ -29,4 +29,10 @@ public interface ZcCurtainInstallProcessMapper extends BaseMapperX<ZcCurtainInst
                 .orderByDesc(ZcCurtainInstallProcessDO::getId));
     }
 
+    default ZcCurtainInstallProcessDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcCurtainInstallProcessDO>()
+                .eq(ZcCurtainInstallProcessDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

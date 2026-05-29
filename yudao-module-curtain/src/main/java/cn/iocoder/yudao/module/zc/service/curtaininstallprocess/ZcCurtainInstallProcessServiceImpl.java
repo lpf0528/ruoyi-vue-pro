@@ -34,11 +34,10 @@ public class ZcCurtainInstallProcessServiceImpl implements ZcCurtainInstallProce
 
     @Override
     public Long createCurtainInstallProcess(ZcCurtainInstallProcessSaveReqVO createReqVO) {
+        validateCurtainInstallProcessNameUnique(null, createReqVO.getName());
         // 插入
         ZcCurtainInstallProcessDO curtainInstallProcess = BeanUtils.toBean(createReqVO, ZcCurtainInstallProcessDO.class);
         curtainInstallProcessMapper.insert(curtainInstallProcess);
-
-        // 返回
         return curtainInstallProcess.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcCurtainInstallProcessServiceImpl implements ZcCurtainInstallProce
     public void updateCurtainInstallProcess(ZcCurtainInstallProcessSaveReqVO updateReqVO) {
         // 校验存在
         validateCurtainInstallProcessExists(updateReqVO.getId());
+        validateCurtainInstallProcessNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcCurtainInstallProcessDO updateObj = BeanUtils.toBean(updateReqVO, ZcCurtainInstallProcessDO.class);
         curtainInstallProcessMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcCurtainInstallProcessServiceImpl implements ZcCurtainInstallProce
         if (curtainInstallProcessMapper.selectById(id) == null) {
             throw exception(CURTAIN_INSTALL_PROCESS_NOT_EXISTS);
         }
+    }
+
+    private void validateCurtainInstallProcessNameUnique(Long id, String name) {
+        ZcCurtainInstallProcessDO existing = curtainInstallProcessMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(CURTAIN_INSTALL_PROCESS_NAME_EXISTS);
     }
 
     @Override

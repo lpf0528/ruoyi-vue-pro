@@ -102,5 +102,15 @@ public interface ErrorCodeConstants {
     ErrorCode BRAND_NAME_EXISTS = new ErrorCode(100049, "品牌名称已存在");
     /** 客户简称已存在 */
     ErrorCode CUSTOMER_SHORT_NAME_EXISTS = new ErrorCode(100050, "客户简称已存在");
+    /** 褶倍值已存在 */
+    ErrorCode CURTAIN_PLEAT_RATIO_VALUE_EXISTS = new ErrorCode(100051, "褶倍值已存在");
+    /** 安装工艺名称已存在 */
+    ErrorCode CURTAIN_INSTALL_PROCESS_NAME_EXISTS = new ErrorCode(100052, "安装工艺名称已存在");
+    /** 窗帘结构名称已存在 */
+    ErrorCode CURTAIN_STRUCTURE_NAME_EXISTS = new ErrorCode(100053, "窗帘结构名称已存在");
+    /** 窗帘组件名称已存在 */
+    ErrorCode CURTAIN_STRUCTURE_ELEMENT_NAME_EXISTS = new ErrorCode(100054, "窗帘组件名称已存在");
+    /** 窗帘款式名称已存在 */
+    ErrorCode CURTAIN_NAME_EXISTS = new ErrorCode(100055, "窗帘款式名称已存在");
 }
 

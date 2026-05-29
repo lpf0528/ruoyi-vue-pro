@@ -34,11 +34,10 @@ public class ZcCurtainStructureServiceImpl implements ZcCurtainStructureService 
 
     @Override
     public Long createCurtainStructure(ZcCurtainStructureSaveReqVO createReqVO) {
+        validateCurtainStructureNameUnique(null, createReqVO.getName());
         // 插入
         ZcCurtainStructureDO curtainStructure = BeanUtils.toBean(createReqVO, ZcCurtainStructureDO.class);
         curtainStructureMapper.insert(curtainStructure);
-
-        // 返回
         return curtainStructure.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcCurtainStructureServiceImpl implements ZcCurtainStructureService 
     public void updateCurtainStructure(ZcCurtainStructureSaveReqVO updateReqVO) {
         // 校验存在
         validateCurtainStructureExists(updateReqVO.getId());
+        validateCurtainStructureNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcCurtainStructureDO updateObj = BeanUtils.toBean(updateReqVO, ZcCurtainStructureDO.class);
         curtainStructureMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcCurtainStructureServiceImpl implements ZcCurtainStructureService 
         if (curtainStructureMapper.selectById(id) == null) {
             throw exception(CURTAIN_STRUCTURE_NOT_EXISTS);
         }
+    }
+
+    private void validateCurtainStructureNameUnique(Long id, String name) {
+        ZcCurtainStructureDO existing = curtainStructureMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(CURTAIN_STRUCTURE_NAME_EXISTS);
     }
 
     @Override

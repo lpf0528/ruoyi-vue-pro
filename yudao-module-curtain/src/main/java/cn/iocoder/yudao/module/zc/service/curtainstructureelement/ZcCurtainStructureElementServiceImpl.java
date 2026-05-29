@@ -34,11 +34,10 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
 
     @Override
     public Long createCurtainStructureElement(ZcCurtainStructureElementSaveReqVO createReqVO) {
+        validateCurtainStructureElementNameUnique(null, createReqVO.getName());
         // 插入
         ZcCurtainStructureElementDO curtainStructureElement = BeanUtils.toBean(createReqVO, ZcCurtainStructureElementDO.class);
         curtainStructureElementMapper.insert(curtainStructureElement);
-
-        // 返回
         return curtainStructureElement.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
     public void updateCurtainStructureElement(ZcCurtainStructureElementSaveReqVO updateReqVO) {
         // 校验存在
         validateCurtainStructureElementExists(updateReqVO.getId());
+        validateCurtainStructureElementNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcCurtainStructureElementDO updateObj = BeanUtils.toBean(updateReqVO, ZcCurtainStructureElementDO.class);
         curtainStructureElementMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
         if (curtainStructureElementMapper.selectById(id) == null) {
             throw exception(CURTAIN_STRUCTURE_ELEMENT_NOT_EXISTS);
         }
+    }
+
+    private void validateCurtainStructureElementNameUnique(Long id, String name) {
+        ZcCurtainStructureElementDO existing = curtainStructureElementMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(CURTAIN_STRUCTURE_ELEMENT_NAME_EXISTS);
     }
 
     @Override
