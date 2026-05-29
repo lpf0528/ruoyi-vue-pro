@@ -34,11 +34,10 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
 
     @Override
     public Long createLogistics(ZcLogisticsSaveReqVO createReqVO) {
+        validateLogisticsNameUnique(null, createReqVO.getName());
         // 插入
         ZcLogisticsDO logistics = BeanUtils.toBean(createReqVO, ZcLogisticsDO.class);
         logisticsMapper.insert(logistics);
-
-        // 返回
         return logistics.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
     public void updateLogistics(ZcLogisticsSaveReqVO updateReqVO) {
         // 校验存在
         validateLogisticsExists(updateReqVO.getId());
+        validateLogisticsNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcLogisticsDO updateObj = BeanUtils.toBean(updateReqVO, ZcLogisticsDO.class);
         logisticsMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
         if (logisticsMapper.selectById(id) == null) {
             throw exception(LOGISTICS_NOT_EXISTS);
         }
+    }
+
+    private void validateLogisticsNameUnique(Long id, String name) {
+        ZcLogisticsDO existing = logisticsMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(LOGISTICS_NAME_EXISTS);
     }
 
     @Override

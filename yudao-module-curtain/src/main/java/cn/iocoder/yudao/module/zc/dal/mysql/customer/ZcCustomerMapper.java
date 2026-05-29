@@ -34,4 +34,10 @@ public interface ZcCustomerMapper extends BaseMapperX<ZcCustomerDO> {
                 .orderByDesc(ZcCustomerDO::getId));
     }
 
+    default ZcCustomerDO selectByShortName(String shortName) {
+        return selectOne(new LambdaQueryWrapperX<ZcCustomerDO>()
+                .eq(ZcCustomerDO::getShortName, shortName)
+                .last("LIMIT 1"));
+    }
+
 }

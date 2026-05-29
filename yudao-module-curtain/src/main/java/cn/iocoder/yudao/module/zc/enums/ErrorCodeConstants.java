@@ -92,5 +92,15 @@ public interface ErrorCodeConstants {
      * 产品类别名称已存在（创建/更新时唯一性校验）
      */
     ErrorCode PRODUCT_CATEGORY_VALUE_EXISTS = new ErrorCode(100045, "产品类别名称已存在");
+    /** 仓库名称已存在 */
+    ErrorCode WAREHOUSE_NAME_EXISTS = new ErrorCode(100046, "仓库名称已存在");
+    /** 物流公司名称已存在 */
+    ErrorCode LOGISTICS_NAME_EXISTS = new ErrorCode(100047, "物流公司名称已存在");
+    /** 供应商简称已存在 */
+    ErrorCode SUPPLIER_SHORT_NAME_EXISTS = new ErrorCode(100048, "供应商简称已存在");
+    /** 品牌名称已存在 */
+    ErrorCode BRAND_NAME_EXISTS = new ErrorCode(100049, "品牌名称已存在");
+    /** 客户简称已存在 */
+    ErrorCode CUSTOMER_SHORT_NAME_EXISTS = new ErrorCode(100050, "客户简称已存在");
 }
 

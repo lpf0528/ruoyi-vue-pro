@@ -34,11 +34,10 @@ public class ZcSupplierServiceImpl implements ZcSupplierService {
 
     @Override
     public Long createSupplier(ZcSupplierSaveReqVO createReqVO) {
+        validateSupplierShortNameUnique(null, createReqVO.getShortName());
         // 插入
         ZcSupplierDO supplier = BeanUtils.toBean(createReqVO, ZcSupplierDO.class);
         supplierMapper.insert(supplier);
-
-        // 返回
         return supplier.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcSupplierServiceImpl implements ZcSupplierService {
     public void updateSupplier(ZcSupplierSaveReqVO updateReqVO) {
         // 校验存在
         validateSupplierExists(updateReqVO.getId());
+        validateSupplierShortNameUnique(updateReqVO.getId(), updateReqVO.getShortName());
         // 更新
         ZcSupplierDO updateObj = BeanUtils.toBean(updateReqVO, ZcSupplierDO.class);
         supplierMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcSupplierServiceImpl implements ZcSupplierService {
         if (supplierMapper.selectById(id) == null) {
             throw exception(SUPPLIER_NOT_EXISTS);
         }
+    }
+
+    private void validateSupplierShortNameUnique(Long id, String shortName) {
+        ZcSupplierDO existing = supplierMapper.selectByShortName(shortName);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(SUPPLIER_SHORT_NAME_EXISTS);
     }
 
     @Override

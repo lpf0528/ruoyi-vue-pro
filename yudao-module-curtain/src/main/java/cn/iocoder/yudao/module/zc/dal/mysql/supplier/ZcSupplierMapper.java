@@ -31,4 +31,10 @@ public interface ZcSupplierMapper extends BaseMapperX<ZcSupplierDO> {
                 .orderByDesc(ZcSupplierDO::getId));
     }
 
+    default ZcSupplierDO selectByShortName(String shortName) {
+        return selectOne(new LambdaQueryWrapperX<ZcSupplierDO>()
+                .eq(ZcSupplierDO::getShortName, shortName)
+                .last("LIMIT 1"));
+    }
+
 }

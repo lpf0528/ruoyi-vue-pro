@@ -31,4 +31,10 @@ public interface ZcLogisticsMapper extends BaseMapperX<ZcLogisticsDO> {
                 .orderByDesc(ZcLogisticsDO::getId));
     }
 
+    default ZcLogisticsDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcLogisticsDO>()
+                .eq(ZcLogisticsDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

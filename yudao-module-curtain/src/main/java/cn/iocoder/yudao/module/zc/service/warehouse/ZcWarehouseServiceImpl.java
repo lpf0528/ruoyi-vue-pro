@@ -34,11 +34,10 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
 
     @Override
     public Long createWarehouse(ZcWarehouseSaveReqVO createReqVO) {
+        validateWarehouseNameUnique(null, createReqVO.getName());
         // 插入
         ZcWarehouseDO warehouse = BeanUtils.toBean(createReqVO, ZcWarehouseDO.class);
         warehouseMapper.insert(warehouse);
-
-        // 返回
         return warehouse.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
     public void updateWarehouse(ZcWarehouseSaveReqVO updateReqVO) {
         // 校验存在
         validateWarehouseExists(updateReqVO.getId());
+        validateWarehouseNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcWarehouseDO updateObj = BeanUtils.toBean(updateReqVO, ZcWarehouseDO.class);
         warehouseMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         if (warehouseMapper.selectById(id) == null) {
             throw exception(WAREHOUSE_NOT_EXISTS);
         }
+    }
+
+    private void validateWarehouseNameUnique(Long id, String name) {
+        ZcWarehouseDO existing = warehouseMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(WAREHOUSE_NAME_EXISTS);
     }
 
     @Override

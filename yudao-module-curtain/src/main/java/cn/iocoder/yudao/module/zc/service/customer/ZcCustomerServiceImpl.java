@@ -47,12 +47,11 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Override
     public Long createCustomer(ZcCustomerSaveReqVO createReqVO) {
+        validateCustomerShortNameUnique(null, createReqVO.getShortName());
         // 插入，余额强制初始化为 0，不允许前端传入
         ZcCustomerDO customer = BeanUtils.toBean(createReqVO, ZcCustomerDO.class);
         customer.setBalance(BigDecimal.ZERO);
         customerMapper.insert(customer);
-
-        // 返回
         return customer.getId();
     }
 
@@ -60,6 +59,7 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     public void updateCustomer(ZcCustomerSaveReqVO updateReqVO) {
         // 校验存在
         validateCustomerExists(updateReqVO.getId());
+        validateCustomerShortNameUnique(updateReqVO.getId(), updateReqVO.getShortName());
         // 更新
         ZcCustomerDO updateObj = BeanUtils.toBean(updateReqVO, ZcCustomerDO.class);
         customerMapper.updateById(updateObj);
@@ -89,6 +89,14 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
         if (customerMapper.selectById(id) == null) {
             throw exception(CUSTOMER_NOT_EXISTS);
         }
+    }
+
+    private void validateCustomerShortNameUnique(Long id, String shortName) {
+        ZcCustomerDO existing = customerMapper.selectByShortName(shortName);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(CUSTOMER_SHORT_NAME_EXISTS);
     }
 
     @Override

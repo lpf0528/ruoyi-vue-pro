@@ -29,4 +29,10 @@ public interface ZcBrandMapper extends BaseMapperX<ZcBrandDO> {
                 .orderByDesc(ZcBrandDO::getId));
     }
 
+    default ZcBrandDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcBrandDO>()
+                .eq(ZcBrandDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

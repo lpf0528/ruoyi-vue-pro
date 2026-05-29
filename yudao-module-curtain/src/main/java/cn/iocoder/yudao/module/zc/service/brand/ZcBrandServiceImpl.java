@@ -34,11 +34,10 @@ public class ZcBrandServiceImpl implements ZcBrandService {
 
     @Override
     public Long createBrand(ZcBrandSaveReqVO createReqVO) {
+        validateBrandNameUnique(null, createReqVO.getName());
         // 插入
         ZcBrandDO brand = BeanUtils.toBean(createReqVO, ZcBrandDO.class);
         brandMapper.insert(brand);
-
-        // 返回
         return brand.getId();
     }
 
@@ -46,6 +45,7 @@ public class ZcBrandServiceImpl implements ZcBrandService {
     public void updateBrand(ZcBrandSaveReqVO updateReqVO) {
         // 校验存在
         validateBrandExists(updateReqVO.getId());
+        validateBrandNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcBrandDO updateObj = BeanUtils.toBean(updateReqVO, ZcBrandDO.class);
         brandMapper.updateById(updateObj);
@@ -70,6 +70,14 @@ public class ZcBrandServiceImpl implements ZcBrandService {
         if (brandMapper.selectById(id) == null) {
             throw exception(BRAND_NOT_EXISTS);
         }
+    }
+
+    private void validateBrandNameUnique(Long id, String name) {
+        ZcBrandDO existing = brandMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(BRAND_NAME_EXISTS);
     }
 
     @Override

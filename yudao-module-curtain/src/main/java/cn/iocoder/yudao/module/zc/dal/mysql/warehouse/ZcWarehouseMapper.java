@@ -49,4 +49,10 @@ public interface ZcWarehouseMapper extends BaseMapperX<ZcWarehouseDO> {
                 .orderByDesc(ZcWarehouseDO::getId));
     }
 
+    default ZcWarehouseDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcWarehouseDO>()
+                .eq(ZcWarehouseDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }
