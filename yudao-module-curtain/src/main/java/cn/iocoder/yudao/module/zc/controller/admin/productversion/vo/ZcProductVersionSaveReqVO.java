@@ -28,9 +28,11 @@ public class ZcProductVersionSaveReqVO {
     private String sellingPriceType;
 
     @Schema(description = "进货价", example = "10033")
+    @DecimalMin(value = "0", message = "进货价不能小于0")
     private BigDecimal inboundPrice;
 
     @Schema(description = "一级类销售价", example = "18914")
+    @DecimalMin(value = "0", message = "一级销售价不能小于0")
     private BigDecimal onePrice;
 
     @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")

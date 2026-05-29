@@ -22,12 +22,14 @@ public class ZcProductSaveReqVO {
     private Long versionId;
 
     @Schema(description = "进货价", example = "14151")
+    @DecimalMin(value = "0", message = "进货价不能小于0")
     private BigDecimal inboundPrice;
 
     @Schema(description = "规格", example = "27939")
     private Long specId;
 
     @Schema(description = "一级销售价", example = "25120")
+    @DecimalMin(value = "0", message = "一级销售价不能小于0")
     private BigDecimal onePrice;
 
     @Schema(description = "供应商", example = "25473")
