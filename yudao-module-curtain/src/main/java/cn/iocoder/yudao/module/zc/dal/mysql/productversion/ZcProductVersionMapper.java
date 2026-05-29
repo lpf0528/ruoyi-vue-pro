@@ -35,7 +35,8 @@ public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> 
 
     default ZcProductVersionDO selectByName(String name) {
         return selectOne(new LambdaQueryWrapperX<ZcProductVersionDO>()
-                .eq(ZcProductVersionDO::getName, name));
+                .eq(ZcProductVersionDO::getName, name)
+                .last("LIMIT 1"));
     }
 
 }
