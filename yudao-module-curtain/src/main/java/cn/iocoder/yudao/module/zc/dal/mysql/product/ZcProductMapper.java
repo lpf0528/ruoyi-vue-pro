@@ -41,4 +41,10 @@ public interface ZcProductMapper extends BaseMapperX<ZcProductDO> {
                 .eq(ZcProductDO::getVersionId, versionId));
     }
 
+    default ZcProductDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcProductDO>()
+                .eq(ZcProductDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

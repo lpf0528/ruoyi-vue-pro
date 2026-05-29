@@ -37,11 +37,11 @@ public class ZcProductServiceImpl implements ZcProductService {
 
     @Override
     public Long createProduct(ZcProductSaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateProductNameUnique(null, createReqVO.getName());
         // 插入
         ZcProductDO product = BeanUtils.toBean(createReqVO, ZcProductDO.class);
         productMapper.insert(product);
-
-        // 返回
         return product.getId();
     }
 
@@ -49,6 +49,8 @@ public class ZcProductServiceImpl implements ZcProductService {
     public void updateProduct(ZcProductSaveReqVO updateReqVO) {
         // 校验存在
         validateProductExists(updateReqVO.getId());
+        // 校验名称唯一性（排除自身）
+        validateProductNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcProductDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductDO.class);
         productMapper.updateById(updateObj);
@@ -79,6 +81,24 @@ public class ZcProductServiceImpl implements ZcProductService {
         if (productMapper.selectById(id) == null) {
             throw exception(PRODUCT_NOT_EXISTS);
         }
+    }
+
+    /**
+     * 校验产品名称唯一性
+     *
+     * @param id   排除的记录 ID（更新时传入，新增时传 null）
+     * @param name 待校验的名称
+     */
+    private void validateProductNameUnique(Long id, String name) {
+        ZcProductDO existing = productMapper.selectByName(name);
+        if (existing == null) {
+            return;
+        }
+        // 更新场景：查到的记录是自身，允许通过
+        if (existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(PRODUCT_NAME_EXISTS);
     }
 
     @Override

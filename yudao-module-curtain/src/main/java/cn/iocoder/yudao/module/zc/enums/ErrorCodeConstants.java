@@ -80,5 +80,9 @@ public interface ErrorCodeConstants {
      * 产品版本名称已存在（创建/更新时唯一性校验）
      */
     ErrorCode PRODUCT_VERSION_NAME_EXISTS = new ErrorCode(100042, "产品版本名称已存在");
+    /**
+     * 产品名称已存在（创建/更新时唯一性校验）
+     */
+    ErrorCode PRODUCT_NAME_EXISTS = new ErrorCode(100043, "产品名称已存在");
 }
 
