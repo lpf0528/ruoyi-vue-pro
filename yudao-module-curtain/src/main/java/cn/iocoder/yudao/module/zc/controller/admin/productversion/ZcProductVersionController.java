@@ -97,7 +97,10 @@ public class ZcProductVersionController {
                 .setName(item.getName())
                 .setUnitValue(item.getUnitValue())
                 .setCategoryId(item.getCategoryId())
-                .setSellingPriceType(item.getSellingPriceType())));
+                .setSellingPriceType(item.getSellingPriceType())
+                .setInboundPrice(item.getInboundPrice())
+                .setOnePrice(item.getOnePrice())
+                .setSupplierId(item.getSupplierId())));
     }
 
     @GetMapping("/export-excel")

@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 @Schema(description = "管理后台 - 产品版本精简 Response VO")
 @Data
 @Accessors(chain = true)
@@ -23,5 +25,14 @@ public class ZcProductVersionSimpleRespVO {
 
     @Schema(description = "出货价类型")
     private String sellingPriceType;
+
+    @Schema(description = "进货价")
+    private BigDecimal inboundPrice;
+
+    @Schema(description = "一级类销售价")
+    private BigDecimal onePrice;
+
+    @Schema(description = "供应商ID")
+    private Long supplierId;
 
 }
