@@ -76,5 +76,9 @@ public interface ErrorCodeConstants {
      * 已确认的订单禁止删除（confirm_time 不为空）
      */
     ErrorCode SALES_ORDER_CONFIRMED_CANNOT_DELETE = new ErrorCode(100041, "已确认的订单禁止删除");
+    /**
+     * 产品版本名称已存在（创建/更新时唯一性校验）
+     */
+    ErrorCode PRODUCT_VERSION_NAME_EXISTS = new ErrorCode(100042, "产品版本名称已存在");
 }
 

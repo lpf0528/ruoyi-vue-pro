@@ -33,4 +33,9 @@ public interface ZcProductVersionMapper extends BaseMapperX<ZcProductVersionDO> 
                 .orderByDesc(ZcProductVersionDO::getId));
     }
 
+    default ZcProductVersionDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcProductVersionDO>()
+                .eq(ZcProductVersionDO::getName, name));
+    }
+
 }

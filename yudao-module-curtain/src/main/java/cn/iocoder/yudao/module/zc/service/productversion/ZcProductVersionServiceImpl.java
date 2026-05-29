@@ -37,11 +37,11 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
 
     @Override
     public Long createProductVersion(ZcProductVersionSaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateProductVersionNameUnique(null, createReqVO.getName());
         // 插入
         ZcProductVersionDO productVersion = BeanUtils.toBean(createReqVO, ZcProductVersionDO.class);
         productVersionMapper.insert(productVersion);
-
-        // 返回
         return productVersion.getId();
     }
 
@@ -49,6 +49,8 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
     public void updateProductVersion(ZcProductVersionSaveReqVO updateReqVO) {
         // 校验存在
         validateProductVersionExists(updateReqVO.getId());
+        // 校验名称唯一性（排除自身）
+        validateProductVersionNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcProductVersionDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductVersionDO.class);
         productVersionMapper.updateById(updateObj);
@@ -83,6 +85,24 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
         if (productVersionMapper.selectById(id) == null) {
             throw exception(PRODUCT_VERSION_NOT_EXISTS);
         }
+    }
+
+    /**
+     * 校验版本名称唯一性
+     *
+     * @param id   排除的记录 ID（更新时传入，新增时传 null）
+     * @param name 待校验的名称
+     */
+    private void validateProductVersionNameUnique(Long id, String name) {
+        ZcProductVersionDO existing = productVersionMapper.selectByName(name);
+        if (existing == null) {
+            return;
+        }
+        // 更新场景：查到的记录是自身，允许通过
+        if (existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(PRODUCT_VERSION_NAME_EXISTS);
     }
 
     @Override
