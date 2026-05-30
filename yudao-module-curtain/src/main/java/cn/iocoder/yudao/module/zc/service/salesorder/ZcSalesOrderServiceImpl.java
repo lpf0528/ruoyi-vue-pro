@@ -173,20 +173,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             throw exception(SALES_ORDER_NOT_EXISTS);
         }
 
-        // 2. confirm_time 不为空表示已确认：只允许修改品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains
+        // 2. confirm_time 不为空表示已确认，禁止修改任何信息
         if (existing.getConfirmTime() != null) {
-            salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                    .set(ZcSalesOrderDO::getBrandId, updateReqVO.getBrandId())
-                    .set(ZcSalesOrderDO::getLogisticId, updateReqVO.getLogisticId())
-                    .set(ZcSalesOrderDO::getReceiver, updateReqVO.getReceiver())
-                    .set(ZcSalesOrderDO::getDeliveryDate, updateReqVO.getDeliveryDate())
-                    .set(ZcSalesOrderDO::getDeliveryAddress, updateReqVO.getDeliveryAddress())
-                    .set(ZcSalesOrderDO::getFreight, updateReqVO.getFreight())
-                    .set(ZcSalesOrderDO::getDiscountAmount, updateReqVO.getDiscountAmount())
-                    .set(ZcSalesOrderDO::getAmount, updateReqVO.getAmount())
-                    .set(ZcSalesOrderDO::getNote, updateReqVO.getNote())
-                    .eq(ZcSalesOrderDO::getId, orderId));
-            return;
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
         }
 
         // 3. 未确认的订单：整单更新主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
