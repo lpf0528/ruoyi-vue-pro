@@ -12,6 +12,17 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 public interface ZcCustomerBalanceLogService {
 
     /**
+     * 创建余额变动流水记录
+     *
+     * <p>由其他 Service（如销售订单、收款单）在调整客户余额后调用，
+     * 将变动前后余额、业务类型、关联单据等信息写入流水表。</p>
+     *
+     * @param log 流水数据对象，需提前填充 customerId、changeAmount、balanceBefore、
+     *            balanceAfter、bizType、refType、refId、refNo 等字段
+     */
+    void createLog(ZcCustomerBalanceLogDO log);
+
+    /**
      * 获得客户余额变动流水分页
      *
      * @param pageReqVO 分页查询

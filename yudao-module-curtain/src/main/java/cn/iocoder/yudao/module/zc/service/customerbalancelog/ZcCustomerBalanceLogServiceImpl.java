@@ -23,6 +23,11 @@ public class ZcCustomerBalanceLogServiceImpl implements ZcCustomerBalanceLogServ
     private ZcCustomerBalanceLogMapper customerBalanceLogMapper;
 
     @Override
+    public void createLog(ZcCustomerBalanceLogDO log) {
+        customerBalanceLogMapper.insert(log);
+    }
+
+    @Override
     public PageResult<ZcCustomerBalanceLogDO> getCustomerBalanceLogPage(ZcCustomerBalanceLogPageReqVO pageReqVO) {
         return customerBalanceLogMapper.selectPage(pageReqVO);
     }

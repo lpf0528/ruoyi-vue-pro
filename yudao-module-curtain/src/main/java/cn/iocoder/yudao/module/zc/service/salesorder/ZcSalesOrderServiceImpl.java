@@ -38,7 +38,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureMapper;
@@ -67,6 +70,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcCustomerBalanceLogService customerBalanceLogService;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
@@ -288,9 +293,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 3. 从客户账户余额中扣除订单金额
+        // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
-            customerService.adjustBalance(order.getCustomerId(), order.getAmount().negate());
+            BigDecimal delta = order.getAmount().negate();
+            ZcCustomerDO customer = customerService.getCustomer(order.getCustomerId());
+            BigDecimal balanceBefore = customer != null && customer.getBalance() != null
+                    ? customer.getBalance() : BigDecimal.ZERO;
+            BigDecimal balanceAfter = balanceBefore.add(delta);
+
+            customerService.adjustBalance(order.getCustomerId(), delta);
+
+            customerBalanceLogService.createLog(ZcCustomerBalanceLogDO.builder()
+                    .customerId(order.getCustomerId())
+                    .changeAmount(delta)
+                    .balanceBefore(balanceBefore)
+                    .balanceAfter(balanceAfter)
+                    .bizType("ORDER_CONFIRM")
+                    .refType("SALES_ORDER")
+                    .refId(order.getId())
+                    .refNo(order.getOrderNo())
+                    .build());
         }
     }
 
@@ -317,9 +339,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 4. 将订单金额退回客户账户余额
+        // 4. 将订单金额退回客户账户余额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
-            customerService.adjustBalance(order.getCustomerId(), order.getAmount());
+            BigDecimal delta = order.getAmount();
+            ZcCustomerDO customer = customerService.getCustomer(order.getCustomerId());
+            BigDecimal balanceBefore = customer != null && customer.getBalance() != null
+                    ? customer.getBalance() : BigDecimal.ZERO;
+            BigDecimal balanceAfter = balanceBefore.add(delta);
+
+            customerService.adjustBalance(order.getCustomerId(), delta);
+
+            customerBalanceLogService.createLog(ZcCustomerBalanceLogDO.builder()
+                    .customerId(order.getCustomerId())
+                    .changeAmount(delta)
+                    .balanceBefore(balanceBefore)
+                    .balanceAfter(balanceAfter)
+                    .bizType("ORDER_UNCONFIRM")
+                    .refType("SALES_ORDER")
+                    .refId(order.getId())
+                    .refNo(order.getOrderNo())
+                    .build());
         }
     }
 
