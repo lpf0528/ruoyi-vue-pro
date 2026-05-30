@@ -59,4 +59,12 @@ public interface ZcBillsService {
      */
     PageResult<ZcBillsRespVO> getBillsPage(ZcBillsPageReqVO pageReqVO);
 
+    /**
+     * 获得收款单的订单分摊明细列表（含订单号）
+     *
+     * @param billId 收款单 ID
+     * @return 分摊明细列表
+     */
+    List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId);
+
 }

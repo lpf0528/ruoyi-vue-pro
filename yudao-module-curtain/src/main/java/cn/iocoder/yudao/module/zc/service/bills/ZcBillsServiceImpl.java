@@ -291,6 +291,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         return billsMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId) {
+        return billOrderItemsMapper.selectListWithOrderNoByBillId(billId);
+    }
+
     /**
      * 根据 URL 后缀判断是否为图片类型
      */

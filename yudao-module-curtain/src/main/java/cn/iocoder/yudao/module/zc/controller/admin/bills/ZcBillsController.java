@@ -87,6 +87,14 @@ public class ZcBillsController {
         return success(billsService.getBillsPage(pageReqVO));
     }
 
+    @GetMapping("/order-items")
+    @Operation(summary = "获得收款单的订单分摊明细列表")
+    @Parameter(name = "billId", description = "收款单 ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:bills:query')")
+    public CommonResult<List<ZcBillOrderItemRespVO>> getBillOrderItems(@RequestParam("billId") Long billId) {
+        return success(billsService.getBillOrderItems(billId));
+    }
+
     @GetMapping("/export-excel")
     @Operation(summary = "导出收支账单 Excel")
     @PreAuthorize("@ss.hasPermission('zc:bills:export')")
