@@ -19,12 +19,15 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillAttachmentsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillOrderItemsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -49,6 +52,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcCustomerBalanceLogService customerBalanceLogService;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
@@ -120,10 +125,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             billOrderItemsMapper.insert(itemDO);
         }
 
-        // 6. 更新客户余额：balance += actualAmount + discountAmount
+        // 6. 更新客户余额并记录流水：balance += actualAmount + discountAmount
         // actualAmount 为本次实收，discountAmount 为本次优惠，两者合计为本次结算总价值
         if (createReqVO.getCustomerId() != null) {
-            customerService.adjustBalance(createReqVO.getCustomerId(), totalSettled);
+            adjustAndRecordLog(createReqVO.getCustomerId(), totalSettled,
+                    "COLLECTION", "COLLECTION_RECORD", billId, billNo, null);
         }
 
         return billId;
@@ -168,11 +174,12 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             salesOrderMapper.updateById(updateOrder);
         }
 
-        // 4. 回滚旧的客户余额
+        // 4. 回滚旧的客户余额并记录冲回流水
         if (existingBill.getCustomerId() != null) {
             BigDecimal oldDiscount = existingBill.getDiscountAmount() == null ? BigDecimal.ZERO : existingBill.getDiscountAmount();
-            BigDecimal oldSettled = existingBill.getActualAmount().add(oldDiscount);
-            customerService.adjustBalance(existingBill.getCustomerId(), oldSettled.negate());
+            BigDecimal oldSettledNegate = existingBill.getActualAmount().add(oldDiscount).negate();
+            adjustAndRecordLog(existingBill.getCustomerId(), oldSettledNegate,
+                    "COLLECTION_VOID", "COLLECTION_RECORD", existingBill.getId(), existingBill.getBillNo(), "收款单修改-冲回旧记录");
         }
 
         // 5. 删除旧附件和分摊明细
@@ -221,10 +228,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             billOrderItemsMapper.insert(itemDO);
         }
 
-        // 9. 更新新的客户余额
+        // 9. 更新新的客户余额并记录流水
         Long newCustomerId = updateReqVO.getCustomerId() != null ? updateReqVO.getCustomerId() : existingBill.getCustomerId();
         if (newCustomerId != null) {
-            customerService.adjustBalance(newCustomerId, newTotalSettled);
+            adjustAndRecordLog(newCustomerId, newTotalSettled,
+                    "COLLECTION", "COLLECTION_RECORD", updateReqVO.getId(), existingBill.getBillNo(), "收款单修改-应用新记录");
         }
     }
 
@@ -258,10 +266,12 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             salesOrderMapper.updateById(updateOrder);
         }
 
-        // 3. 回滚客户余额（撤销当时增加的 actualAmount + discountAmount）
+        // 3. 回滚客户余额并记录冲回流水（撤销当时增加的 actualAmount + discountAmount）
         if (bill.getCustomerId() != null && bill.getActualAmount() != null) {
             BigDecimal discount = bill.getDiscountAmount() == null ? BigDecimal.ZERO : bill.getDiscountAmount();
-            customerService.adjustBalance(bill.getCustomerId(), bill.getActualAmount().add(discount).negate());
+            BigDecimal delta = bill.getActualAmount().add(discount).negate();
+            adjustAndRecordLog(bill.getCustomerId(), delta,
+                    "COLLECTION_VOID", "COLLECTION_RECORD", bill.getId(), bill.getBillNo(), "收款单删除-冲回");
         }
 
         // 4. 级联删除附件和分摊明细，再删主记录
@@ -294,6 +304,42 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @Override
     public List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId) {
         return billOrderItemsMapper.selectListWithOrderNoByBillId(billId);
+    }
+
+    /**
+     * 调整客户余额并记录变动流水（与 ZcSalesOrderServiceImpl 保持一致的调用顺序）
+     *
+     * <p>先读取变动前余额快照，再执行原子余额更新，最后通过 {@link ZcCustomerBalanceLogService}
+     * 写入流水记录。全程在同一事务内，余额快照与实际变动一致。</p>
+     *
+     * @param customerId 客户 ID
+     * @param delta      变动金额（正数增加、负数减少）
+     * @param bizType    业务类型（COLLECTION / COLLECTION_VOID 等）
+     * @param refType    关联单据类型（COLLECTION_RECORD 等）
+     * @param refId      关联单据主键
+     * @param refNo      关联单号快照
+     * @param remark     备注
+     */
+    private void adjustAndRecordLog(Long customerId, BigDecimal delta, String bizType,
+                                    String refType, Long refId, String refNo, String remark) {
+        // 1. 在余额更新前读取快照，同一事务内数据一致
+        ZcCustomerDO customer = customerService.getCustomer(customerId);
+        BigDecimal balanceBefore = (customer != null && customer.getBalance() != null)
+                ? customer.getBalance() : BigDecimal.ZERO;
+        // 2. 原子 SQL 更新余额，并发安全
+        customerService.adjustBalance(customerId, delta);
+        // 3. 写入流水记录
+        customerBalanceLogService.createLog(ZcCustomerBalanceLogDO.builder()
+                .customerId(customerId)
+                .changeAmount(delta)
+                .balanceBefore(balanceBefore)
+                .balanceAfter(balanceBefore.add(delta))
+                .bizType(bizType)
+                .refType(refType)
+                .refId(refId)
+                .refNo(refNo)
+                .remark(remark)
+                .build());
     }
 
     /**
