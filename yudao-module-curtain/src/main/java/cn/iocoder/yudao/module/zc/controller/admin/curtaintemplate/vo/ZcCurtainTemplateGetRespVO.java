@@ -40,5 +40,8 @@ public class ZcCurtainTemplateGetRespVO {
 
         @Schema(description = "产品ID")
         private Long productId;
+
+        @Schema(description = "产品名称")
+        private String productName;
     }
 }

@@ -112,5 +112,9 @@ public interface ErrorCodeConstants {
     ErrorCode CURTAIN_STRUCTURE_ELEMENT_NAME_EXISTS = new ErrorCode(100054, "窗帘组件名称已存在");
     /** 窗帘款式名称已存在 */
     ErrorCode CURTAIN_NAME_EXISTS = new ErrorCode(100055, "窗帘款式名称已存在");
+    /**
+     * 删除窗帘结构组件时，该组件已被窗帘模板配置引用，禁止删除
+     */
+    ErrorCode CURTAIN_STRUCTURE_ELEMENT_HAS_TEMPLATE = new ErrorCode(100056, "该组件已在窗帘模板中配置，禁止删除");
 }
 

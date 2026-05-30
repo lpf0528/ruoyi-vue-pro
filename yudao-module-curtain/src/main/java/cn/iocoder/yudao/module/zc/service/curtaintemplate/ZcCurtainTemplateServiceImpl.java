@@ -9,8 +9,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaintemplate.ZcCurtainTemplateMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
 
 
 /**
@@ -26,6 +28,8 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
     private ZcCurtainTemplateMapper curtainTemplateMapper;
     @Resource
     private ZcCurtainStructureElementMapper curtainStructureElementMapper;
+    @Resource
+    private ZcProductMapper productMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -61,6 +65,18 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
                     .forEach(e -> elementVersionMap.put(e.getId(), e.getVersionId()));
         }
 
+        // 批量查产品名称，避免 N+1
+        List<Long> productIds = list.stream()
+                .map(ZcCurtainTemplateDO::getProductId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> productNameMap = new HashMap<>();
+        if (!productIds.isEmpty()) {
+            productMapper.selectBatchIds(productIds)
+                    .forEach(p -> productNameMap.put(p.getId(), p.getName()));
+        }
+
         Map<Long, List<ZcCurtainTemplateDO>> structureMap = list.stream()
                 .collect(Collectors.groupingBy(ZcCurtainTemplateDO::getStructureId));
         List<ZcCurtainTemplateGetRespVO.StructureItem> structures = structureMap.entrySet().stream()
@@ -73,6 +89,7 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
                                 ei.setElementId(t.getElementId());
                                 ei.setVersionId(elementVersionMap.get(t.getElementId()));
                                 ei.setProductId(t.getProductId());
+                                ei.setProductName(productNameMap.get(t.getProductId()));
                                 return ei;
                             })
                             .collect(Collectors.toList()));

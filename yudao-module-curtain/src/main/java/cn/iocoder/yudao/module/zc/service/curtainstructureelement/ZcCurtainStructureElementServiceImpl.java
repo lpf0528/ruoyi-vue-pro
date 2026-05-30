@@ -14,6 +14,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.curtaintemplate.ZcCurtainTemplateMapper;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
@@ -31,6 +32,8 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
 
     @Resource
     private ZcCurtainStructureElementMapper curtainStructureElementMapper;
+    @Resource
+    private ZcCurtainTemplateMapper curtainTemplateMapper;
 
     @Override
     public Long createCurtainStructureElement(ZcCurtainStructureElementSaveReqVO createReqVO) {
@@ -55,15 +58,23 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
     public void deleteCurtainStructureElement(Long id) {
         // 校验存在
         validateCurtainStructureElementExists(id);
+        // 校验该组件是否已被窗帘模板引用，引用时禁止删除
+        if (curtainTemplateMapper.selectByElementId(id) != null) {
+            throw exception(CURTAIN_STRUCTURE_ELEMENT_HAS_TEMPLATE);
+        }
         // 删除
         curtainStructureElementMapper.deleteById(id);
     }
 
     @Override
-        public void deleteCurtainStructureElementListByIds(List<Long> ids) {
+    public void deleteCurtainStructureElementListByIds(List<Long> ids) {
+        // 校验批量删除的组件中是否有已被窗帘模板引用的，引用时禁止删除
+        if (curtainTemplateMapper.selectByElementIds(ids) != null) {
+            throw exception(CURTAIN_STRUCTURE_ELEMENT_HAS_TEMPLATE);
+        }
         // 删除
         curtainStructureElementMapper.deleteByIds(ids);
-        }
+    }
 
 
     private void validateCurtainStructureElementExists(Long id) {
