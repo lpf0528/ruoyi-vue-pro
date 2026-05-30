@@ -9,10 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
-import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaintemplate.ZcCurtainTemplateMapper;
-import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
-import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
 
 
 /**
@@ -26,10 +23,6 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
 
     @Resource
     private ZcCurtainTemplateMapper curtainTemplateMapper;
-    @Resource
-    private ZcCurtainStructureElementMapper curtainStructureElementMapper;
-    @Resource
-    private ZcProductMapper productMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -53,29 +46,8 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
 
     @Override
     public ZcCurtainTemplateGetRespVO getCurtainTemplateByCurtainId(Long curtainId) {
-        List<ZcCurtainTemplateDO> list = curtainTemplateMapper.selectByCurtainId(curtainId);
-
-        List<Long> elementIds = list.stream()
-                .map(ZcCurtainTemplateDO::getElementId)
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Long, Long> elementVersionMap = new HashMap<>();
-        if (!elementIds.isEmpty()) {
-            curtainStructureElementMapper.selectBatchIds(elementIds)
-                    .forEach(e -> elementVersionMap.put(e.getId(), e.getVersionId()));
-        }
-
-        // 批量查产品名称，避免 N+1
-        List<Long> productIds = list.stream()
-                .map(ZcCurtainTemplateDO::getProductId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Long, String> productNameMap = new HashMap<>();
-        if (!productIds.isEmpty()) {
-            productMapper.selectBatchIds(productIds)
-                    .forEach(p -> productNameMap.put(p.getId(), p.getName()));
-        }
+        // JOIN 查询一次拿到模板行及产品名称
+        List<ZcCurtainTemplateDO> list = curtainTemplateMapper.selectByCurtainIdWithProductName(curtainId);
 
         Map<Long, List<ZcCurtainTemplateDO>> structureMap = list.stream()
                 .collect(Collectors.groupingBy(ZcCurtainTemplateDO::getStructureId));
@@ -87,9 +59,9 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
                             .map(t -> {
                                 ZcCurtainTemplateGetRespVO.ElementItem ei = new ZcCurtainTemplateGetRespVO.ElementItem();
                                 ei.setElementId(t.getElementId());
-                                ei.setVersionId(elementVersionMap.get(t.getElementId()));
                                 ei.setProductId(t.getProductId());
-                                ei.setProductName(productNameMap.get(t.getProductId()));
+                                ei.setProductName(t.getProductName());
+                                ei.setOnePrice(t.getOnePrice());
                                 return ei;
                             })
                             .collect(Collectors.toList()));

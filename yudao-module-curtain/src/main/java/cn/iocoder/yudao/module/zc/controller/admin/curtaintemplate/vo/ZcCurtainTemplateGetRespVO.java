@@ -1,9 +1,9 @@
 package cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Schema(description = "管理后台 - 获得窗帘模板 Response VO")
@@ -34,14 +34,13 @@ public class ZcCurtainTemplateGetRespVO {
         @Schema(description = "配件ID")
         private Long elementId;
 
-        @Schema(description = "版本ID")
-        @JsonProperty("version_id")
-        private Long versionId;
-
         @Schema(description = "产品ID")
         private Long productId;
 
         @Schema(description = "产品名称")
         private String productName;
+
+        @Schema(description = "一级销售价")
+        private BigDecimal onePrice;
     }
 }

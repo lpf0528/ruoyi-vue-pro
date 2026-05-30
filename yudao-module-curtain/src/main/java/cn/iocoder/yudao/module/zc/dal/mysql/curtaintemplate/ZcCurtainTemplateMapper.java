@@ -4,6 +4,7 @@ import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,5 +40,13 @@ public interface ZcCurtainTemplateMapper extends BaseMapperX<ZcCurtainTemplateDO
                 .in(ZcCurtainTemplateDO::getElementId, elementIds)
                 .last("LIMIT 1"));
     }
+
+    /**
+     * 按款式ID查询模板行，LEFT JOIN zc_product 取产品名称
+     *
+     * @param curtainId 款式ID
+     * @return 含 productName 的模板行列表
+     */
+    List<ZcCurtainTemplateDO> selectByCurtainIdWithProductName(@Param("curtainId") Long curtainId);
 
 }
