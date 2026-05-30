@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.service.productbatch;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -12,18 +11,19 @@ import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 产品批次 Service 实现类
@@ -42,6 +42,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_BATCH_TYPE, subType = ZC_PRODUCT_BATCH_CREATE_SUB_TYPE, bizNo = "{{#productBatch.id}}",
+            success = ZC_PRODUCT_BATCH_CREATE_SUCCESS)
     public Long createProductBatch(ZcProductBatchSaveReqVO createReqVO) {
         ZcProductBatchDO productBatch = BeanUtils.toBean(createReqVO, ZcProductBatchDO.class);
         // 生成批号：{yyyyMMdd}-{2位序号}，Redis INCR 保证并发唯一（按产品隔离，跨日从 01 重置）
@@ -50,6 +52,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
                 TenantContextHolder.getRequiredTenantId(), createReqVO.getProductId(), date);
         productBatch.setBatchNo(date + "-" + String.format("%02d", seq));
         productBatchMapper.insert(productBatch);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("productBatch", productBatch);
         return productBatch.getId();
     }
 
@@ -64,22 +68,31 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_BATCH_TYPE, subType = ZC_PRODUCT_BATCH_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_PRODUCT_BATCH_UPDATE_SUCCESS)
     public void updateProductBatch(ZcProductBatchSaveReqVO updateReqVO) {
         // 校验存在
-        validateProductBatchExists(updateReqVO.getId());
+        ZcProductBatchDO oldProductBatch = validateProductBatchExists(updateReqVO.getId());
         // 更新
         ZcProductBatchDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductBatchDO.class);
         productBatchMapper.updateById(updateObj);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldProductBatch, ZcProductBatchSaveReqVO.class));
+        LogRecordContext.putVariable("batchNo", oldProductBatch.getBatchNo());
     }
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_BATCH_TYPE, subType = ZC_PRODUCT_BATCH_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_PRODUCT_BATCH_DELETE_SUCCESS)
     public void deleteProductBatch(Long id) {
         // 校验存在
-        validateProductBatchExists(id);
+        ZcProductBatchDO productBatch = validateProductBatchExists(id);
         // 校验该批次是否已被订单用料明细引用，有则禁止删除
         if (salesOrderMaterialMapper.countByBatchId(id) > 0) {
             throw exception(PRODUCT_BATCH_HAS_ORDER_MATERIALS);
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("batchNo", productBatch.getBatchNo());
         // 删除
         productBatchMapper.deleteById(id);
     }
@@ -97,10 +110,12 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
 
-    private void validateProductBatchExists(Long id) {
-        if (productBatchMapper.selectById(id) == null) {
+    private ZcProductBatchDO validateProductBatchExists(Long id) {
+        ZcProductBatchDO productBatch = productBatchMapper.selectById(id);
+        if (productBatch == null) {
             throw exception(PRODUCT_BATCH_NOT_EXISTS);
         }
+        return productBatch;
     }
 
     @Override

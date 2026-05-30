@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.controller.admin.curtaininstallprocess.vo;
 
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -13,10 +14,12 @@ public class ZcCurtainInstallProcessSaveReqVO {
     private Long id;
 
     @Schema(description = "工艺名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
+    @DiffLogField(name = "工艺名称")
     @NotEmpty(message = "工艺名称不能为空")
     private String name;
 
     @Schema(description = "备注")
+    @DiffLogField(name = "备注")
     private String note;
 
 }

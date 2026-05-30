@@ -4,22 +4,22 @@ import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.product.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.product.ZcProductDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 产品 Service 实现类
@@ -36,30 +36,43 @@ public class ZcProductServiceImpl implements ZcProductService {
     private ZcProductBatchMapper productBatchMapper;
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_TYPE, subType = ZC_PRODUCT_CREATE_SUB_TYPE, bizNo = "{{#product.id}}",
+            success = ZC_PRODUCT_CREATE_SUCCESS)
     public Long createProduct(ZcProductSaveReqVO createReqVO) {
         // 校验名称唯一性
         validateProductNameUnique(null, createReqVO.getName());
         // 插入
         ZcProductDO product = BeanUtils.toBean(createReqVO, ZcProductDO.class);
         productMapper.insert(product);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("product", product);
         return product.getId();
     }
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_TYPE, subType = ZC_PRODUCT_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_PRODUCT_UPDATE_SUCCESS)
     public void updateProduct(ZcProductSaveReqVO updateReqVO) {
         // 校验存在
-        validateProductExists(updateReqVO.getId());
+        ZcProductDO oldProduct = validateProductExists(updateReqVO.getId());
         // 校验名称唯一性（排除自身）
         validateProductNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcProductDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductDO.class);
         productMapper.updateById(updateObj);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldProduct, ZcProductSaveReqVO.class));
+        LogRecordContext.putVariable("productName", oldProduct.getName());
     }
 
     @Override
+    @LogRecord(type = ZC_PRODUCT_TYPE, subType = ZC_PRODUCT_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_PRODUCT_DELETE_SUCCESS)
     public void deleteProduct(Long id) {
-        validateProductExists(id);
+        ZcProductDO product = validateProductExists(id);
         validateProductHasNoBatch(Collections.singletonList(id));
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("productName", product.getName());
         productMapper.deleteById(id);
     }
 
@@ -77,10 +90,12 @@ public class ZcProductServiceImpl implements ZcProductService {
     }
 
 
-    private void validateProductExists(Long id) {
-        if (productMapper.selectById(id) == null) {
+    private ZcProductDO validateProductExists(Long id) {
+        ZcProductDO product = productMapper.selectById(id);
+        if (product == null) {
             throw exception(PRODUCT_NOT_EXISTS);
         }
+        return product;
     }
 
     /**

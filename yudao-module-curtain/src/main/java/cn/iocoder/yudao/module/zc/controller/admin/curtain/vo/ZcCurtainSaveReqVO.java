@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.controller.admin.curtain.vo;
 
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -14,16 +15,20 @@ public class ZcCurtainSaveReqVO {
     private Long id;
 
     @Schema(description = "款式名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "李四")
+    @DiffLogField(name = "款式名称")
     @NotEmpty(message = "款式名称不能为空")
     private String name;
 
     @Schema(description = "默认褶倍")
+    @DiffLogField(name = "默认褶倍")
     private BigDecimal pleatRatioValue;
 
     @Schema(description = "褶距")
+    @DiffLogField(name = "褶距")
     private BigDecimal pleatsDistance;
 
     @Schema(description = "备注")
+    @DiffLogField(name = "备注")
     private String note;
 
 }

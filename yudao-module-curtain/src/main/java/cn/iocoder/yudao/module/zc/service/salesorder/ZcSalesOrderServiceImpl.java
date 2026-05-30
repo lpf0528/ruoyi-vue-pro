@@ -49,12 +49,16 @@ import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMappe
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderStructureMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMap;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 销售订单 Service 实现类
@@ -94,6 +98,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_CREATE_SUB_TYPE, bizNo = "{{#salesOrder.id}}",
+            success = ZC_SALES_ORDER_CREATE_SUCCESS)
     public Long createSalesOrder(ZcSalesOrderCreateReqVO createReqVO) {
         // 1. 生成订单号：ZC{租户ID}{yyyyMMdd}{5位序号}，Redis INCR 保证并发唯一
         Long tenantId = TenantContextHolder.getRequiredTenantId();
@@ -116,6 +122,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
         salesOrderMapper.insert(salesOrder);
         Long orderId = salesOrder.getId();
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("salesOrder", salesOrder);
 
         // 3. 级联保存窗帘行 → 结构行 → 用料明细
         if (CollUtil.isEmpty(createReqVO.getCurtains())) {
@@ -159,14 +167,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_SALES_ORDER_UPDATE_SUCCESS)
     public void updateSalesOrder(ZcSalesOrderUpdateReqVO updateReqVO) {
         Long orderId = updateReqVO.getId();
 
         // 1. 校验订单存在
-        ZcSalesOrderDO existing = salesOrderMapper.selectById(orderId);
-        if (existing == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
+        ZcSalesOrderDO existing = validateSalesOrderExists(orderId);
 
         // 2. confirm_time 不为空表示已确认：只允许修改品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains
         if (existing.getConfirmTime() != null) {
@@ -181,6 +188,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                     .set(ZcSalesOrderDO::getAmount, updateReqVO.getAmount())
                     .set(ZcSalesOrderDO::getNote, updateReqVO.getNote())
                     .eq(ZcSalesOrderDO::getId, orderId));
+            // 记录操作日志上下文（仅主表字段参与 diff）
+            LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
+            LogRecordContext.putVariable("orderNo", existing.getOrderNo());
             return;
         }
 
@@ -198,6 +208,10 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrderCurtainMapper.deleteByOrderId(orderId);
         salesOrderStructureMapper.deleteByOrderId(orderId);
         salesOrderMaterialMapper.deleteByOrderId(orderId);
+
+        // 记录操作日志上下文（仅主表字段参与 diff）
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
+        LogRecordContext.putVariable("orderNo", existing.getOrderNo());
 
         // 5. 级联插入新窗帘行 → 结构行 → 用料明细（逻辑与创建相同）
         if (CollUtil.isEmpty(updateReqVO.getCurtains())) {
@@ -240,16 +254,17 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_SALES_ORDER_DELETE_SUCCESS)
     public void deleteSalesOrder(Long id) {
         // 校验订单存在
-        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
-        if (order == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
+        ZcSalesOrderDO order = validateSalesOrderExists(id);
         // confirm_time 不为空表示已确认，禁止删除
         if (order.getConfirmTime() != null) {
             throw exception(SALES_ORDER_CONFIRMED_CANNOT_DELETE);
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
         // 级联删除三层子表，再删主记录，防止孤立数据
         salesOrderCurtainMapper.deleteByOrderId(id);
         salesOrderStructureMapper.deleteByOrderId(id);
@@ -272,12 +287,11 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_CONFIRM_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_SALES_ORDER_CONFIRM_SUCCESS)
     public void confirmSalesOrder(Long id) {
         // 1. 校验订单存在且当前状态为待确认
-        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
-        if (order == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
+        ZcSalesOrderDO order = validateSalesOrderExists(id);
         if (!"unconfirmed".equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_NOT_UNCONFIRMED);
         }
@@ -292,16 +306,17 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (order.getCustomerId() != null && order.getAmount() != null) {
             customerService.adjustBalance(order.getCustomerId(), order.getAmount().negate());
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_CANCEL_CONFIRM_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_SALES_ORDER_CANCEL_CONFIRM_SUCCESS)
     public void cancelConfirmSalesOrder(Long id) {
         // 1. 校验订单存在且当前状态为已确认
-        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
-        if (order == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
+        ZcSalesOrderDO order = validateSalesOrderExists(id);
         if (!"confirmed".equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_NOT_CONFIRMED);
         }
@@ -321,22 +336,30 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (order.getCustomerId() != null && order.getAmount() != null) {
             customerService.adjustBalance(order.getCustomerId(), order.getAmount());
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
     }
 
     @Override
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_MARK_EXPEDITED_SUB_TYPE, bizNo = "{{#orderId}}",
+            success = ZC_SALES_ORDER_MARK_EXPEDITED_SUCCESS)
     public void markExpedited(Long orderId) {
         // 校验订单存在
-        validateSalesOrderExists(orderId);
+        ZcSalesOrderDO order = validateSalesOrderExists(orderId);
         // 将加急标志设置为 true
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getIsExpedited, true)
                 .eq(ZcSalesOrderDO::getId, orderId));
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
     }
 
-    private void validateSalesOrderExists(Long id) {
-        if (salesOrderMapper.selectById(id) == null) {
+    private ZcSalesOrderDO validateSalesOrderExists(Long id) {
+        ZcSalesOrderDO order = salesOrderMapper.selectById(id);
+        if (order == null) {
             throw exception(SALES_ORDER_NOT_EXISTS);
         }
+        return order;
     }
 
     @Override

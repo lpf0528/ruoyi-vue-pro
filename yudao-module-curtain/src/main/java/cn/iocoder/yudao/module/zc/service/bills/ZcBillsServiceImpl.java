@@ -26,9 +26,13 @@ import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 收支账单 Service 实现类
@@ -54,6 +58,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_BILLS_TYPE, subType = ZC_BILLS_CREATE_SUB_TYPE, bizNo = "{{#bill.id}}",
+            success = ZC_BILLS_CREATE_SUCCESS)
     public Long createBills(ZcBillsSaveReqVO createReqVO) {
         // 1. 校验分摊金额合计必须等于实收+优惠，否则订单账目与客户余额会不一致
         BigDecimal discount = createReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
@@ -126,17 +132,18 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             customerService.adjustBalance(createReqVO.getCustomerId(), totalSettled);
         }
 
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("bill", bills);
         return billId;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_BILLS_TYPE, subType = ZC_BILLS_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_BILLS_UPDATE_SUCCESS)
     public void updateBills(ZcBillsSaveReqVO updateReqVO) {
         // 1. 校验收款单存在，获取当前数据快照
-        ZcBillsDO existingBill = billsMapper.selectById(updateReqVO.getId());
-        if (existingBill == null) {
-            throw exception(BILLS_NOT_EXISTS);
-        }
+        ZcBillsDO existingBill = validateBillsExists(updateReqVO.getId());
 
         // 2. 校验新分摊金额合计一致性
         BigDecimal newDiscount = updateReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : updateReqVO.getDiscountAmount();
@@ -226,16 +233,18 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         if (newCustomerId != null) {
             customerService.adjustBalance(newCustomerId, newTotalSettled);
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existingBill, ZcBillsSaveReqVO.class));
+        LogRecordContext.putVariable("billNo", existingBill.getBillNo());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_BILLS_TYPE, subType = ZC_BILLS_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_BILLS_DELETE_SUCCESS)
     public void deleteBills(Long id) {
         // 1. 校验收款单存在
-        ZcBillsDO bill = billsMapper.selectById(id);
-        if (bill == null) {
-            throw exception(BILLS_NOT_EXISTS);
-        }
+        ZcBillsDO bill = validateBillsExists(id);
 
         // 2. 回滚各订单的已收金额与支付状态
         List<ZcBillOrderItemsDO> orderItems = billOrderItemsMapper.selectByBillId(id);
@@ -264,6 +273,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             customerService.adjustBalance(bill.getCustomerId(), bill.getActualAmount().add(discount).negate());
         }
 
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("billNo", bill.getBillNo());
         // 4. 级联删除附件和分摊明细，再删主记录
         billAttachmentsMapper.deleteByBillId(id);
         billOrderItemsMapper.deleteByBillId(id);
@@ -275,10 +286,12 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         billsMapper.deleteByIds(ids);
     }
 
-    private void validateBillsExists(Long id) {
-        if (billsMapper.selectById(id) == null) {
+    private ZcBillsDO validateBillsExists(Long id) {
+        ZcBillsDO bill = billsMapper.selectById(id);
+        if (bill == null) {
             throw exception(BILLS_NOT_EXISTS);
         }
+        return bill;
     }
 
     @Override

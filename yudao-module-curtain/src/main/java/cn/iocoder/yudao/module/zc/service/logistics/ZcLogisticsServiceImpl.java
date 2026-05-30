@@ -1,24 +1,25 @@
 package cn.iocoder.yudao.module.zc.service.logistics;
 
-import cn.hutool.core.collection.CollUtil;
-import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.*;
-import cn.iocoder.yudao.module.zc.dal.dataobject.logistics.ZcLogisticsDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
-
+import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsListReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsPageReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsSaveReqVO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.logistics.ZcLogisticsDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.logistics.ZcLogisticsMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.LOGISTICS_NAME_EXISTS;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.LOGISTICS_NOT_EXISTS;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 物流公司 Service 实现类
@@ -33,28 +34,41 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
     private ZcLogisticsMapper logisticsMapper;
 
     @Override
+    @LogRecord(type = ZC_LOGISTICS_TYPE, subType = ZC_LOGISTICS_CREATE_SUB_TYPE, bizNo = "{{#logistics.id}}",
+            success = ZC_LOGISTICS_CREATE_SUCCESS)
     public Long createLogistics(ZcLogisticsSaveReqVO createReqVO) {
         validateLogisticsNameUnique(null, createReqVO.getName());
         // 插入
         ZcLogisticsDO logistics = BeanUtils.toBean(createReqVO, ZcLogisticsDO.class);
         logisticsMapper.insert(logistics);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("logistics", logistics);
         return logistics.getId();
     }
 
     @Override
+    @LogRecord(type = ZC_LOGISTICS_TYPE, subType = ZC_LOGISTICS_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_LOGISTICS_UPDATE_SUCCESS)
     public void updateLogistics(ZcLogisticsSaveReqVO updateReqVO) {
         // 校验存在
-        validateLogisticsExists(updateReqVO.getId());
+        ZcLogisticsDO oldLogistics = validateLogisticsExists(updateReqVO.getId());
         validateLogisticsNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcLogisticsDO updateObj = BeanUtils.toBean(updateReqVO, ZcLogisticsDO.class);
         logisticsMapper.updateById(updateObj);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldLogistics, ZcLogisticsSaveReqVO.class));
+        LogRecordContext.putVariable("logisticsName", oldLogistics.getName());
     }
 
     @Override
+    @LogRecord(type = ZC_LOGISTICS_TYPE, subType = ZC_LOGISTICS_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_LOGISTICS_DELETE_SUCCESS)
     public void deleteLogistics(Long id) {
         // 校验存在
-        validateLogisticsExists(id);
+        ZcLogisticsDO logistics = validateLogisticsExists(id);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("logisticsName", logistics.getName());
         // 删除
         logisticsMapper.deleteById(id);
     }
@@ -66,10 +80,12 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
         }
 
 
-    private void validateLogisticsExists(Long id) {
-        if (logisticsMapper.selectById(id) == null) {
+    private ZcLogisticsDO validateLogisticsExists(Long id) {
+        ZcLogisticsDO logistics = logisticsMapper.selectById(id);
+        if (logistics == null) {
             throw exception(LOGISTICS_NOT_EXISTS);
         }
+        return logistics;
     }
 
     private void validateLogisticsNameUnique(Long id, String name) {
@@ -95,4 +111,4 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
         return logisticsMapper.selectPage(pageReqVO);
     }
 
-}
+}

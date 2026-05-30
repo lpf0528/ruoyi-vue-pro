@@ -1,5 +1,8 @@
 package cn.iocoder.yudao.module.zc.controller.admin.customer.vo;
 
+import cn.iocoder.yudao.module.zc.framework.operatelog.core.ZcBrandParseFunction;
+import cn.iocoder.yudao.module.zc.framework.operatelog.core.ZcLogisticsParseFunction;
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -13,36 +16,46 @@ public class ZcCustomerSaveReqVO {
     private Long id;
 
     @Schema(description = "简称", requiredMode = Schema.RequiredMode.REQUIRED, example = "张三")
+    @DiffLogField(name = "简称")
     @NotEmpty(message = "简称不能为空")
     private String shortName;
 
     @Schema(description = "全称", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
+    @DiffLogField(name = "全称")
     @NotEmpty(message = "全称不能为空")
     private String name;
 
     @Schema(description = "联系人", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
+    @DiffLogField(name = "联系人")
     @NotEmpty(message = "联系人不能为空")
     private String contactName;
 
     @Schema(description = "固定地址")
+    @DiffLogField(name = "固定地址")
     private String address;
 
     @Schema(description = "送货地址")
+    @DiffLogField(name = "送货地址")
     private String deliveryAddress;
 
     @Schema(description = "手机")
+    @DiffLogField(name = "手机")
     private String mobile;
 
     @Schema(description = "联系电话")
+    @DiffLogField(name = "联系电话")
     private String mobile2;
 
     @Schema(description = "物流", example = "429")
+    @DiffLogField(name = "物流", function = ZcLogisticsParseFunction.NAME)
     private Long logisticId;
 
     @Schema(description = "关联品牌", example = "22168")
+    @DiffLogField(name = "关联品牌", function = ZcBrandParseFunction.NAME)
     private Long brandId;
 
     @Schema(description = "备注")
+    @DiffLogField(name = "备注")
     private String note;
 
 }

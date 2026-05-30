@@ -9,6 +9,8 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcUserProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcUserProcessNodeMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.USER_PROCESS_NODE_NOT_AUTHORIZED;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 员工-工序节点绑定 Service 实现类
@@ -38,9 +41,15 @@ public class ZcUserProcessNodeServiceImpl implements ZcUserProcessNodeService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_USER_PROCESS_NODE_TYPE, subType = ZC_USER_PROCESS_NODE_SAVE_SUB_TYPE, bizNo = "{{#reqVO.userId}}",
+            success = ZC_USER_PROCESS_NODE_SAVE_SUCCESS)
     public void saveUserProcessNodes(ZcUserProcessNodeSaveReqVO reqVO) {
         // 1. 清除该员工原有全部绑定关系
         userProcessNodeMapper.deleteByUserId(reqVO.getUserId());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("userId", reqVO.getUserId());
+        LogRecordContext.putVariable("nodeCount", CollUtil.isEmpty(reqVO.getNodeIds()) ? 0 : reqVO.getNodeIds().size());
 
         // 2. 重新插入新的绑定关系
         if (CollUtil.isEmpty(reqVO.getNodeIds())) {

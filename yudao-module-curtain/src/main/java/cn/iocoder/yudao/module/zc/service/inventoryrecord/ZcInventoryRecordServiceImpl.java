@@ -15,9 +15,12 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 盘点记录 Service 实现类
@@ -37,6 +40,8 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_INVENTORY_RECORD_TYPE, subType = ZC_INVENTORY_RECORD_CREATE_SUB_TYPE, bizNo = "{{#inventoryRecord.id}}",
+            success = ZC_INVENTORY_RECORD_CREATE_SUCCESS)
     public Long createInventoryRecord(ZcInventoryRecordSaveReqVO createReqVO) {
         // 1. 校验批次存在
         ZcProductBatchDO batch = productBatchMapper.selectById(createReqVO.getBatchId());
@@ -59,6 +64,9 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
         updateBatch.setNote(newNote);
         productBatchMapper.updateById(updateBatch);
 
+        // 4. 记录操作日志上下文
+        LogRecordContext.putVariable("inventoryRecord", inventoryRecord);
+        LogRecordContext.putVariable("batchNo", batch.getBatchNo());
         return inventoryRecord.getId();
     }
 

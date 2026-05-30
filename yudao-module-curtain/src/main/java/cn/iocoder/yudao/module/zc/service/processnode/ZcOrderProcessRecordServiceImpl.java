@@ -12,6 +12,8 @@ import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapp
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 订单工序记录 Service 实现类
@@ -42,12 +45,11 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE, bizNo = "{{#record.id}}",
+            success = ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS)
     public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
         // 1. 校验订单存在，且处于 pending 或 processing 状态
-        ZcSalesOrderDO order = salesOrderMapper.selectById(reqVO.getOrderId());
-        if (order == null) {
-            throw exception(SALES_ORDER_NOT_EXISTS);
-        }
+        ZcSalesOrderDO order = validateSalesOrderExists(reqVO.getOrderId());
         if (!"pending".equals(order.getStatus()) && !"processing".equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_CANNOT_PROCESS);
         }
@@ -76,38 +78,61 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
 
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
+        LogRecordContext.putVariable("nodeName", node.getName());
         return record.getId();
     }
 
     @Override
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_COMPLETE_SUB_TYPE, bizNo = "{{#reqVO.id}}",
+            success = ZC_ORDER_PROCESS_RECORD_COMPLETE_SUCCESS)
     public void completeProcessRecord(ZcOrderProcessRecordCompleteReqVO reqVO) {
-        ZcOrderProcessRecordDO record = processRecordMapper.selectById(reqVO.getId());
-        if (record == null) {
-            throw exception(ORDER_PROCESS_RECORD_NOT_EXISTS);
-        }
+        ZcOrderProcessRecordDO record = validateProcessRecordExists(reqVO.getId());
         // 更新状态为已完成，写入完成备注
         processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
                 .set(ZcOrderProcessRecordDO::getStatus, 2) // 2=已完成
                 .set(ZcOrderProcessRecordDO::getNote, reqVO.getNote())
                 .eq(ZcOrderProcessRecordDO::getId, reqVO.getId()));
+        // 记录操作日志上下文
+        ZcSalesOrderDO order = validateSalesOrderExists(record.getOrderId());
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
+        LogRecordContext.putVariable("nodeName", record.getNodeName());
     }
 
     @Override
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_ORDER_PROCESS_RECORD_DELETE_SUCCESS)
     public void deleteProcessRecord(Long id) {
-        ZcOrderProcessRecordDO record = processRecordMapper.selectById(id);
-        if (record == null) {
-            throw exception(ORDER_PROCESS_RECORD_NOT_EXISTS);
-        }
+        ZcOrderProcessRecordDO record = validateProcessRecordExists(id);
         // 已完成的记录不允许删除，防止历史数据被篡改
         if (Integer.valueOf(2).equals(record.getStatus())) {
             throw exception(ORDER_PROCESS_RECORD_ALREADY_COMPLETED);
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("recordId", id);
         processRecordMapper.deleteById(id);
     }
 
     @Override
     public List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId) {
         return processRecordMapper.selectListWithUserByOrderId(orderId);
+    }
+
+    private ZcSalesOrderDO validateSalesOrderExists(Long orderId) {
+        ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        return order;
+    }
+
+    private ZcOrderProcessRecordDO validateProcessRecordExists(Long id) {
+        ZcOrderProcessRecordDO record = processRecordMapper.selectById(id);
+        if (record == null) {
+            throw exception(ORDER_PROCESS_RECORD_NOT_EXISTS);
+        }
+        return record;
     }
 
 }

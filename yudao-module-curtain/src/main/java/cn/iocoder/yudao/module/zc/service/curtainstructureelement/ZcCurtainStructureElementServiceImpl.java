@@ -1,25 +1,24 @@
 package cn.iocoder.yudao.module.zc.service.curtainstructureelement;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.curtainstructureelement.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtainstructureelement.ZcCurtainStructureElementDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaintemplate.ZcCurtainTemplateMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 窗帘结构组件 Service 实现类
@@ -36,32 +35,45 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
     private ZcCurtainTemplateMapper curtainTemplateMapper;
 
     @Override
+    @LogRecord(type = ZC_CURTAIN_STRUCTURE_ELEMENT_TYPE, subType = ZC_CURTAIN_STRUCTURE_ELEMENT_CREATE_SUB_TYPE,
+            bizNo = "{{#element.id}}", success = ZC_CURTAIN_STRUCTURE_ELEMENT_CREATE_SUCCESS)
     public Long createCurtainStructureElement(ZcCurtainStructureElementSaveReqVO createReqVO) {
         validateCurtainStructureElementNameUnique(null, createReqVO.getName());
         // 插入
-        ZcCurtainStructureElementDO curtainStructureElement = BeanUtils.toBean(createReqVO, ZcCurtainStructureElementDO.class);
-        curtainStructureElementMapper.insert(curtainStructureElement);
-        return curtainStructureElement.getId();
+        ZcCurtainStructureElementDO element = BeanUtils.toBean(createReqVO, ZcCurtainStructureElementDO.class);
+        curtainStructureElementMapper.insert(element);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("element", element);
+        return element.getId();
     }
 
     @Override
+    @LogRecord(type = ZC_CURTAIN_STRUCTURE_ELEMENT_TYPE, subType = ZC_CURTAIN_STRUCTURE_ELEMENT_UPDATE_SUB_TYPE,
+            bizNo = "{{#updateReqVO.id}}", success = ZC_CURTAIN_STRUCTURE_ELEMENT_UPDATE_SUCCESS)
     public void updateCurtainStructureElement(ZcCurtainStructureElementSaveReqVO updateReqVO) {
         // 校验存在
-        validateCurtainStructureElementExists(updateReqVO.getId());
+        ZcCurtainStructureElementDO oldElement = validateCurtainStructureElementExists(updateReqVO.getId());
         validateCurtainStructureElementNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcCurtainStructureElementDO updateObj = BeanUtils.toBean(updateReqVO, ZcCurtainStructureElementDO.class);
         curtainStructureElementMapper.updateById(updateObj);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldElement, ZcCurtainStructureElementSaveReqVO.class));
+        LogRecordContext.putVariable("elementName", oldElement.getName());
     }
 
     @Override
+    @LogRecord(type = ZC_CURTAIN_STRUCTURE_ELEMENT_TYPE, subType = ZC_CURTAIN_STRUCTURE_ELEMENT_DELETE_SUB_TYPE,
+            bizNo = "{{#id}}", success = ZC_CURTAIN_STRUCTURE_ELEMENT_DELETE_SUCCESS)
     public void deleteCurtainStructureElement(Long id) {
         // 校验存在
-        validateCurtainStructureElementExists(id);
+        ZcCurtainStructureElementDO element = validateCurtainStructureElementExists(id);
         // 校验该组件是否已被窗帘模板引用，引用时禁止删除
         if (curtainTemplateMapper.selectByElementId(id) != null) {
             throw exception(CURTAIN_STRUCTURE_ELEMENT_HAS_TEMPLATE);
         }
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("elementName", element.getName());
         // 删除
         curtainStructureElementMapper.deleteById(id);
     }
@@ -77,10 +89,12 @@ public class ZcCurtainStructureElementServiceImpl implements ZcCurtainStructureE
     }
 
 
-    private void validateCurtainStructureElementExists(Long id) {
-        if (curtainStructureElementMapper.selectById(id) == null) {
+    private ZcCurtainStructureElementDO validateCurtainStructureElementExists(Long id) {
+        ZcCurtainStructureElementDO element = curtainStructureElementMapper.selectById(id);
+        if (element == null) {
             throw exception(CURTAIN_STRUCTURE_ELEMENT_NOT_EXISTS);
         }
+        return element;
     }
 
     private void validateCurtainStructureElementNameUnique(Long id, String name) {

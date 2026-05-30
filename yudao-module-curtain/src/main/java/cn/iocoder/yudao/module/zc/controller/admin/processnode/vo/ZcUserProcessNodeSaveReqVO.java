@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.zc.controller.admin.processnode.vo;
 
+import cn.iocoder.yudao.module.system.framework.operatelog.core.AdminUserParseFunction;
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -17,6 +19,7 @@ import java.util.List;
 public class ZcUserProcessNodeSaveReqVO {
 
     @Schema(description = "员工用户 ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "100")
+    @DiffLogField(name = "员工", function = AdminUserParseFunction.NAME)
     @NotNull(message = "员工用户 ID 不能为空")
     private Long userId;
 

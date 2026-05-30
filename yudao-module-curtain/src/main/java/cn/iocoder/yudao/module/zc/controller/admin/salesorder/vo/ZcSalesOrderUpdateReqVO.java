@@ -1,5 +1,9 @@
 package cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo;
 
+import cn.iocoder.yudao.module.zc.framework.operatelog.core.ZcBrandParseFunction;
+import cn.iocoder.yudao.module.zc.framework.operatelog.core.ZcCustomerParseFunction;
+import cn.iocoder.yudao.module.zc.framework.operatelog.core.ZcLogisticsParseFunction;
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -32,62 +36,76 @@ public class ZcSalesOrderUpdateReqVO {
 
     /** 客户 ID，必填 */
     @Schema(description = "客户", requiredMode = Schema.RequiredMode.REQUIRED, example = "29746")
+    @DiffLogField(name = "客户", function = ZcCustomerParseFunction.NAME)
     @NotNull(message = "客户不能为空")
     private Long customerId;
 
     /** 客户手机号 */
     @Schema(description = "手机")
+    @DiffLogField(name = "手机")
     private String mobile;
 
     /** 品牌 */
     @Schema(description = "品牌", example = "8302")
+    @DiffLogField(name = "品牌", function = ZcBrandParseFunction.NAME)
     private Long brandId;
 
     /** 下单日期，必填 */
     @Schema(description = "下单日期", requiredMode = Schema.RequiredMode.REQUIRED)
+    @DiffLogField(name = "下单日期")
     @NotNull(message = "下单日期不能为空")
     private LocalDate orderDate;
 
     /** 物流 */
     @Schema(description = "物流", example = "27080")
+    @DiffLogField(name = "物流", function = ZcLogisticsParseFunction.NAME)
     private Long logisticId;
 
     /** 收货人姓名 */
     @Schema(description = "收货人")
+    @DiffLogField(name = "收货人")
     private String receiver;
 
     /** 送货地址，必填 */
     @Schema(description = "送货地址", requiredMode = Schema.RequiredMode.REQUIRED)
+    @DiffLogField(name = "送货地址")
     @NotEmpty(message = "送货地址不能为空")
     private String deliveryAddress;
 
     /** 运费，不传默认保留原值 */
     @Schema(description = "运费")
+    @DiffLogField(name = "运费")
     private BigDecimal freight;
 
     /** 订单类型，必填 */
     @Schema(description = "订单类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "chengpin")
+    @DiffLogField(name = "订单类型")
     @NotEmpty(message = "订单类型不能为空")
     private String types;
 
     /** 优惠金额 */
     @Schema(description = "优惠金额")
+    @DiffLogField(name = "优惠金额")
     private BigDecimal discountAmount;
 
     /** 总金额 */
     @Schema(description = "总金额")
+    @DiffLogField(name = "总金额")
     private BigDecimal totalAmount;
 
     /** 订单金额（优惠后实收） */
     @Schema(description = "订单金额")
+    @DiffLogField(name = "订单金额")
     private BigDecimal amount;
 
     /** 交付日期 */
     @Schema(description = "交付日期")
+    @DiffLogField(name = "交付日期")
     private LocalDate deliveryDate;
 
     /** 备注 */
     @Schema(description = "备注")
+    @DiffLogField(name = "备注")
     private String note;
 
     /** 窗帘行列表（含嵌套结构行与用料明细），至少包含一个 */

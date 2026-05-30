@@ -10,7 +10,10 @@ import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaintemplate.ZcCurtainTemplateDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaintemplate.ZcCurtainTemplateMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 窗帘模板 Service 实现类
@@ -26,6 +29,8 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_CURTAIN_TEMPLATE_TYPE, subType = ZC_CURTAIN_TEMPLATE_SAVE_SUB_TYPE, bizNo = "{{#curtainId}}",
+            success = ZC_CURTAIN_TEMPLATE_SAVE_SUCCESS)
     public void saveCurtainTemplate(ZcCurtainTemplateSaveReqVO saveReqVO) {
         // 全量替换：先按 curtainId 清空旧记录，再批量插入新记录
         // productId 允许为空，模板未指定产品时直接落库 null
@@ -42,6 +47,8 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
             }
         }
         curtainTemplateMapper.insertBatch(list);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("curtainId", saveReqVO.getCurtainId());
     }
 
     @Override

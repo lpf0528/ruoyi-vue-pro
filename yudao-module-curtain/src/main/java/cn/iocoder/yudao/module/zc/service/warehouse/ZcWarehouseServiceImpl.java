@@ -1,24 +1,23 @@
 package cn.iocoder.yudao.module.zc.service.warehouse;
 
-import cn.hutool.core.collection.CollUtil;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.warehouse.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.warehouse.ZcWarehouseDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.warehouse.ZcWarehouseMapper;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.starter.annotation.LogRecord;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
-import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
  * 仓库 Service 实现类
@@ -33,28 +32,41 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
     private ZcWarehouseMapper warehouseMapper;
 
     @Override
+    @LogRecord(type = ZC_WAREHOUSE_TYPE, subType = ZC_WAREHOUSE_CREATE_SUB_TYPE, bizNo = "{{#warehouse.id}}",
+            success = ZC_WAREHOUSE_CREATE_SUCCESS)
     public Long createWarehouse(ZcWarehouseSaveReqVO createReqVO) {
         validateWarehouseNameUnique(null, createReqVO.getName());
         // 插入
         ZcWarehouseDO warehouse = BeanUtils.toBean(createReqVO, ZcWarehouseDO.class);
         warehouseMapper.insert(warehouse);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("warehouse", warehouse);
         return warehouse.getId();
     }
 
     @Override
+    @LogRecord(type = ZC_WAREHOUSE_TYPE, subType = ZC_WAREHOUSE_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_WAREHOUSE_UPDATE_SUCCESS)
     public void updateWarehouse(ZcWarehouseSaveReqVO updateReqVO) {
         // 校验存在
-        validateWarehouseExists(updateReqVO.getId());
+        ZcWarehouseDO oldWarehouse = validateWarehouseExists(updateReqVO.getId());
         validateWarehouseNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新
         ZcWarehouseDO updateObj = BeanUtils.toBean(updateReqVO, ZcWarehouseDO.class);
         warehouseMapper.updateById(updateObj);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldWarehouse, ZcWarehouseSaveReqVO.class));
+        LogRecordContext.putVariable("warehouseName", oldWarehouse.getName());
     }
 
     @Override
+    @LogRecord(type = ZC_WAREHOUSE_TYPE, subType = ZC_WAREHOUSE_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_WAREHOUSE_DELETE_SUCCESS)
     public void deleteWarehouse(Long id) {
         // 校验存在
-        validateWarehouseExists(id);
+        ZcWarehouseDO warehouse = validateWarehouseExists(id);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("warehouseName", warehouse.getName());
         // 删除
         warehouseMapper.deleteById(id);
     }
@@ -66,10 +78,12 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         }
 
 
-    private void validateWarehouseExists(Long id) {
-        if (warehouseMapper.selectById(id) == null) {
+    private ZcWarehouseDO validateWarehouseExists(Long id) {
+        ZcWarehouseDO warehouse = warehouseMapper.selectById(id);
+        if (warehouse == null) {
             throw exception(WAREHOUSE_NOT_EXISTS);
         }
+        return warehouse;
     }
 
     private void validateWarehouseNameUnique(Long id, String name) {
@@ -105,4 +119,4 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         return warehouseMapper.selectList(listReqVO);
     }
 
-}
+}

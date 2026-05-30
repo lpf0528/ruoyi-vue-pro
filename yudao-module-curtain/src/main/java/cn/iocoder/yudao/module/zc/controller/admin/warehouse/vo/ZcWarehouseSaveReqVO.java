@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.zc.controller.admin.warehouse.vo;
 
+import cn.iocoder.yudao.module.system.framework.operatelog.core.AdminUserParseFunction;
+import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
@@ -13,13 +15,16 @@ public class ZcWarehouseSaveReqVO {
     private Long id;
 
     @Schema(description = "仓库名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "张三")
+    @DiffLogField(name = "仓库名称")
     @NotEmpty(message = "仓库名称不能为空")
     private String name;
 
     @Schema(description = "负责人", example = "29011")
+    @DiffLogField(name = "负责人", function = AdminUserParseFunction.NAME)
     private Long managerId;
 
     @Schema(description = "备注")
+    @DiffLogField(name = "备注")
     private String note;
 
 }
