@@ -15,7 +15,6 @@ import java.io.IOException;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
@@ -24,7 +23,6 @@ import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
 import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.*;
-import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
 
 @Tag(name = "管理后台 - 客户余额变动流水")
@@ -40,8 +38,7 @@ public class ZcCustomerBalanceLogController {
     @Operation(summary = "获得客户余额变动流水分页")
     @PreAuthorize("@ss.hasPermission('zc:customer-balance-log:query')")
     public CommonResult<PageResult<ZcCustomerBalanceLogRespVO>> getCustomerBalanceLogPage(@Valid ZcCustomerBalanceLogPageReqVO pageReqVO) {
-        PageResult<ZcCustomerBalanceLogDO> pageResult = customerBalanceLogService.getCustomerBalanceLogPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcCustomerBalanceLogRespVO.class));
+        return success(customerBalanceLogService.getCustomerBalanceLogPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -51,10 +48,9 @@ public class ZcCustomerBalanceLogController {
     public void exportCustomerBalanceLogExcel(@Valid ZcCustomerBalanceLogPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcCustomerBalanceLogDO> list = customerBalanceLogService.getCustomerBalanceLogPage(pageReqVO).getList();
+        List<ZcCustomerBalanceLogRespVO> list = customerBalanceLogService.getCustomerBalanceLogPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "客户余额变动流水.xls", "数据", ZcCustomerBalanceLogRespVO.class,
-                        BeanUtils.toBean(list, ZcCustomerBalanceLogRespVO.class));
+        ExcelUtils.write(response, "客户余额变动流水.xls", "数据", ZcCustomerBalanceLogRespVO.class, list);
     }
 
 }

@@ -1,12 +1,12 @@
 package cn.iocoder.yudao.module.zc.dal.mysql.customerbalancelog;
 
-import java.util.*;
-
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.*;
 
 /**
@@ -17,19 +17,14 @@ import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.*;
 @Mapper
 public interface ZcCustomerBalanceLogMapper extends BaseMapperX<ZcCustomerBalanceLogDO> {
 
-    default PageResult<ZcCustomerBalanceLogDO> selectPage(ZcCustomerBalanceLogPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<ZcCustomerBalanceLogDO>()
-                .eqIfPresent(ZcCustomerBalanceLogDO::getCustomerId, reqVO.getCustomerId())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getChangeAmount, reqVO.getChangeAmount())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getBalanceBefore, reqVO.getBalanceBefore())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getBalanceAfter, reqVO.getBalanceAfter())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getBizType, reqVO.getBizType())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getRefType, reqVO.getRefType())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getRefId, reqVO.getRefId())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getRefNo, reqVO.getRefNo())
-                .eqIfPresent(ZcCustomerBalanceLogDO::getRemark, reqVO.getRemark())
-                .betweenIfPresent(ZcCustomerBalanceLogDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(ZcCustomerBalanceLogDO::getId));
+    /** XML 绑定方法，由分页插件自动注入 LIMIT/COUNT */
+    IPage<ZcCustomerBalanceLogRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZcCustomerBalanceLogPageReqVO reqVO);
+
+    /** 对外统一入口，封装 IPage → PageResult */
+    default PageResult<ZcCustomerBalanceLogRespVO> selectPage(ZcCustomerBalanceLogPageReqVO reqVO) {
+        IPage<ZcCustomerBalanceLogRespVO> result = selectPageWithVO(
+                new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
 }

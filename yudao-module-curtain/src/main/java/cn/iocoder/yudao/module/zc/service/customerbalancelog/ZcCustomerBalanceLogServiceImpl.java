@@ -5,6 +5,7 @@ import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.ZcCustomerBalanceLogPageReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.ZcCustomerBalanceLogRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 
@@ -28,7 +29,7 @@ public class ZcCustomerBalanceLogServiceImpl implements ZcCustomerBalanceLogServ
     }
 
     @Override
-    public PageResult<ZcCustomerBalanceLogDO> getCustomerBalanceLogPage(ZcCustomerBalanceLogPageReqVO pageReqVO) {
+    public PageResult<ZcCustomerBalanceLogRespVO> getCustomerBalanceLogPage(ZcCustomerBalanceLogPageReqVO pageReqVO) {
         return customerBalanceLogMapper.selectPage(pageReqVO);
     }
 

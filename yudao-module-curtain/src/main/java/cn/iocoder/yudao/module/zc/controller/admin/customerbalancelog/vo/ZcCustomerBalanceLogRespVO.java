@@ -23,6 +23,10 @@ public class ZcCustomerBalanceLogRespVO {
     @ExcelProperty("客户")
     private Long customerId;
 
+    @Schema(description = "客户简称")
+    @ExcelProperty("客户简称")
+    private String customerShortName;
+
     @Schema(description = "余额变动额", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("余额变动额")
     private BigDecimal changeAmount;
