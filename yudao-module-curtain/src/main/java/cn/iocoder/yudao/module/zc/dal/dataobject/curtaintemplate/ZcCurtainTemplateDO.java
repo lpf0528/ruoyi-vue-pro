@@ -39,5 +39,9 @@ public class ZcCurtainTemplateDO extends BaseDO {
      * 配件
      */
     private Long elementId;
+    /**
+     * 产品，可为空（模板未指定具体产品时）
+     */
+    private Long productId;
 
 }

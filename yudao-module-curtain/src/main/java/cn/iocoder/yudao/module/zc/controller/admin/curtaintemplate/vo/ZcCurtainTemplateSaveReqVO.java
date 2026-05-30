@@ -27,7 +27,19 @@ public class ZcCurtainTemplateSaveReqVO {
 
         @Schema(description = "配件列表", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotEmpty(message = "配件列表不能为空")
-        private List<Long> elementIds;
+        private List<ElementItem> elements;
+    }
+
+    @Schema(description = "配件项")
+    @Data
+    public static class ElementItem {
+
+        @Schema(description = "配件", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "配件不能为空")
+        private Long elementId;
+
+        @Schema(description = "产品，可为空")
+        private Long productId;
     }
 
 }

@@ -24,7 +24,7 @@ public class ZcCurtainTemplateGetRespVO {
         private Long structureId;
 
         @Schema(description = "配件列表")
-        private List<ElementItem> elementIds;
+        private List<ElementItem> elements;
     }
 
     @Schema(description = "配件项")
@@ -37,5 +37,8 @@ public class ZcCurtainTemplateGetRespVO {
         @Schema(description = "版本ID")
         @JsonProperty("version_id")
         private Long versionId;
+
+        @Schema(description = "产品ID")
+        private Long productId;
     }
 }

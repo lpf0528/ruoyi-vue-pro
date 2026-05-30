@@ -30,14 +30,17 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveCurtainTemplate(ZcCurtainTemplateSaveReqVO saveReqVO) {
+        // 全量替换：先按 curtainId 清空旧记录，再批量插入新记录
+        // productId 允许为空，模板未指定产品时直接落库 null
         curtainTemplateMapper.deleteByCurtainId(saveReqVO.getCurtainId());
         List<ZcCurtainTemplateDO> list = new ArrayList<>();
         for (ZcCurtainTemplateSaveReqVO.StructureItem structure : saveReqVO.getStructures()) {
-            for (Long elementId : structure.getElementIds()) {
+            for (ZcCurtainTemplateSaveReqVO.ElementItem element : structure.getElements()) {
                 list.add(ZcCurtainTemplateDO.builder()
                         .curtainId(saveReqVO.getCurtainId())
                         .structureId(structure.getStructureId())
-                        .elementId(elementId)
+                        .elementId(element.getElementId())
+                        .productId(element.getProductId())
                         .build());
             }
         }
@@ -64,11 +67,12 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
                 .map(entry -> {
                     ZcCurtainTemplateGetRespVO.StructureItem item = new ZcCurtainTemplateGetRespVO.StructureItem();
                     item.setStructureId(entry.getKey());
-                    item.setElementIds(entry.getValue().stream()
+                    item.setElements(entry.getValue().stream()
                             .map(t -> {
                                 ZcCurtainTemplateGetRespVO.ElementItem ei = new ZcCurtainTemplateGetRespVO.ElementItem();
                                 ei.setElementId(t.getElementId());
                                 ei.setVersionId(elementVersionMap.get(t.getElementId()));
+                                ei.setProductId(t.getProductId());
                                 return ei;
                             })
                             .collect(Collectors.toList()));
