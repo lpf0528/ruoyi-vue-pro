@@ -33,7 +33,7 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
     @Resource
     private ZcProductBatchMapper productBatchMapper;
 
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     @Transactional(rollbackFor = Exception.class)
