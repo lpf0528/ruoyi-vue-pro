@@ -6,12 +6,9 @@ import java.util.*;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
 
-@Schema(description = "管理后台 - 盘点记录新增/修改 Request VO")
+@Schema(description = "管理后台 - 盘点记录新增 Request VO")
 @Data
 public class ZcInventoryRecordSaveReqVO {
-
-    @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "8627")
-    private Long id;
 
     @Schema(description = "产品", requiredMode = Schema.RequiredMode.REQUIRED, example = "9127")
     @NotNull(message = "产品不能为空")
