@@ -287,7 +287,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     }
 
     @Override
-    public PageResult<ZcBillsDO> getBillsPage(ZcBillsPageReqVO pageReqVO) {
+    public PageResult<ZcBillsRespVO> getBillsPage(ZcBillsPageReqVO pageReqVO) {
         return billsMapper.selectPage(pageReqVO);
     }
 

@@ -49,4 +49,12 @@ public class ZcBillsRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    /** 客户简称，JOIN zc_customer.short_name */
+    @Schema(description = "客户简称")
+    private String customerName;
+
+    /** 收款方式名称，JOIN zc_bill_methods.name */
+    @Schema(description = "收款方式名称")
+    private String billMethodName;
+
 }
