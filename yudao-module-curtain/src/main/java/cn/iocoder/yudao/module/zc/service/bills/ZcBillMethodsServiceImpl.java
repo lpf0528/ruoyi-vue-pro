@@ -67,4 +67,9 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
         return billMethodsMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcBillMethodsDO> getBillMethodsList(ZcBillMethodsListReqVO listReqVO) {
+        return billMethodsMapper.selectList(listReqVO);
+    }
+
 }
