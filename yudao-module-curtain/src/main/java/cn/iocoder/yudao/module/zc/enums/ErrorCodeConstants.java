@@ -121,5 +121,6 @@ public interface ErrorCodeConstants {
      * 已确认的订单禁止修改（confirm_time 不为空）
      */
     ErrorCode SALES_ORDER_CONFIRMED_CANNOT_UPDATE = new ErrorCode(100058, "已确认的订单禁止修改");
+    ErrorCode WORKSHOP_USER_NOT_EXISTS = new ErrorCode(100059, "车间员工不存在");
 }
 
