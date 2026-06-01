@@ -59,4 +59,12 @@ public interface ZcWorkshopUserService {
      */
     PageResult<ZcWorkshopUserDO> getWorkshopUserPage(ZcWorkshopUserPageReqVO pageReqVO);
 
+    /**
+     * 获得车间员工列表
+     *
+     * @param listReqVO 查询条件
+     * @return 车间员工列表
+     */
+    List<ZcWorkshopUserDO> getWorkshopUserList(ZcWorkshopUserListReqVO listReqVO);
+
 }

@@ -24,4 +24,16 @@ public interface ZcWorkshopUserMapper extends BaseMapperX<ZcWorkshopUserDO> {
                 .orderByDesc(ZcWorkshopUserDO::getId));
     }
 
+    /**
+     * 查询车间员工列表
+     *
+     * @param reqVO 查询条件（可按 status 过滤）
+     * @return 员工列表
+     */
+    default List<ZcWorkshopUserDO> selectList(ZcWorkshopUserListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcWorkshopUserDO>()
+                .eqIfPresent(ZcWorkshopUserDO::getStatus, reqVO.getStatus())
+                .orderByDesc(ZcWorkshopUserDO::getId));
+    }
+
 }

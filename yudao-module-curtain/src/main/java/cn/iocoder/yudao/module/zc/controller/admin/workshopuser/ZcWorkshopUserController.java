@@ -14,11 +14,13 @@ import javax.servlet.http.*;
 import java.util.*;
 import java.io.IOException;
 
+import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 
@@ -86,6 +88,16 @@ public class ZcWorkshopUserController {
     public CommonResult<PageResult<ZcWorkshopUserRespVO>> getWorkshopUserPage(@Valid ZcWorkshopUserPageReqVO pageReqVO) {
         PageResult<ZcWorkshopUserDO> pageResult = workshopUserService.getWorkshopUserPage(pageReqVO);
         return success(BeanUtils.toBean(pageResult, ZcWorkshopUserRespVO.class));
+    }
+
+    @GetMapping("/simple-list")
+    @Operation(summary = "获得车间员工精简列表", description = "主要用于前端的下拉选项")
+    public CommonResult<List<ZcWorkshopUserSimpleRespVO>> getWorkshopUserSimpleList() {
+        List<ZcWorkshopUserDO> list = workshopUserService.getWorkshopUserList(
+                new ZcWorkshopUserListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus()));
+        return success(convertList(list, item -> new ZcWorkshopUserSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())));
     }
 
     @GetMapping("/export-excel")

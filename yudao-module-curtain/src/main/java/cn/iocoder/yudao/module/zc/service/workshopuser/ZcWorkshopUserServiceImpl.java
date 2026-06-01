@@ -82,4 +82,9 @@ public class ZcWorkshopUserServiceImpl implements ZcWorkshopUserService {
         return workshopUserMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public List<ZcWorkshopUserDO> getWorkshopUserList(ZcWorkshopUserListReqVO listReqVO) {
+        return workshopUserMapper.selectList(listReqVO);
+    }
+
 }
