@@ -24,4 +24,9 @@ public interface ZcBillMethodsMapper extends BaseMapperX<ZcBillMethodsDO> {
                 .orderByDesc(ZcBillMethodsDO::getId));
     }
 
+    default List<ZcBillMethodsDO> selectList(ZcBillMethodsListReqVO reqVO) {
+        return selectList(new LambdaQueryWrapperX<ZcBillMethodsDO>()
+                .orderByDesc(ZcBillMethodsDO::getId));
+    }
+
 }

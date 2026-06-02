@@ -38,7 +38,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureMapper;
@@ -71,6 +74,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcCustomerBalanceLogService customerBalanceLogService;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
 
@@ -175,23 +180,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         // 1. 校验订单存在
         ZcSalesOrderDO existing = validateSalesOrderExists(orderId);
 
-        // 2. confirm_time 不为空表示已确认：只允许修改品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains
+        // 2. confirm_time 不为空表示已确认，禁止修改任何信息
         if (existing.getConfirmTime() != null) {
-            salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                    .set(ZcSalesOrderDO::getBrandId, updateReqVO.getBrandId())
-                    .set(ZcSalesOrderDO::getLogisticId, updateReqVO.getLogisticId())
-                    .set(ZcSalesOrderDO::getReceiver, updateReqVO.getReceiver())
-                    .set(ZcSalesOrderDO::getDeliveryDate, updateReqVO.getDeliveryDate())
-                    .set(ZcSalesOrderDO::getDeliveryAddress, updateReqVO.getDeliveryAddress())
-                    .set(ZcSalesOrderDO::getFreight, updateReqVO.getFreight())
-                    .set(ZcSalesOrderDO::getDiscountAmount, updateReqVO.getDiscountAmount())
-                    .set(ZcSalesOrderDO::getAmount, updateReqVO.getAmount())
-                    .set(ZcSalesOrderDO::getNote, updateReqVO.getNote())
-                    .eq(ZcSalesOrderDO::getId, orderId));
-            // 记录操作日志上下文（仅主表字段参与 diff）
-            LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
-            LogRecordContext.putVariable("orderNo", existing.getOrderNo());
-            return;
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
         }
 
         // 3. 未确认的订单：整单更新主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
@@ -302,9 +293,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 3. 从客户账户余额中扣除订单金额
+        // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
-            customerService.adjustBalance(order.getCustomerId(), order.getAmount().negate());
+            BigDecimal delta = order.getAmount().negate();
+            ZcCustomerDO customer = customerService.getCustomer(order.getCustomerId());
+            BigDecimal balanceBefore = customer != null && customer.getBalance() != null
+                    ? customer.getBalance() : BigDecimal.ZERO;
+            BigDecimal balanceAfter = balanceBefore.add(delta);
+
+            customerService.adjustBalance(order.getCustomerId(), delta);
+
+            customerBalanceLogService.createLog(ZcCustomerBalanceLogDO.builder()
+                    .customerId(order.getCustomerId())
+                    .changeAmount(delta)
+                    .balanceBefore(balanceBefore)
+                    .balanceAfter(balanceAfter)
+                    .bizType("ORDER_CONFIRM")
+                    .refType("SALES_ORDER")
+                    .refId(order.getId())
+                    .refNo(order.getOrderNo())
+                    .build());
         }
         // 记录操作日志上下文
         LogRecordContext.putVariable("orderNo", order.getOrderNo());
@@ -332,9 +340,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 4. 将订单金额退回客户账户余额
+        // 4. 将订单金额退回客户账户余额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
-            customerService.adjustBalance(order.getCustomerId(), order.getAmount());
+            BigDecimal delta = order.getAmount();
+            ZcCustomerDO customer = customerService.getCustomer(order.getCustomerId());
+            BigDecimal balanceBefore = customer != null && customer.getBalance() != null
+                    ? customer.getBalance() : BigDecimal.ZERO;
+            BigDecimal balanceAfter = balanceBefore.add(delta);
+
+            customerService.adjustBalance(order.getCustomerId(), delta);
+
+            customerBalanceLogService.createLog(ZcCustomerBalanceLogDO.builder()
+                    .customerId(order.getCustomerId())
+                    .changeAmount(delta)
+                    .balanceBefore(balanceBefore)
+                    .balanceAfter(balanceAfter)
+                    .bizType("ORDER_UNCONFIRM")
+                    .refType("SALES_ORDER")
+                    .refId(order.getId())
+                    .refNo(order.getOrderNo())
+                    .build());
         }
         // 记录操作日志上下文
         LogRecordContext.putVariable("orderNo", order.getOrderNo());

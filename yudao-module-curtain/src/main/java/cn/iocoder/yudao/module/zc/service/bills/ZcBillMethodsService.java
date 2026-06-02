@@ -45,4 +45,12 @@ public interface ZcBillMethodsService {
      */
     PageResult<ZcBillMethodsDO> getBillMethodsPage(ZcBillMethodsPageReqVO pageReqVO);
 
+    /**
+     * 获得收款方式列表（用于前端下拉，全量返回）
+     *
+     * @param listReqVO 列表查询条件
+     * @return 收款方式列表
+     */
+    List<ZcBillMethodsDO> getBillMethodsList(ZcBillMethodsListReqVO listReqVO);
+
 }

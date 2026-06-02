@@ -28,6 +28,7 @@ import java.util.List;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_DELETE;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_UPDATE;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
@@ -108,7 +109,12 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 1. 校验订单存在
         ZcSalesOrderDO existing = validateSalesOrderExists(orderId);
 
-        // 2. 更新订单主记录，保留系统字段（订单号、状态、结算状态、是否加急不允许覆盖）
+        // 2. confirm_time 不为空表示已确认，禁止修改任何信息
+        if (existing.getConfirmTime() != null) {
+            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
+        }
+
+        // 3. 更新订单主记录，保留系统字段（订单号、状态、结算状态、是否加急不允许覆盖）
         ZcSalesOrderDO updateOrder = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         updateOrder.setOrderNo(existing.getOrderNo());
         updateOrder.setStatus(existing.getStatus());
@@ -120,7 +126,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         }
         salesOrderMapper.updateById(updateOrder);
 
-        // 3. 整单替换产品行：先全量删除旧行，再重新插入新行
+        // 4. 整单替换产品行：先全量删除旧行，再重新插入新行
         salesOrderProductMapper.deleteByOrderId(orderId);
         for (ZcSalesOrderProductBatchCreateVO batchVO : updateReqVO.getBatchs()) {
             ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);

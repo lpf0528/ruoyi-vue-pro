@@ -12,7 +12,9 @@
       "PowerShell([System.IO.Directory]::GetDirectories\\(\"D:\\\\workplace\\\\ruoyi-vue-pro\\\\yudao-module-curtain\\\\src\\\\main\\\\java\\\\cn\\\\iocoder\\\\yudao\\\\module\\\\zc\\\\service\"\\))",
       "Bash(Remove-Item *)",
       "Bash(xargs grep -l \"SalesOrderProduct\")",
-      "Bash(xargs grep -l \"SalesOrderDetail\\\\|SalesOrderController\\\\|salesOrderController\")"
+      "Bash(xargs grep -l \"SalesOrderDetail\\\\|SalesOrderController\\\\|salesOrderController\")",
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

@@ -84,8 +84,15 @@ public class ZcBillsController {
     @Operation(summary = "获得收支账单分页")
     @PreAuthorize("@ss.hasPermission('zc:bills:query')")
     public CommonResult<PageResult<ZcBillsRespVO>> getBillsPage(@Valid ZcBillsPageReqVO pageReqVO) {
-        PageResult<ZcBillsDO> pageResult = billsService.getBillsPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZcBillsRespVO.class));
+        return success(billsService.getBillsPage(pageReqVO));
+    }
+
+    @GetMapping("/order-items")
+    @Operation(summary = "获得收款单的订单分摊明细列表")
+    @Parameter(name = "billId", description = "收款单 ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:bills:query')")
+    public CommonResult<List<ZcBillOrderItemRespVO>> getBillOrderItems(@RequestParam("billId") Long billId) {
+        return success(billsService.getBillOrderItems(billId));
     }
 
     @GetMapping("/export-excel")
@@ -95,10 +102,9 @@ public class ZcBillsController {
     public void exportBillsExcel(@Valid ZcBillsPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZcBillsDO> list = billsService.getBillsPage(pageReqVO).getList();
+        List<ZcBillsRespVO> list = billsService.getBillsPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "收支账单.xls", "数据", ZcBillsRespVO.class,
-                        BeanUtils.toBean(list, ZcBillsRespVO.class));
+        ExcelUtils.write(response, "收支账单.xls", "数据", ZcBillsRespVO.class, list);
     }
 
 }

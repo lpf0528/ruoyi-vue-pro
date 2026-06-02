@@ -116,5 +116,11 @@ public interface ErrorCodeConstants {
      * 删除窗帘结构组件时，该组件已被窗帘模板配置引用，禁止删除
      */
     ErrorCode CURTAIN_STRUCTURE_ELEMENT_HAS_TEMPLATE = new ErrorCode(100056, "该组件已在窗帘模板中配置，禁止删除");
+    ErrorCode CUSTOMER_BALANCE_LOG_NOT_EXISTS = new ErrorCode(100057, "客户余额变动流水不存在");
+    /**
+     * 已确认的订单禁止修改（confirm_time 不为空）
+     */
+    ErrorCode SALES_ORDER_CONFIRMED_CANNOT_UPDATE = new ErrorCode(100058, "已确认的订单禁止修改");
+    ErrorCode WORKSHOP_USER_NOT_EXISTS = new ErrorCode(100059, "车间员工不存在");
 }
 

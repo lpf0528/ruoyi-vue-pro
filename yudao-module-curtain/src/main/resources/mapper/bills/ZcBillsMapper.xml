@@ -2,11 +2,35 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper">
 
-    <!--
-        一般情况下，尽可能使用 Mapper 进行 CRUD 增删改查即可。
-        无法满足的场景，例如说多表关联查询，才使用 XML 编写 SQL。
-        代码生成器暂时只生成 Mapper XML 文件本身，更多推荐 MybatisX 快速开发插件来生成查询。
-        文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
-     -->
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.bills.vo.ZcBillsRespVO">
+        SELECT
+            t2.short_name   AS customer_name,
+            t3.`name`       AS bill_method_name,
+            t1.id, t1.bill_no, t1.bill_date, t1.bill_user_id,
+            t1.customer_id, t1.discount_amount, t1.actual_amount,
+            t1.bill_method_id, t1.note,
+            t1.create_time, t1.update_time, t1.creator, t1.updater
+        FROM zc_bills t1
+        LEFT JOIN zc_customer     t2 ON t1.customer_id    = t2.id AND t2.deleted = 0
+        LEFT JOIN zc_bill_methods t3 ON t1.bill_method_id = t3.id AND t3.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.billNo != null and reqVO.billNo != ''">
+            AND t1.bill_no LIKE CONCAT('%', #{reqVO.billNo}, '%')
+        </if>
+        <if test="reqVO.billDate != null and reqVO.billDate.length == 2">
+            AND t1.bill_date BETWEEN #{reqVO.billDate[0]} AND #{reqVO.billDate[1]}
+        </if>
+        <if test="reqVO.billUserId != null">
+            AND t1.bill_user_id = #{reqVO.billUserId}
+        </if>
+        <if test="reqVO.customerId != null">
+            AND t1.customer_id = #{reqVO.customerId}
+        </if>
+        <if test="reqVO.billMethodId != null">
+            AND t1.bill_method_id = #{reqVO.billMethodId}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
 
 </mapper>
