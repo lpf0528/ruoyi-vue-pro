@@ -15,4 +15,7 @@ public class ZcWarehouseSimpleRespVO {
     @Schema(description = "仓库名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
+    @Schema(description = "是否默认仓库")
+    private Boolean defaultStatus;
+
 }

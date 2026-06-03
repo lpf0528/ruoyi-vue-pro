@@ -95,7 +95,8 @@ public class ZcWarehouseController {
         List<ZcWarehouseDO> list = warehouseService.getWarehouseList(new ZcWarehouseListReqVO());
         return success(convertList(list, item -> new ZcWarehouseSimpleRespVO()
                 .setId(item.getId())
-                .setName(item.getName())));
+                .setName(item.getName())
+                .setDefaultStatus(item.getDefaultStatus())));
     }
 
     @GetMapping("/export-excel")

@@ -27,4 +27,8 @@ public class ZcWarehouseSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
+    @Schema(description = "是否默认仓库", example = "false")
+    @DiffLogField(name = "是否默认")
+    private Boolean defaultStatus;
+
 }

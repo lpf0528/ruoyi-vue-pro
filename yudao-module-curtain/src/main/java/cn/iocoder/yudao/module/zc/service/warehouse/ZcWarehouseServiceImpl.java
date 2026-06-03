@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.warehouse;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -39,6 +40,10 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         // 插入
         ZcWarehouseDO warehouse = BeanUtils.toBean(createReqVO, ZcWarehouseDO.class);
         warehouseMapper.insert(warehouse);
+        // 若设为默认仓库，需清除其他仓库的默认标记（同一时刻至多一条默认）
+        if (Boolean.TRUE.equals(createReqVO.getDefaultStatus())) {
+            clearOtherDefaultStatus(warehouse.getId());
+        }
         // 记录操作日志上下文
         LogRecordContext.putVariable("warehouse", warehouse);
         return warehouse.getId();
@@ -54,6 +59,10 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
         // 更新
         ZcWarehouseDO updateObj = BeanUtils.toBean(updateReqVO, ZcWarehouseDO.class);
         warehouseMapper.updateById(updateObj);
+        // 若更新为默认仓库，需清除其他仓库的默认标记（同一时刻至多一条默认）
+        if (Boolean.TRUE.equals(updateReqVO.getDefaultStatus())) {
+            clearOtherDefaultStatus(updateReqVO.getId());
+        }
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldWarehouse, ZcWarehouseSaveReqVO.class));
         LogRecordContext.putVariable("warehouseName", oldWarehouse.getName());
@@ -117,6 +126,20 @@ public class ZcWarehouseServiceImpl implements ZcWarehouseService {
     @Override
     public List<ZcWarehouseDO> getWarehouseList(ZcWarehouseListReqVO listReqVO) {
         return warehouseMapper.selectList(listReqVO);
+    }
+
+    /**
+     * 将除 excludeId 之外所有默认仓库的 defaultStatus 置为 false，
+     * 保证同一时刻至多只有一条默认记录
+     *
+     * @param excludeId 不需要被清除的仓库 ID（当前正在设为默认的那条）
+     */
+    private void clearOtherDefaultStatus(Long excludeId) {
+        LambdaUpdateWrapper<ZcWarehouseDO> wrapper = new LambdaUpdateWrapper<ZcWarehouseDO>()
+                .set(ZcWarehouseDO::getDefaultStatus, false)
+                .eq(ZcWarehouseDO::getDefaultStatus, true)
+                .ne(ZcWarehouseDO::getId, excludeId);
+        warehouseMapper.update(wrapper);
     }
 
 }

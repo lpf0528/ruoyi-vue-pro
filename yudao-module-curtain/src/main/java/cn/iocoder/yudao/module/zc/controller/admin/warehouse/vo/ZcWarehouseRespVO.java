@@ -32,6 +32,10 @@ public class ZcWarehouseRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "是否默认仓库")
+    @ExcelProperty("是否默认")
+    private Boolean defaultStatus;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

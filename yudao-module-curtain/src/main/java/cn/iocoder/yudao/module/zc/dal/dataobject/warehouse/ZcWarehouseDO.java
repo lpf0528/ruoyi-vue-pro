@@ -39,6 +39,9 @@ public class ZcWarehouseDO extends BaseDO {
      * 备注
      */
     private String note;
-
+    /**
+     * 是否默认仓库，同一时刻至多一条记录为 true
+     */
+    private Boolean defaultStatus;
 
 }
