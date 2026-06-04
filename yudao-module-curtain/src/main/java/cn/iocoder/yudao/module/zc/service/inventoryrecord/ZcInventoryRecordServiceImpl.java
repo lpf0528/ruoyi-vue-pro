@@ -5,8 +5,6 @@ import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.*;
@@ -38,9 +36,7 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
     @Resource
     private ZcProductBatchMapper productBatchMapper;
 
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-    @Override
+@Override
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_INVENTORY_RECORD_TYPE, subType = ZC_INVENTORY_RECORD_CREATE_SUB_TYPE, bizNo = "{{#inventoryRecord.id}}",
             success = ZC_INVENTORY_RECORD_CREATE_SUCCESS)
@@ -60,15 +56,14 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
         updateBatch.setId(batch.getId());
         updateBatch.setQuantity(createReqVO.getNewQuantity());
         if (createReqVO.getNote() != null && !createReqVO.getNote().isEmpty()) {
-            String timeStr = LocalDateTime.now().format(DATETIME_FORMATTER);
-            String inventoryNote = "盘点(" + timeStr + ")：" + createReqVO.getNote();
+            String inventoryNote = "盘点：" + createReqVO.getNote();
             String newNote;
             if (batch.getNote() == null) {
                 newNote = inventoryNote;
             } else {
                 // 过滤掉上次的盘点行（以"盘点("开头），保留原始批次备注
                 String filtered = Arrays.stream(batch.getNote().split("\n"))
-                        .filter(line -> !line.startsWith("盘点("))
+                        .filter(line -> !line.startsWith("盘点："))
                         .collect(Collectors.joining("\n"));
                 newNote = filtered.isEmpty() ? inventoryNote : filtered + "\n" + inventoryNote;
             }
