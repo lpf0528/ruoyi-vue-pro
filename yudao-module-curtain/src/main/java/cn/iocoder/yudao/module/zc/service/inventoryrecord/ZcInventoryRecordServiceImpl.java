@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
@@ -53,15 +55,25 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
         ZcInventoryRecordDO inventoryRecord = BeanUtils.toBean(createReqVO, ZcInventoryRecordDO.class);
         inventoryRecordMapper.insert(inventoryRecord);
 
-        // 3. 更新批次剩余数量，并追加盘点备注（格式："\n盘点(时间)：备注"）
-        String timeStr = LocalDateTime.now().format(DATETIME_FORMATTER);
-        String appendNote = "盘点(" + timeStr + ")：" + (createReqVO.getNote() != null ? createReqVO.getNote() : "");
-        String newNote = batch.getNote() == null ? appendNote.trim() : appendNote.trim() + "\n" + batch.getNote();
-
+        // 3. 更新批次剩余数量；若本次盘点填写了备注，则用新备注覆盖上次盘点备注（保留原始非盘点备注）
         ZcProductBatchDO updateBatch = new ZcProductBatchDO();
         updateBatch.setId(batch.getId());
         updateBatch.setQuantity(createReqVO.getNewQuantity());
-        updateBatch.setNote(newNote);
+        if (createReqVO.getNote() != null && !createReqVO.getNote().isEmpty()) {
+            String timeStr = LocalDateTime.now().format(DATETIME_FORMATTER);
+            String inventoryNote = "盘点(" + timeStr + ")：" + createReqVO.getNote();
+            String newNote;
+            if (batch.getNote() == null) {
+                newNote = inventoryNote;
+            } else {
+                // 过滤掉上次的盘点行（以"盘点("开头），保留原始批次备注
+                String filtered = Arrays.stream(batch.getNote().split("\n"))
+                        .filter(line -> !line.startsWith("盘点("))
+                        .collect(Collectors.joining("\n"));
+                newNote = filtered.isEmpty() ? inventoryNote : filtered + "\n" + inventoryNote;
+            }
+            updateBatch.setNote(newNote);
+        }
         productBatchMapper.updateById(updateBatch);
 
         // 4. 记录操作日志上下文
