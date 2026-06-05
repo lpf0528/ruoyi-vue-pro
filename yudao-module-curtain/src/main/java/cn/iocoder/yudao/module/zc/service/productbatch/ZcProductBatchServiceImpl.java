@@ -15,6 +15,7 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
+import cn.iocoder.yudao.module.zc.dal.redis.ZcBarcodeGeneratorRedisDAO;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import com.mzt.logapi.context.LogRecordContext;
@@ -40,6 +41,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     private ZCSalesOrderMaterialMapper salesOrderMaterialMapper;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
+    @Resource
+    private ZcBarcodeGeneratorRedisDAO barcodeGeneratorRedisDAO;
 
     @Override
     @LogRecord(type = ZC_PRODUCT_BATCH_TYPE, subType = ZC_PRODUCT_BATCH_CREATE_SUB_TYPE, bizNo = "{{#productBatch.id}}",
@@ -51,6 +54,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
         long seq = noGeneratorRedisDAO.nextBatchSeq(
                 TenantContextHolder.getRequiredTenantId(), createReqVO.getProductId(), date);
         productBatch.setBatchNo(date + "-" + String.format("%02d", seq));
+        // 生成条码：BAT-XXXXXXXX（12位），Redis setIfAbsent 保证全局唯一
+        productBatch.setBarcode(barcodeGeneratorRedisDAO.generateBatchBarcode());
         productBatchMapper.insert(productBatch);
         // 记录操作日志上下文
         LogRecordContext.putVariable("productBatch", productBatch);

@@ -83,6 +83,10 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("单位")
     private String unitValue;
 
+    @Schema(description = "条码，格式 BAT-XXXXXXXX（共 12 位）")
+    @ExcelProperty("条码")
+    private String barcode;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

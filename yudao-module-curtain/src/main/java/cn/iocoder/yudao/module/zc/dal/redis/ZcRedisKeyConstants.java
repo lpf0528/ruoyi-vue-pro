@@ -36,4 +36,13 @@ public interface ZcRedisKeyConstants {
      */
     String ZC_BATCH_SEQ = "zc:seq:batch:%d:%d:%s";
 
+    /**
+     * 条码唯一性占位 Key
+     *
+     * <p>KEY 格式：{@code zc:barcode:{barcode}}</p>
+     * <p>VALUE 类型：String（固定值 "1"，setIfAbsent 占位）</p>
+     * <p>过期时间：10 年，视为永久唯一</p>
+     */
+    String ZC_BARCODE = "zc:barcode:%s";
+
 }
