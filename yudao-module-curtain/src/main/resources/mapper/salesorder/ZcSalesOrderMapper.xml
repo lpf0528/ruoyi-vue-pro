@@ -62,9 +62,9 @@
         <if test="reqVO.isExpedited != null">
             AND t1.is_expedited = #{reqVO.isExpedited}
         </if>
-        <!-- includeUnconfirmed 明确传 false 时，过滤掉 status = 'unconfirmed' 的订单 -->
+        <!-- includeUnconfirmed 明确传 false 时，过滤掉未确认订单（confirm_time 为空） -->
         <if test="reqVO.includeUnconfirmed != null and !reqVO.includeUnconfirmed">
-            AND t1.status != 'unconfirmed'
+            AND t1.confirm_time IS NOT NULL
         </if>
         ORDER BY t1.id DESC
     </select>
