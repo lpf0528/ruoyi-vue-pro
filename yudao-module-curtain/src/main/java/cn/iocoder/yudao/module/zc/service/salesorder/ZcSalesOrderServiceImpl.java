@@ -463,9 +463,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .map(ZCSalesOrderMaterialDO::getBatchId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> batchNoMap = CollUtil.isNotEmpty(batchIds)
-                ? convertMap(productBatchMapper.selectBatchIds(batchIds), ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo)
-                : Collections.emptyMap();
+        List<ZcProductBatchDO> batchList = CollUtil.isNotEmpty(batchIds)
+                ? productBatchMapper.selectBatchIds(batchIds)
+                : Collections.emptyList();
+        Map<Long, String> batchNoMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo);
+        // 复用已查出的批次列表，避免重复查库
+        Map<Long, String> batchBarcodeMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBarcode);
 
         // 8. 按结构行 ID 分组用料明细
         Map<Long, List<ZCSalesOrderMaterialDetailRespVO>> materialsByStructureId = materialList.stream()
@@ -476,6 +479,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             vo.setElementName(elementNameMap.get(m.getElementId()));
                             vo.setProductName(productNameMap.get(m.getProductId()));
                             vo.setBatchNo(batchNoMap.get(m.getBatchId()));
+                            vo.setBarcode(batchBarcodeMap.get(m.getBatchId()));
                             return vo;
                         }, Collectors.toList())
                 ));

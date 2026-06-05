@@ -27,4 +27,8 @@ public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO
     @Schema(description = "批次号")
     private String batchNo;
 
+    /** 批次条码，来自 zc_product_batch.barcode */
+    @Schema(description = "批次条码")
+    private String barcode;
+
 }
