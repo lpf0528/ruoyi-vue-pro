@@ -96,6 +96,15 @@ public class ZcSalesOrderController {
         return success(salesOrderService.getSalesOrderPage(pageReqVO));
     }
 
+    @GetMapping("/app/page")
+    @Operation(summary = "获得销售订单分页（已确认，自动过滤 status = unconfirmed 的订单）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<PageResult<ZcSalesOrderRespVO>> getSalesOrderAppPage(@Valid ZcSalesOrderPageReqVO pageReqVO) {
+        // 固定过滤未确认订单，前端无需传此参数
+        pageReqVO.setIncludeUnconfirmed(false);
+        return success(salesOrderService.getSalesOrderPage(pageReqVO));
+    }
+
     @PutMapping("/expedited")
     @Operation(summary = "标记销售订单为加急")
     @Parameter(name = "orderId", description = "销售订单 ID", required = true)
