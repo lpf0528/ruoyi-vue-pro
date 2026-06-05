@@ -103,6 +103,10 @@ public class ZcSalesOrderRespVO {
     @ExcelProperty("是否加急")
     private Boolean isExpedited;
 
+    @Schema(description = "套数")
+    @ExcelProperty("套数")
+    private Integer sets;
+
     @Schema(description = "备注")
     @ExcelProperty("备注")
     private String note;

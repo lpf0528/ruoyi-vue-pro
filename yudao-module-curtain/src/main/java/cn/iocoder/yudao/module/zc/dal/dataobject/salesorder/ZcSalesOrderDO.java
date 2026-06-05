@@ -122,6 +122,10 @@ public class ZcSalesOrderDO extends BaseDO {
      */
     private String currentNodeName;
     /**
+     * 套数（成品单 = curtains 数量，面料单 = batchs 数量）
+     */
+    private Integer sets;
+    /**
      * 备注
      */
     private String note;

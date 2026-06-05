@@ -118,6 +118,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrder.setPayStatus("unpaid");   // 默认：未结算
         salesOrder.setStatus("unconfirmed"); // 默认：待确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
+        salesOrder.setSets(CollUtil.isEmpty(createReqVO.getCurtains()) ? 0 : createReqVO.getCurtains().size());
         // 运费、总金额不传时默认为 0
         if (salesOrder.getFreight() == null) {
             salesOrder.setFreight(java.math.BigDecimal.ZERO);
@@ -193,6 +194,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         updateDO.setIsExpedited(null);
         updateDO.setAmountReceived(null);
         updateDO.setConfirmTime(null);
+        updateDO.setSets(CollUtil.isEmpty(updateReqVO.getCurtains()) ? 0 : updateReqVO.getCurtains().size());
         salesOrderMapper.updateById(updateDO);
 
         // 4. 删除旧的三层子表数据，再重新插入（全量替换保证一致性）

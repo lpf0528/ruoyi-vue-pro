@@ -64,6 +64,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         salesOrder.setPayStatus("unpaid");   // 默认：未结算
         salesOrder.setStatus("unconfirmed"); // 默认：待确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
+        salesOrder.setSets(createReqVO.getBatchs() == null ? 0 : createReqVO.getBatchs().size());
         if (salesOrder.getFreight() == null) {
             salesOrder.setFreight(java.math.BigDecimal.ZERO);
         }
@@ -121,6 +122,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         updateOrder.setPayStatus(existing.getPayStatus());
         updateOrder.setIsExpedited(existing.getIsExpedited());
         updateOrder.setConfirmTime(existing.getConfirmTime());
+        updateOrder.setSets(updateReqVO.getBatchs() == null ? 0 : updateReqVO.getBatchs().size());
         if (updateOrder.getFreight() == null) {
             updateOrder.setFreight(java.math.BigDecimal.ZERO);
         }
