@@ -67,6 +67,14 @@ public class ZcSalesOrderCurtainRespVO {
     @ExcelProperty("序号")
     private Integer index;
 
+    @Schema(description = "打包时间")
+    @ExcelProperty("打包时间")
+    private LocalDateTime packTime;
+
+    @Schema(description = "发货时间")
+    @ExcelProperty("发货时间")
+    private LocalDateTime shipTime;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

@@ -13,7 +13,6 @@ import com.mzt.logapi.starter.annotation.LogRecord;
 import cn.iocoder.yudao.module.zc.dal.dataobject.orderoperationlog.ZcOrderOperationLogDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderCurtainDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
-import cn.iocoder.yudao.module.zc.dal.mysql.orderoperationlog.ZcOrderOperationLogMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTargetTypeEnum;
@@ -41,8 +40,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
-    private ZcOrderOperationLogMapper orderOperationLogMapper;
-    @Resource
     private ZcOrderOperationLogService orderOperationLogService;
 
     @Override
@@ -55,9 +52,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         Long orderId = curtain.getOrderId();
         String beforeStatus = curtain.getStatus();
 
-        // 校验该窗帘行是否已存在未撤销的打包记录，防止重复打包
-        if (orderOperationLogMapper.existsActiveLog(
-                ZcOrderOperateTargetTypeEnum.CURTAIN.name(), id, ZcOrderOperateTypeEnum.PACK.name())) {
+        // 打包时间不为空说明已打包，防止重复打包
+        if (curtain.getPackTime() != null) {
             throw exception(SALES_ORDER_CURTAIN_ALREADY_PACKED);
         }
 
@@ -114,9 +110,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         Long orderId = curtain.getOrderId();
         String beforeStatus = curtain.getStatus();
 
-        // 校验该窗帘行是否已存在未撤销的发货记录，防止重复发货
-        if (orderOperationLogMapper.existsActiveLog(
-                ZcOrderOperateTargetTypeEnum.CURTAIN.name(), id, ZcOrderOperateTypeEnum.SHIP.name())) {
+        // 发货时间不为空说明已发货，防止重复发货
+        if (curtain.getShipTime() != null) {
             throw exception(SALES_ORDER_CURTAIN_ALREADY_SHIPPED);
         }
 
