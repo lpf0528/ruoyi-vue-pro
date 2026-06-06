@@ -61,6 +61,14 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "配料状态：NOT_PEILIAO=未配料，HAVE_PEILIAO=已配料")
+    @ExcelProperty("配料状态")
+    private String status;
+
+    @Schema(description = "裁剪数量")
+    @ExcelProperty("裁剪数量")
+    private BigDecimal cutQuantity;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
