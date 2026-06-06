@@ -107,6 +107,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CUT_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_SALES_ORDER_MATERIAL_CUT_SUCCESS)
     public void cutMaterial(ZcCutMaterialReqVO reqVO) {
         // 校验用料明细存在，取出 orderId 供库存记录关联
         ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(reqVO.getId());
@@ -140,10 +142,15 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CAIJIAN.name());
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("batchNo", batch.getBatchNo());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUB_TYPE,
+            bizNo = "{{#materialId}}", success = ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUCCESS)
     public void cancelCutMaterial(Long materialId) {
         // 1. 校验用料明细存在
         ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(materialId);
@@ -179,6 +186,10 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CANCEL_CAIJIAN.name());
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("batchNo", batch.getBatchNo());
+        LogRecordContext.putVariable("cutQuantity", material.getCutQuantity());
     }
 
 }

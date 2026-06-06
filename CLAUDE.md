@@ -632,3 +632,10 @@ mvn test -pl yudao-module-system/yudao-module-system-biz
 5. **返回值统一用 `CommonResult`**：Controller 层所有接口返回类型必须是 `CommonResult<T>`，用 `success()` 或 `error()` 包装
 6. **涉及多租户改动时提醒确认**：若修改涉及 `tenant_id` 相关逻辑，需明确提示开发者确认是否影响租户隔离
 7. **字典/状态枚举的主动处理**：当用户要求处理状态或字典类型字段时，按以下步骤执行：① 若用户未提供枚举值，**先询问所有取值及中文名称再动手**；② 确认后同时创建枚举类（`enums/XxxEnum.java`）、追加字典 SQL（`curtain.sql` 末尾）、更新 DO 字段 Javadoc；③ grep 全项目中该字段的所有硬编码字符串，逐一替换为 `枚举.name()`，并为对应 Service 文件补充 import；④ 如有 `switch/case` 或 `if-else` 做 label 映射，改为 `枚举.valueOf(code).getLabel()` + try-catch 兜底。枚举类模板：`@Getter @AllArgsConstructor public enum XxxEnum { VALUE("中文"); private final String label; }`；字典 SQL 使用 `system_dict_type`（id ≥ 2301）和 `system_dict_data`（id ≥ 3700），颜色参考：默认/初始=info、进行中/主要=primary、警告/中间态=warning、完成/成功=success。
+8. **操作日志（@LogRecord）规范**：ZC 模块所有写操作（增删改、状态变更、库存操作等）必须加操作日志。步骤如下：
+   - **① 在 `LogRecordConstants` 定义常量**（位于 `yudao-module-curtain/.../enums/LogRecordConstants.java`），每个操作需定义 `_SUB_TYPE`（子类型中文名）和 `_SUCCESS`（成功模板，支持 SpEL 表达式）两个常量，挂在对应资源的分组注释下。
+   - **② 在 Service 实现方法上加 `@LogRecord` 注解**，参数：`type`（资源大类，如 `ZC_SALES_ORDER_MATERIAL_TYPE`）、`subType`（操作子类型常量）、`bizNo`（业务主键，用 SpEL 取方法参数，如 `"{{#reqVO.id}}"`）、`success`（成功模板常量）。
+   - **③ 将模板中用到的非方法参数变量放入 `LogRecordContext`**：在方法执行成功后（通常在方法末尾）调用 `LogRecordContext.putVariable("变量名", 值)`，确保异常回滚时不会产生虚假日志。方法入参可直接在模板用 `{{#参数名.字段}}`，无需放入 Context。
+   - **常量命名模板**：`ZC_{资源}_TYPE`、`ZC_{资源}_{操作}_SUB_TYPE`、`ZC_{资源}_{操作}_SUCCESS`，操作词：`CREATE/UPDATE/DELETE/CONFIRM/CANCEL_CONFIRM/MARK_EXPEDITED/CUT/CANCEL_CUT` 等。
+   - **成功模板示例**：`"裁剪了用料明细【{{#reqVO.id}}】，批次【{{#batchNo}}】，裁剪数量 {{#reqVO.cutQuantity}}"`；diff 场景用 `{_DIFF{#updateReqVO}}`，需配合 `LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, oldObj)`。
+   - **注意**：`@LogRecord` 加在 Service 实现类方法上，不加在 Controller 上；`@Transactional` 与 `@LogRecord` 可同时存在，顺序不限。
