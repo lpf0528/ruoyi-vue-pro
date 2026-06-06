@@ -220,6 +220,7 @@ ZcSalesOrder（订单主表）
 7. **收款分摊**：创建/更新收款单时，需校验分摊金额合计 = 实收 + 优惠，参考错误码 `BILL_ALLOCATED_AMOUNT_NOT_MATCH`
 8. **裁剪操作**：`cutMaterial` 扣库存用原子方法 `decreaseQuantity`；`cancelCutMaterial` 回退库存后必须用 `LambdaUpdateWrapper` 将 `cutQuantity` 显式置 null（`updateById` 不会更新 null 字段）；两个操作均需写入 `ZcInventoryRecordDO`
 9. **库存变动记录**：`zc_inventory_record` 已不只是盘点表，所有库存变化（入库/盘点/裁剪/撤销裁剪）都写入，operate 字段区分类型，勿遗漏
+10. **字典/状态枚举**：DO 中凡是注释含"枚举"或"字典"的 String 字段（如 `status`、`payStatus`），必须有对应的枚举类（位于 `enums/` 包）及 `curtain.sql` 中的字典数据（`system_dict_type` + `system_dict_data`）。Service 层一律使用 `枚举.name()` 写入，禁止硬编码字符串字面量。**若字段尚无枚举，Claude 应主动询问用户提供所有取值及其中文名称，确认后再创建枚举类和字典 SQL；若枚举已存在但需新增取值，同步更新枚举类、字典 SQL，并 grep 所有引用该字段的 Service/Mapper，确保没有遗漏的硬编码字面量。**
 
 ---
 
@@ -630,3 +631,4 @@ mvn test -pl yudao-module-system/yudao-module-system-biz
 4. **异常统一用 `exception()`**：不要直接 `throw new RuntimeException()`，一律调用 `ServiceExceptionUtil.exception(errorCode)` 抛出业务异常
 5. **返回值统一用 `CommonResult`**：Controller 层所有接口返回类型必须是 `CommonResult<T>`，用 `success()` 或 `error()` 包装
 6. **涉及多租户改动时提醒确认**：若修改涉及 `tenant_id` 相关逻辑，需明确提示开发者确认是否影响租户隔离
+7. **字典/状态枚举的主动处理**：当用户要求处理状态或字典类型字段时，按以下步骤执行：① 若用户未提供枚举值，**先询问所有取值及中文名称再动手**；② 确认后同时创建枚举类（`enums/XxxEnum.java`）、追加字典 SQL（`curtain.sql` 末尾）、更新 DO 字段 Javadoc；③ grep 全项目中该字段的所有硬编码字符串，逐一替换为 `枚举.name()`，并为对应 Service 文件补充 import；④ 如有 `switch/case` 或 `if-else` 做 label 映射，改为 `枚举.valueOf(code).getLabel()` + try-catch 兜底。枚举类模板：`@Getter @AllArgsConstructor public enum XxxEnum { VALUE("中文"); private final String label; }`；字典 SQL 使用 `system_dict_type`（id ≥ 2301）和 `system_dict_data`（id ≥ 3700），颜色参考：默认/初始=info、进行中/主要=primary、警告/中间态=warning、完成/成功=success。
