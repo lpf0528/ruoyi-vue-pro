@@ -65,6 +65,10 @@ public class ZcSalesOrderCurtainRespVO {
     @ExcelProperty("状态")
     private String status;
 
+    @Schema(description = "序号，同一订单内窗帘行的显示顺序，从 1 开始")
+    @ExcelProperty("序号")
+    private Integer index;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

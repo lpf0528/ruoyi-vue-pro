@@ -138,11 +138,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (CollUtil.isEmpty(createReqVO.getCurtains())) {
             return orderId;
         }
+        int curtainIndex = 1;
         for (ZcSalesOrderCurtainCreateVO curtainVO : createReqVO.getCurtains()) {
             // 3.1 保存窗帘行，配件列表序列化为 JSON 字符串存储
             ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
             curtainDO.setOrderId(orderId);
             curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 新建订单默认未确认
+            curtainDO.setIndex(curtainIndex++);
             if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
                 curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
             }
@@ -214,11 +216,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (CollUtil.isEmpty(updateReqVO.getCurtains())) {
             return;
         }
+        int curtainIndex = 1;
         for (ZcSalesOrderCurtainCreateVO curtainVO : updateReqVO.getCurtains()) {
             // 5.1 保存窗帘行，配件列表序列化为 JSON 字符串
             ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
             curtainDO.setOrderId(orderId);
             curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 整单更新时订单必为未确认状态
+            curtainDO.setIndex(curtainIndex++);
             if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
                 curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
             }

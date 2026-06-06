@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
 /**
  * 成品订单-窗帘行 DO
@@ -76,9 +77,15 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
     private BigDecimal pleatsDistance;
 
     /**
-     * 窗帘行状态，冗余自订单主表，随确认/取消确认操作同步更新，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     * 窗帘行状态，冗余自订单主表，随确认/取消确认操作同步更新，参见 {@link ZcSalesOrderStatusEnum}
      */
     private String status;
+
+    /**
+     * 序号，创建/整单更新时按前端传入列表顺序自动从 1 开始赋值
+     */
+    @TableField("`index`")
+    private Integer index;
 
 
 }
