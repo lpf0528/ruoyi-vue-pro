@@ -23,6 +23,7 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
@@ -48,9 +49,9 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE, bizNo = "{{#record.id}}",
             success = ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS)
     public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
-        // 1. 校验订单存在，且处于 pending 或 processing 状态
+        // 1. 校验订单存在，且处于已确认状态（确认后方可记录工序）
         ZcSalesOrderDO order = validateSalesOrderExists(reqVO.getOrderId());
-        if (!"pending".equals(order.getStatus()) && !"processing".equals(order.getStatus())) {
+        if (!ZcSalesOrderStatusEnum.CONFIRMED.name().equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_CANNOT_PROCESS);
         }
 
@@ -70,11 +71,8 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
         record.setOperatorUserId(SecurityFrameworkUtils.getLoginUserId());
         processRecordMapper.insert(record);
 
-        // 5. 联动更新订单状态与当前工序名称
-        // 若订单当前为 pending，首条工序记录创建时自动推进至 processing
-        String newStatus = "pending".equals(order.getStatus()) ? "processing" : order.getStatus();
+        // 5. 同步更新订单当前工序名称（状态保持 CONFIRMED，由打包/发货操作推进后续状态）
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                .set(ZcSalesOrderDO::getStatus, newStatus)
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
 

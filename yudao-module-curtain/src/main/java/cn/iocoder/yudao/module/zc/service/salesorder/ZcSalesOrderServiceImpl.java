@@ -57,6 +57,7 @@ import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
@@ -118,7 +119,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
         salesOrder.setPayStatus("unpaid");   // 默认：未结算
-        salesOrder.setStatus("unconfirmed"); // 默认：待确认
+        salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 默认：未确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
         salesOrder.setSets(CollUtil.isEmpty(createReqVO.getCurtains()) ? 0 : createReqVO.getCurtains().size());
         // 运费、总金额不传时默认为 0
@@ -287,13 +288,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     public void confirmSalesOrder(Long id) {
         // 1. 校验订单存在且当前状态为待确认
         ZcSalesOrderDO order = validateSalesOrderExists(id);
-        if (!"unconfirmed".equals(order.getStatus())) {
+        if (!ZcSalesOrderStatusEnum.UNCONFIRMED.name().equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_NOT_UNCONFIRMED);
         }
 
         // 2. 更新状态为已确认，记录确认时间
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                .set(ZcSalesOrderDO::getStatus, "confirmed")
+                .set(ZcSalesOrderDO::getStatus, ZcSalesOrderStatusEnum.CONFIRMED.name())
                 .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
                 .eq(ZcSalesOrderDO::getId, id));
 
@@ -329,7 +330,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     public void cancelConfirmSalesOrder(Long id) {
         // 1. 校验订单存在且当前状态为已确认
         ZcSalesOrderDO order = validateSalesOrderExists(id);
-        if (!"confirmed".equals(order.getStatus())) {
+        if (!ZcSalesOrderStatusEnum.CONFIRMED.name().equals(order.getStatus())) {
             throw exception(SALES_ORDER_STATUS_NOT_CONFIRMED);
         }
 
@@ -345,9 +346,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             throw exception(SALES_ORDER_HAS_CUT_MATERIAL);
         }
 
-        // 4. 更新状态回待确认，清空确认时间
+        // 4. 更新状态回未确认，清空确认时间
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                .set(ZcSalesOrderDO::getStatus, "unconfirmed")
+                .set(ZcSalesOrderDO::getStatus, ZcSalesOrderStatusEnum.UNCONFIRMED.name())
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
 
@@ -796,14 +797,10 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (status == null) {
             return "";
         }
-        switch (status) {
-            case "unconfirmed": return "待确认";
-            case "confirmed":   return "已确认";
-            case "pending":     return "待生产";
-            case "processing":  return "生产中";
-            case "completed":   return "已完成";
-            case "cancelled":   return "已取消";
-            default:            return status;
+        try {
+            return ZcSalesOrderStatusEnum.valueOf(status).getLabel();
+        } catch (IllegalArgumentException e) {
+            return status;
         }
     }
 
