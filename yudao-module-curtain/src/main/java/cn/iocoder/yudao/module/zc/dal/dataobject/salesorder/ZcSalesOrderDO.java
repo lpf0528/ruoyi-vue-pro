@@ -74,7 +74,7 @@ public class ZcSalesOrderDO extends BaseDO {
     /**
      * 订单类型
      *
-     * 枚举 {@link TODO zc_order_type 对应的类}
+     * 枚举 {@link ZcOrderTypeEnum}，字典类型 {@code zc_order_type}
      */
     private String types;
     /**

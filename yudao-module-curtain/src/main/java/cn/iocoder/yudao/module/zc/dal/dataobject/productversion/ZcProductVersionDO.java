@@ -34,9 +34,7 @@ public class ZcProductVersionDO extends BaseDO {
      */
     private String name;
     /**
-     * 单位
-     *
-     * 枚举 {@link TODO zc_product_unit 对应的类}
+     * 单位（来自 zc_product_unit 字典，用户可配置，非固定枚举）
      */
     private String unitValue;
     /**
@@ -47,7 +45,7 @@ public class ZcProductVersionDO extends BaseDO {
     /**
      * 出货价类型
      *
-     * 枚举 {@link TODO zc_selling_price_type 对应的类}
+     * 枚举 {@link ZcSellingPriceTypeEnum}，字典类型 {@code zc_selling_price_type}
      */
     private String sellingPriceType;
     /**
@@ -61,9 +59,9 @@ public class ZcProductVersionDO extends BaseDO {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal onePrice;
     /**
-     * 分类
+     * 物料分类
      *
-     * 枚举 {@link TODO zc_product_classify 对应的类}
+     * 枚举 {@link ZcProductClassifyEnum}，字典类型 {@code zc_product_classify}
      */
     private String classify;
     /**

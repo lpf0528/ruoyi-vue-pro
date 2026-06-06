@@ -49,7 +49,7 @@ public class ZcCustomerBalanceLogDO extends BaseDO {
     /**
      * 业务类型
      *
-     * 枚举 {@link TODO zc_customer_balance_biz_type 对应的类}
+     * 枚举 {@link ZcCustomerBalanceBizTypeEnum}，字典类型 {@code zc_customer_balance_biz_type}
      */
     private String bizType;
     /**

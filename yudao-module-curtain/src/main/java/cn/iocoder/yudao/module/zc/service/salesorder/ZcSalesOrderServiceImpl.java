@@ -56,6 +56,7 @@ import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
+import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
@@ -314,7 +315,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                     .changeAmount(delta)
                     .balanceBefore(balanceBefore)
                     .balanceAfter(balanceAfter)
-                    .bizType("ORDER_CONFIRM")
+                    .bizType(ZcCustomerBalanceBizTypeEnum.ORDER_CONFIRM.name())
                     .refType("SALES_ORDER")
                     .refId(order.getId())
                     .refNo(order.getOrderNo())
@@ -368,7 +369,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                     .changeAmount(delta)
                     .balanceBefore(balanceBefore)
                     .balanceAfter(balanceAfter)
-                    .bizType("ORDER_UNCONFIRM")
+                    .bizType(ZcCustomerBalanceBizTypeEnum.ORDER_UNCONFIRM.name())
                     .refType("SALES_ORDER")
                     .refId(order.getId())
                     .refNo(order.getOrderNo())
