@@ -58,7 +58,6 @@ public class ZcSalesOrderStructureDO extends BaseDO {
     private String rightCorner;
     /**
      * 粘贴方向
-     *
      * 枚举 {@link ZcPasteDirectionEnum}，字典类型 {@code zc_paste_direction}
      */
     private String pasteDirection;
@@ -68,13 +67,11 @@ public class ZcSalesOrderStructureDO extends BaseDO {
     private Long installProcessId;
     /**
      * 打开方式
-     *
      * 枚举 {@link ZcOpenMethodEnum}，字典类型 {@code zc_open_method}
      */
     private String openMethod;
     /**
      * 加工类型
-     *
      * 枚举 {@link ZcProcessTypeEnum}，字典类型 {@code zc_process_type}
      */
     private String processType;

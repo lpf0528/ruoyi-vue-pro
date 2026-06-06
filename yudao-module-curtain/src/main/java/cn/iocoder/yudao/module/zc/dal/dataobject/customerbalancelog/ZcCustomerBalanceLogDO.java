@@ -45,13 +45,11 @@ public class ZcCustomerBalanceLogDO extends BaseDO {
     private BigDecimal balanceAfter;
     /**
      * 业务类型
-     *
      * 枚举 {@link ZcCustomerBalanceBizTypeEnum}，字典类型 {@code zc_customer_balance_biz_type}
      */
     private String bizType;
     /**
      * 关联单据类型
-     *
      * 枚举 {@link ZcRefTypeEnum}，字典类型 {@code zc_ref_type}
      */
     private String refType;

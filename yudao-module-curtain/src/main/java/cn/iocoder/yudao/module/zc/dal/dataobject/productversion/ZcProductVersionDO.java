@@ -42,7 +42,6 @@ public class ZcProductVersionDO extends BaseDO {
     private Long categoryId;
     /**
      * 出货价类型
-     *
      * 枚举 {@link ZcSellingPriceTypeEnum}，字典类型 {@code zc_selling_price_type}
      */
     private String sellingPriceType;
@@ -58,7 +57,6 @@ public class ZcProductVersionDO extends BaseDO {
     private BigDecimal onePrice;
     /**
      * 物料分类
-     *
      * 枚举 {@link ZcProductClassifyEnum}，字典类型 {@code zc_product_classify}
      */
     private String classify;

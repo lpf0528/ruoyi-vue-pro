@@ -2,7 +2,6 @@ package cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import java.util.*;
 import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;

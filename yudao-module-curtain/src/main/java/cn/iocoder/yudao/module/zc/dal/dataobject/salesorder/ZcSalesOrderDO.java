@@ -69,7 +69,6 @@ public class ZcSalesOrderDO extends BaseDO {
     private BigDecimal freight;
     /**
      * 订单类型
-     *
      * 枚举 {@link ZcOrderTypeEnum}，字典类型 {@code zc_order_type}
      */
     private String types;
@@ -95,13 +94,11 @@ public class ZcSalesOrderDO extends BaseDO {
     private LocalDate deliveryDate;
     /**
      * 支付状态
-     *
      * 枚举 {@link ZcSalesOrderPayStatusEnum}，字典类型 {@code zc_order_pay_status}
      */
     private String payStatus;
     /**
      * 状态
-     *
      * 枚举 {@link ZcSalesOrderStatusEnum}，字典类型 {@code zc_order_status}
      */
     private String status;
