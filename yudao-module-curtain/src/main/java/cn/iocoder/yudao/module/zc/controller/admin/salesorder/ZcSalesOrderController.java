@@ -157,10 +157,9 @@ public class ZcSalesOrderController {
 
     @PutMapping("/cancel-cut-material")
     @Operation(summary = "撤销裁剪（回退批次库存、清空配料绑定、写入撤销裁剪记录）")
-    @Parameter(name = "materialId", description = "用料明细ID", required = true)
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
-    public CommonResult<Boolean> cancelCutMaterial(@RequestParam("materialId") Long materialId) {
-        salesOrderMaterialService.cancelCutMaterial(materialId);
+    public CommonResult<Boolean> cancelCutMaterial(@RequestBody @Valid ZcCancelCutMaterialReqVO reqVO) {
+        salesOrderMaterialService.cancelCutMaterial(reqVO.getMaterialId());
         return success(true);
     }
 
