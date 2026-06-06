@@ -12,8 +12,11 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterial
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
+import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
+import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -35,6 +38,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZCSalesOrderMaterialMapper zCSalesOrderMaterialMapper;
     @Resource
     private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZcInventoryRecordMapper inventoryRecordMapper;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -101,8 +106,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cutMaterial(ZcCutMaterialReqVO reqVO) {
-        // 校验用料明细存在
-        validateZCSalesOrderMaterialExists(reqVO.getId());
+        // 校验用料明细存在，取出 orderId 供库存记录关联
+        ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(reqVO.getId());
         // 校验批次存在且库存充足
         ZcProductBatchDO batch = productBatchMapper.selectById(reqVO.getBatchId());
         if (batch == null) {
@@ -120,6 +125,19 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         zCSalesOrderMaterialMapper.updateById(updateObj);
         // 原子扣减批次剩余数量，防止并发超卖
         productBatchMapper.decreaseQuantity(reqVO.getBatchId(), reqVO.getCutQuantity());
+
+        // 裁剪出库：写入库存变动记录
+        java.math.BigDecimal oldQuantity = batch.getQuantity();
+        java.math.BigDecimal newQuantity = oldQuantity.subtract(reqVO.getCutQuantity());
+        ZcInventoryRecordDO inventoryRecord = new ZcInventoryRecordDO();
+        inventoryRecord.setProductId(batch.getProductId());
+        inventoryRecord.setBatchId(reqVO.getBatchId());
+        inventoryRecord.setOldQuantity(oldQuantity);
+        inventoryRecord.setNewQuantity(newQuantity);
+        inventoryRecord.setChangeQuantity(newQuantity.subtract(oldQuantity));
+        inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CAIJIAN.name());
+        inventoryRecord.setOrderId(material.getOrderId());
+        inventoryRecordMapper.insert(inventoryRecord);
     }
 
 }
