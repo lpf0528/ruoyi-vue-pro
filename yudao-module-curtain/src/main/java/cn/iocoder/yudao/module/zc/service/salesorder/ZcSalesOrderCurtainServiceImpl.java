@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
@@ -21,9 +22,7 @@ import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import cn.iocoder.yudao.module.zc.service.orderoperationlog.ZcOrderOperationLogService;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CURTAIN_ALREADY_PACKED;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CURTAIN_ALREADY_SHIPPED;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CURTAIN_NOT_EXISTS;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
@@ -92,7 +91,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .beforeStatus(beforeStatus)
                 .afterStatus(ZcSalesOrderStatusEnum.DABAO.name())
                 .orderAfterStatus(newOrderStatus)
-                .revoked(false)
                 .build());
 
         // 记录操作日志上下文
@@ -142,10 +140,141 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .beforeStatus(beforeStatus)
                 .afterStatus(ZcSalesOrderStatusEnum.FAHUO.name())
                 .orderAfterStatus(newOrderStatus)
-                .revoked(false)
                 .build());
 
         // 记录操作日志上下文
+        LogRecordContext.putVariable("newOrderStatus",
+                ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUB_TYPE,
+            bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUCCESS)
+    public void cancelPackCurtain(Long id) {
+        // 1. 校验窗帘行存在，记录操作前状态
+        ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
+        Long orderId = curtain.getOrderId();
+        String beforeStatus = curtain.getStatus();
+
+        // 打包时间为空说明尚未打包，无需撤销
+        if (curtain.getPackTime() == null) {
+            throw exception(SALES_ORDER_CURTAIN_NOT_PACKED);
+        }
+        // 窗帘行已发货，不允许回退打包状态
+        if (ZcSalesOrderStatusEnum.FAHUO.name().equals(curtain.getStatus())) {
+            throw exception(SALES_ORDER_CURTAIN_ALREADY_SHIPPED);
+        }
+
+        // 2. 回退窗帘行状态为已确认，清空打包时间（必须用 LambdaUpdateWrapper，updateById 不会写 null 字段）
+        salesOrderCurtainMapper.update(null, Wrappers.<ZcSalesOrderCurtainDO>lambdaUpdate()
+                .set(ZcSalesOrderCurtainDO::getStatus, ZcSalesOrderStatusEnum.CONFIRMED.name())
+                .set(ZcSalesOrderCurtainDO::getPackTime, null)
+                .eq(ZcSalesOrderCurtainDO::getId, id));
+
+        // 3. 若订单不处于发货状态，则根据剩余已打包窗帘行数量联动更新订单状态
+        ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
+        String newOrderStatus;
+        if (order != null
+                && !ZcSalesOrderStatusEnum.BUFEN_FAHUO.name().equals(order.getStatus())
+                && !ZcSalesOrderStatusEnum.FAHUO.name().equals(order.getStatus())) {
+            List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+            long dabaoCount = allCurtains.stream()
+                    .filter(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()))
+                    .count();
+            if (dabaoCount == 0) {
+                newOrderStatus = ZcSalesOrderStatusEnum.CONFIRMED.name();
+            } else if (dabaoCount == (long) allCurtains.size()) {
+                newOrderStatus = ZcSalesOrderStatusEnum.DABAO.name();
+            } else {
+                newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
+            }
+            salesOrderMapper.updateStatusById(orderId, newOrderStatus);
+        } else {
+            // 订单已在发货状态，不改变订单状态
+            newOrderStatus = order != null ? order.getStatus() : "";
+        }
+
+        // 4. 写入取消打包操作记录
+        orderOperationLogService.createLog(ZcOrderOperationLogDO.builder()
+                .orderId(orderId)
+                .orderNo(order != null ? order.getOrderNo() : "")
+                .operateType(ZcOrderOperateTypeEnum.CANCEL_PACK.name())
+                .targetType(ZcOrderOperateTargetTypeEnum.CURTAIN.name())
+                .targetId(id)
+                .beforeStatus(beforeStatus)
+                .afterStatus(ZcSalesOrderStatusEnum.CONFIRMED.name())
+                .orderAfterStatus(newOrderStatus)
+                .build());
+
+        LogRecordContext.putVariable("newOrderStatus",
+                ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUB_TYPE,
+            bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUCCESS)
+    public void cancelShipCurtain(Long id) {
+        // 1. 校验窗帘行存在，记录操作前状态
+        ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
+        Long orderId = curtain.getOrderId();
+        String beforeStatus = curtain.getStatus();
+
+        // 发货时间为空说明尚未发货，无需撤销
+        if (curtain.getShipTime() == null) {
+            throw exception(SALES_ORDER_CURTAIN_NOT_SHIPPED);
+        }
+
+        // 2. 回退窗帘行状态：已打包则回退为已打包，否则回退为已确认；清空发货时间
+        String restoredStatus = curtain.getPackTime() != null
+                ? ZcSalesOrderStatusEnum.DABAO.name()
+                : ZcSalesOrderStatusEnum.CONFIRMED.name();
+        salesOrderCurtainMapper.update(null, Wrappers.<ZcSalesOrderCurtainDO>lambdaUpdate()
+                .set(ZcSalesOrderCurtainDO::getStatus, restoredStatus)
+                .set(ZcSalesOrderCurtainDO::getShipTime, null)
+                .eq(ZcSalesOrderCurtainDO::getId, id));
+
+        // 3. 重新查询所有窗帘行（含本次已回退的行），联动更新订单状态
+        ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
+        List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        long fahuoCount = allCurtains.stream()
+                .filter(c -> ZcSalesOrderStatusEnum.FAHUO.name().equals(c.getStatus()))
+                .count();
+        String newOrderStatus;
+        if (fahuoCount > 0 && fahuoCount < (long) allCurtains.size()) {
+            // 仍有部分窗帘行处于已发货状态
+            newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
+        } else if (fahuoCount == (long) allCurtains.size()) {
+            // 全部已发货（理论上不会出现，刚刚撤销了一条）
+            newOrderStatus = ZcSalesOrderStatusEnum.FAHUO.name();
+        } else {
+            // 无已发货行，根据已打包数量决定订单状态
+            long dabaoCount = allCurtains.stream()
+                    .filter(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()))
+                    .count();
+            if (dabaoCount == 0) {
+                newOrderStatus = ZcSalesOrderStatusEnum.CONFIRMED.name();
+            } else if (dabaoCount == (long) allCurtains.size()) {
+                newOrderStatus = ZcSalesOrderStatusEnum.DABAO.name();
+            } else {
+                newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
+            }
+        }
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
+
+        // 4. 写入取消发货操作记录
+        orderOperationLogService.createLog(ZcOrderOperationLogDO.builder()
+                .orderId(orderId)
+                .orderNo(order != null ? order.getOrderNo() : "")
+                .operateType(ZcOrderOperateTypeEnum.CANCEL_SHIP.name())
+                .targetType(ZcOrderOperateTargetTypeEnum.CURTAIN.name())
+                .targetId(id)
+                .beforeStatus(beforeStatus)
+                .afterStatus(restoredStatus)
+                .orderAfterStatus(newOrderStatus)
+                .build());
+
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
     }

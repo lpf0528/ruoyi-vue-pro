@@ -40,4 +40,22 @@ public class ZcSalesOrderCurtainController {
         return success(true);
     }
 
+    @PutMapping("/cancel-pack")
+    @Operation(summary = "取消打包窗帘行（回退窗帘行状态并联动更新订单状态；若订单已在发货状态则不改变订单状态）")
+    @Parameter(name = "id", description = "窗帘行 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    public CommonResult<Boolean> cancelPackCurtain(@RequestParam("id") Long id) {
+        salesOrderCurtainService.cancelPackCurtain(id);
+        return success(true);
+    }
+
+    @PutMapping("/cancel-ship")
+    @Operation(summary = "取消发货窗帘行（回退窗帘行状态并联动更新订单状态）")
+    @Parameter(name = "id", description = "窗帘行 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    public CommonResult<Boolean> cancelShipCurtain(@RequestParam("id") Long id) {
+        salesOrderCurtainService.cancelShipCurtain(id);
+        return success(true);
+    }
+
 }

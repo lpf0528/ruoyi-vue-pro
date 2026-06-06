@@ -49,9 +49,6 @@ public class ZcOrderOperationLogRespVO {
     @Schema(description = "备注")
     private String note;
 
-    @Schema(description = "是否已撤销", example = "false")
-    private Boolean revoked;
-
     @Schema(description = "操作人", example = "admin")
     private String creator;
 

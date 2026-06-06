@@ -70,12 +70,4 @@ public class ZcOrderOperationLogDO extends BaseDO {
     /** 备注 */
     private String note;
 
-    /**
-     * 是否已撤销
-     *
-     * <p>打包、发货等操作允许撤销；撤销时将原操作记录的此字段置为 true，
-     * 同时写入一条对应的撤销操作记录（如 CANCEL_PACK / CANCEL_SHIP）</p>
-     */
-    private Boolean revoked;
-
 }

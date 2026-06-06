@@ -134,5 +134,9 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_CURTAIN_ALREADY_PACKED = new ErrorCode(100063, "该窗帘已打包");
     /** 发货时，该窗帘行已存在未撤销的发货记录 */
     ErrorCode SALES_ORDER_CURTAIN_ALREADY_SHIPPED = new ErrorCode(100064, "该窗帘已发货");
+    /** 取消打包时，该窗帘行尚未打包 */
+    ErrorCode SALES_ORDER_CURTAIN_NOT_PACKED = new ErrorCode(100065, "该窗帘尚未打包，无需取消");
+    /** 取消发货时，该窗帘行尚未发货 */
+    ErrorCode SALES_ORDER_CURTAIN_NOT_SHIPPED = new ErrorCode(100066, "该窗帘尚未发货，无需取消");
 }
 

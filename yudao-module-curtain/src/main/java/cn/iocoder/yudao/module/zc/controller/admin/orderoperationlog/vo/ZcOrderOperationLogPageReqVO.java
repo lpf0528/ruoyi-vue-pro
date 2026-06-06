@@ -23,7 +23,4 @@ public class ZcOrderOperationLogPageReqVO extends PageParam {
     @Schema(description = "操作类型：CONFIRM / CANCEL_CONFIRM / PACK / CANCEL_PACK / SHIP / CANCEL_SHIP / CUT / CANCEL_CUT", example = "PACK")
     private String operateType;
 
-    @Schema(description = "是否已撤销", example = "false")
-    private Boolean revoked;
-
 }
