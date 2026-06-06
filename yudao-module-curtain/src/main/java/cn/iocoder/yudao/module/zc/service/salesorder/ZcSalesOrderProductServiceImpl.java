@@ -30,6 +30,7 @@ import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CO
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_UPDATE;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
 /**
@@ -62,7 +63,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
-        salesOrder.setPayStatus("unpaid");   // 默认：未结算
+        salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name()); // 默认：未支付
         salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 默认：未确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
         salesOrder.setSets(createReqVO.getBatchs() == null ? 0 : createReqVO.getBatchs().size());

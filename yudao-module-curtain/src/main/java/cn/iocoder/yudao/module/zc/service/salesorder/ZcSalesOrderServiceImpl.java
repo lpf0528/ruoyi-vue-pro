@@ -57,6 +57,7 @@ import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -118,7 +119,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
-        salesOrder.setPayStatus("unpaid");   // 默认：未结算
+        salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name()); // 默认：未支付
         salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 默认：未确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
         salesOrder.setSets(CollUtil.isEmpty(createReqVO.getCurtains()) ? 0 : createReqVO.getCurtains().size());
@@ -804,16 +805,15 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
     }
 
-    /** 结算状态 code → 中文描述 */
+    /** 支付状态 code → 中文描述 */
     private static String pdfPayStatus(String payStatus) {
         if (payStatus == null) {
             return "";
         }
-        switch (payStatus) {
-            case "unpaid":      return "未结算";
-            case "partialpaid": return "部分结算";
-            case "paid":        return "已结算";
-            default:            return payStatus;
+        try {
+            return ZcSalesOrderPayStatusEnum.valueOf(payStatus).getLabel();
+        } catch (IllegalArgumentException e) {
+            return payStatus;
         }
     }
 

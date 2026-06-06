@@ -36,6 +36,7 @@ import com.mzt.logapi.starter.annotation.LogRecord;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 
 /**
  * 收支账单 Service 实现类
@@ -115,8 +116,9 @@ public class ZcBillsServiceImpl implements ZcBillsService {
                     ? BigDecimal.ZERO : order.getAmountReceived();
             BigDecimal newReceived = currentReceived.add(item.getAllocatedAmount());
             BigDecimal orderAmount = order.getAmount() == null ? BigDecimal.ZERO : order.getAmount();
-            // 判断结算状态：全额到账则已支付，否则部分收款
-            String payStatus = newReceived.compareTo(orderAmount) >= 0 ? "paid" : "partialpaid";
+            // 判断支付状态：全额到账则已支付，否则部分支付
+            String payStatus = newReceived.compareTo(orderAmount) >= 0
+                    ? ZcSalesOrderPayStatusEnum.PAID.name() : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
             ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
             updateOrder.setId(order.getId());
             updateOrder.setAmountReceived(newReceived);
@@ -172,8 +174,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             // 减去旧分摊额，不允许为负
             BigDecimal newReceived = currentReceived.subtract(item.getAllocatedAmount()).max(BigDecimal.ZERO);
             BigDecimal orderAmount = order.getAmount() == null ? BigDecimal.ZERO : order.getAmount();
-            String payStatus = newReceived.compareTo(BigDecimal.ZERO) == 0 ? "unpaid"
-                    : newReceived.compareTo(orderAmount) >= 0 ? "paid" : "partialpaid";
+            String payStatus = newReceived.compareTo(BigDecimal.ZERO) == 0
+                    ? ZcSalesOrderPayStatusEnum.UNPAID.name()
+                    : newReceived.compareTo(orderAmount) >= 0
+                            ? ZcSalesOrderPayStatusEnum.PAID.name()
+                            : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
             ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
             updateOrder.setId(order.getId());
             updateOrder.setAmountReceived(newReceived);
@@ -221,7 +226,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             BigDecimal currentReceived = order.getAmountReceived() == null ? BigDecimal.ZERO : order.getAmountReceived();
             BigDecimal newReceived = currentReceived.add(item.getAllocatedAmount());
             BigDecimal orderAmount = order.getAmount() == null ? BigDecimal.ZERO : order.getAmount();
-            String payStatus = newReceived.compareTo(orderAmount) >= 0 ? "paid" : "partialpaid";
+            String payStatus = newReceived.compareTo(orderAmount) >= 0
+                    ? ZcSalesOrderPayStatusEnum.PAID.name() : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
             ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
             updateOrder.setId(order.getId());
             updateOrder.setAmountReceived(newReceived);
@@ -266,8 +272,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             // 减去本张账单的分摊额，不允许变为负数
             BigDecimal newReceived = currentReceived.subtract(item.getAllocatedAmount()).max(BigDecimal.ZERO);
             BigDecimal orderAmount = order.getAmount() == null ? BigDecimal.ZERO : order.getAmount();
-            String payStatus = newReceived.compareTo(BigDecimal.ZERO) == 0 ? "unpaid"
-                    : newReceived.compareTo(orderAmount) >= 0 ? "paid" : "partialpaid";
+            String payStatus = newReceived.compareTo(BigDecimal.ZERO) == 0
+                    ? ZcSalesOrderPayStatusEnum.UNPAID.name()
+                    : newReceived.compareTo(orderAmount) >= 0
+                            ? ZcSalesOrderPayStatusEnum.PAID.name()
+                            : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
             ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
             updateOrder.setId(order.getId());
             updateOrder.setAmountReceived(newReceived);

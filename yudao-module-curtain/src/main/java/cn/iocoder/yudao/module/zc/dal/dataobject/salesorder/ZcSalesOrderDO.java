@@ -98,9 +98,9 @@ public class ZcSalesOrderDO extends BaseDO {
      */
     private LocalDate deliveryDate;
     /**
-     * 结算状态
+     * 支付状态
      *
-     * 枚举 {@link TODO zc_order_pay_status 对应的类}
+     * 枚举 {@link ZcSalesOrderPayStatusEnum}，字典类型 {@code zc_order_pay_status}
      */
     private String payStatus;
     /**
