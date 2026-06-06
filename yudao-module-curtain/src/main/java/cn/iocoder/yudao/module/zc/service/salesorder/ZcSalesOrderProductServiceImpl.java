@@ -79,6 +79,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
             ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);
             productDO.setOrderId(orderId);
             productDO.setIndex(productIndex++);
+            productDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 新建订单默认未确认
             salesOrderProductMapper.insert(productDO);
         }
         // 记录操作日志上下文
@@ -139,6 +140,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
             ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);
             productDO.setOrderId(orderId);
             productDO.setIndex(productIndex++);
+            productDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 整单更新时订单必为未确认状态
             salesOrderProductMapper.insert(productDO);
         }
         // 记录操作日志上下文（仅主表字段参与 diff）

@@ -50,12 +50,14 @@ import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderProductMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderStructureMapper;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
 import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcOrderTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcRefTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
@@ -86,6 +88,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
     private ZcSalesOrderCurtainMapper salesOrderCurtainMapper;
+    @Resource
+    private ZcSalesOrderProductMapper salesOrderProductMapper;
     @Resource
     private ZcSalesOrderStructureMapper salesOrderStructureMapper;
     @Resource
@@ -304,8 +308,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 同步更新所有窗帘行状态为已确认
-        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+        // 根据订单类型同步更新子行状态：面料单更新产品行，成品单更新窗帘行
+        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
+            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+        } else {
+            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+        }
 
         // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
@@ -361,8 +369,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
 
-        // 同步更新所有窗帘行状态回未确认
-        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+        // 根据订单类型同步更新子行状态回未确认：面料单更新产品行，成品单更新窗帘行
+        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
+            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+        } else {
+            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+        }
 
         // 4. 将订单金额退回客户账户余额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {

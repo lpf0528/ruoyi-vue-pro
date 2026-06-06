@@ -694,6 +694,8 @@ CREATE TABLE `zc_sales_order_product` (
   `amount` decimal(20, 2) NULL DEFAULT NULL COMMENT '金额',
   `discount_rate` decimal(6, 4) NULL DEFAULT NULL COMMENT '折扣率',
   `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  `index` smallint NULL DEFAULT NULL COMMENT '序号，同一订单内产品行的显示顺序，从 1 开始',
+  `status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '产品行状态，冗余自订单主表，参见 zc_order_status 字典',
   `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',

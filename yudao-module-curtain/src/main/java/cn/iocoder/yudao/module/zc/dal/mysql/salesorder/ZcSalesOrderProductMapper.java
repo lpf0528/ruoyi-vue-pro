@@ -50,4 +50,18 @@ public interface ZcSalesOrderProductMapper extends BaseMapperX<ZcSalesOrderProdu
                 .in(ZcSalesOrderProductDO::getOrderId, orderIds));
     }
 
+    /**
+     * 批量更新指定订单下所有产品行的状态
+     *
+     * <p>用于确认/取消确认面料单时，将产品行状态与主订单状态保持同步</p>
+     *
+     * @param orderId 销售订单 ID
+     * @param status  目标状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     */
+    default void updateStatusByOrderId(Long orderId, String status) {
+        update(null, Wrappers.<ZcSalesOrderProductDO>lambdaUpdate()
+                .set(ZcSalesOrderProductDO::getStatus, status)
+                .eq(ZcSalesOrderProductDO::getOrderId, orderId));
+    }
+
 }

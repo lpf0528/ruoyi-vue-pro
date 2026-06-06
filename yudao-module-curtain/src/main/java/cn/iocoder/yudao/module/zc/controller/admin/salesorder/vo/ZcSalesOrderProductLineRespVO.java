@@ -57,4 +57,8 @@ public class ZcSalesOrderProductLineRespVO {
     @Schema(description = "序号，同一订单内产品行的显示顺序，从 1 开始")
     private Integer index;
 
+    /** 产品行状态，参见 zc_order_status 字典 */
+    @Schema(description = "产品行状态，参见 zc_order_status 字典")
+    private String status;
+
 }
