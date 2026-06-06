@@ -1,13 +1,10 @@
 package cn.iocoder.yudao.module.zc.dal.dataobject.salesorder;
 
+import cn.iocoder.yudao.module.zc.enums.ZcOpenMethodEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcPasteDirectionEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcProcessTypeEnum;
 import lombok.*;
-import java.util.*;
 import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 

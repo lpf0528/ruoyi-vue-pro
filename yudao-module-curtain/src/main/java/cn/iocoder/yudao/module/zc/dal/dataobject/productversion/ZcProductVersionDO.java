@@ -1,13 +1,11 @@
 package cn.iocoder.yudao.module.zc.dal.dataobject.productversion;
 
 import lombok.*;
-import java.util.*;
 import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import cn.iocoder.yudao.module.zc.enums.ZcProductClassifyEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSellingPriceTypeEnum;
 
 /**
  * 产品版本 DO

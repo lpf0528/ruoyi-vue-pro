@@ -1,14 +1,11 @@
 package cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog;
 
 import lombok.*;
-import java.util.*;
 import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcRefTypeEnum;
 
 /**
  * 客户余额变动流水 DO
@@ -72,4 +69,4 @@ public class ZcCustomerBalanceLogDO extends BaseDO {
     private String remark;
 
 
-}
+}
