@@ -9,11 +9,8 @@ import java.util.List;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
-import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderCurtainDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
-
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
@@ -72,16 +69,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         // 记录操作日志上下文
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
-    }
-
-    @Override
-    public ZcSalesOrderCurtainDO getSalesOrderCurtain(Long id) {
-        return salesOrderCurtainMapper.selectById(id);
-    }
-
-    @Override
-    public PageResult<ZcSalesOrderCurtainDO> getSalesOrderCurtainPage(ZcSalesOrderCurtainPageReqVO pageReqVO) {
-        return salesOrderCurtainMapper.selectPage(pageReqVO);
     }
 
     private ZcSalesOrderCurtainDO validateSalesOrderCurtainExists(Long id) {
