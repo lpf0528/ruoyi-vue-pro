@@ -96,7 +96,7 @@ public class ZcUserProcessNodeServiceImpl implements ZcUserProcessNodeService {
         Set<Long> nodeIds = binds.stream()
                 .map(ZcUserProcessNodeDO::getNodeId)
                 .collect(Collectors.toSet());
-        List<ZcProcessNodeDO> nodes = processNodeMapper.selectBatchIds(nodeIds);
+        List<ZcProcessNodeDO> nodes = processNodeMapper.selectList(ZcProcessNodeDO::getId, nodeIds);
         nodes.sort((a, b) -> {
             int sa = a.getSort() == null ? 0 : a.getSort();
             int sb = b.getSort() == null ? 0 : b.getSort();

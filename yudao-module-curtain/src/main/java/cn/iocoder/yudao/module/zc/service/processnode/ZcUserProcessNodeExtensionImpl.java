@@ -40,7 +40,7 @@ public class ZcUserProcessNodeExtensionImpl implements UserProcessNodeExtension 
         Set<Long> nodeIds = binds.stream()
                 .map(ZcUserProcessNodeDO::getNodeId)
                 .collect(Collectors.toSet());
-        List<ZcProcessNodeDO> nodes = processNodeMapper.selectBatchIds(nodeIds);
+        List<ZcProcessNodeDO> nodes = processNodeMapper.selectList(ZcProcessNodeDO::getId, nodeIds);
         Map<Long, ZcProcessNodeDO> nodeMap = nodes.stream()
                 .collect(Collectors.toMap(ZcProcessNodeDO::getId, n -> n));
 

@@ -434,48 +434,36 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .map(ZcSalesOrderCurtainDO::getCurtainId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> curtainNameMap = CollUtil.isNotEmpty(curtainIds)
-                ? convertMap(curtainMapper.selectBatchIds(curtainIds), ZcCurtainDO::getId, ZcCurtainDO::getName)
-                : Collections.emptyMap();
+        Map<Long, String> curtainNameMap = convertMap(curtainMapper.selectList(ZcCurtainDO::getId, curtainIds), ZcCurtainDO::getId, ZcCurtainDO::getName);
 
         // 6. 构建结构名称与安装工艺名称 Map
         Set<Long> structureIds = structureList.stream()
                 .map(ZcSalesOrderStructureDO::getStructureId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> structureNameMap = CollUtil.isNotEmpty(structureIds)
-                ? convertMap(curtainStructureMapper.selectBatchIds(structureIds), ZcCurtainStructureDO::getId, ZcCurtainStructureDO::getName)
-                : Collections.emptyMap();
+        Map<Long, String> structureNameMap = convertMap(curtainStructureMapper.selectList(ZcCurtainStructureDO::getId, structureIds), ZcCurtainStructureDO::getId, ZcCurtainStructureDO::getName);
         Set<Long> installProcessIds = structureList.stream()
                 .map(ZcSalesOrderStructureDO::getInstallProcessId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> installProcessNameMap = CollUtil.isNotEmpty(installProcessIds)
-                ? convertMap(curtainInstallProcessMapper.selectBatchIds(installProcessIds), ZcCurtainInstallProcessDO::getId, ZcCurtainInstallProcessDO::getName)
-                : Collections.emptyMap();
+        Map<Long, String> installProcessNameMap = convertMap(curtainInstallProcessMapper.selectList(ZcCurtainInstallProcessDO::getId, installProcessIds), ZcCurtainInstallProcessDO::getId, ZcCurtainInstallProcessDO::getName);
 
         // 7. 构建组件类型名称、产品名称、批次号 Map
         Set<Long> elementIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getElementId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> elementNameMap = CollUtil.isNotEmpty(elementIds)
-                ? convertMap(curtainStructureElementMapper.selectBatchIds(elementIds), ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getName)
-                : Collections.emptyMap();
+        Map<Long, String> elementNameMap = convertMap(curtainStructureElementMapper.selectList(ZcCurtainStructureElementDO::getId, elementIds), ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getName);
         Set<Long> productIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getProductId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> productNameMap = CollUtil.isNotEmpty(productIds)
-                ? convertMap(productMapper.selectBatchIds(productIds), ZcProductDO::getId, ZcProductDO::getName)
-                : Collections.emptyMap();
+        Map<Long, String> productNameMap = convertMap(productMapper.selectList(ZcProductDO::getId, productIds), ZcProductDO::getId, ZcProductDO::getName);
         Set<Long> batchIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getBatchId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        List<ZcProductBatchDO> batchList = CollUtil.isNotEmpty(batchIds)
-                ? productBatchMapper.selectBatchIds(batchIds)
-                : Collections.emptyList();
+        List<ZcProductBatchDO> batchList = productBatchMapper.selectList(ZcProductBatchDO::getId, batchIds);
         Map<Long, String> batchNoMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo);
         // 复用已查出的批次列表，避免重复查库
         Map<Long, String> batchBarcodeMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBarcode);
