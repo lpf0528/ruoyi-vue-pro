@@ -53,4 +53,8 @@ public class ZcSalesOrderProductLineRespVO {
     @Schema(description = "备注")
     private String note;
 
+    /** 序号，同一订单内产品行的显示顺序，从 1 开始 */
+    @Schema(description = "序号，同一订单内产品行的显示顺序，从 1 开始")
+    private Integer index;
+
 }

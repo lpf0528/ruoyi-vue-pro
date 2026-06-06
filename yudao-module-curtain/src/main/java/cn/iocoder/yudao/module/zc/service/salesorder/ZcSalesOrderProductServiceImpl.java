@@ -74,9 +74,11 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         Long orderId = salesOrder.getId();
 
         // 3. 级联保存产品批次行
+        int productIndex = 1;
         for (ZcSalesOrderProductBatchCreateVO batchVO : createReqVO.getBatchs()) {
             ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);
             productDO.setOrderId(orderId);
+            productDO.setIndex(productIndex++);
             salesOrderProductMapper.insert(productDO);
         }
         // 记录操作日志上下文
@@ -132,9 +134,11 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
 
         // 4. 整单替换产品行：先全量删除旧行，再重新插入新行
         salesOrderProductMapper.deleteByOrderId(orderId);
+        int productIndex = 1;
         for (ZcSalesOrderProductBatchCreateVO batchVO : updateReqVO.getBatchs()) {
             ZcSalesOrderProductDO productDO = BeanUtils.toBean(batchVO, ZcSalesOrderProductDO.class);
             productDO.setOrderId(orderId);
+            productDO.setIndex(productIndex++);
             salesOrderProductMapper.insert(productDO);
         }
         // 记录操作日志上下文（仅主表字段参与 diff）

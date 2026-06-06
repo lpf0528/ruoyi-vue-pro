@@ -49,4 +49,10 @@ public class ZcSalesOrderProductDO extends BaseDO {
     /** 备注 */
     private String note;
 
+    /**
+     * 序号，创建/整单更新时按前端传入列表顺序自动从 1 开始赋值
+     */
+    @TableField("`index`")
+    private Integer index;
+
 }
