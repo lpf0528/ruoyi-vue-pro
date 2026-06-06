@@ -50,7 +50,7 @@ public class ZcInventoryRecordDO extends BaseDO {
      */
     private String note;
     /**
-     * 变化数量（old_quantity - new_quantity），正数表示减少，负数表示增加
+     * 变化数量（new_quantity - old_quantity），正数表示增加，负数表示减少
      */
     private BigDecimal changeQuantity;
     /**

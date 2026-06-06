@@ -50,7 +50,7 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
 
         // 2. 插入盘点记录，计算变化数量（盘点前 - 盘点后），操作类型固定为盘点
         ZcInventoryRecordDO inventoryRecord = BeanUtils.toBean(createReqVO, ZcInventoryRecordDO.class);
-        inventoryRecord.setChangeQuantity(createReqVO.getOldQuantity().subtract(createReqVO.getNewQuantity()));
+        inventoryRecord.setChangeQuantity(createReqVO.getNewQuantity().subtract(createReqVO.getOldQuantity()));
         inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.PANDIAN.name());
         inventoryRecordMapper.insert(inventoryRecord);
 
