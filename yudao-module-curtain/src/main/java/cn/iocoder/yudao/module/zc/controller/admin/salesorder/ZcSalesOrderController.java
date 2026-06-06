@@ -155,6 +155,15 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
+    @PutMapping("/cancel-cut-material")
+    @Operation(summary = "撤销裁剪（回退批次库存、清空配料绑定、写入撤销裁剪记录）")
+    @Parameter(name = "materialId", description = "用料明细ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cancelCutMaterial(@RequestParam("materialId") Long materialId) {
+        salesOrderMaterialService.cancelCutMaterial(materialId);
+        return success(true);
+    }
+
     @GetMapping("/export-pdf")
     @Operation(summary = "导出销售订单 PDF（含全量明细：窗帘行→结构行→用料明细）")
     @Parameter(name = "id", description = "销售订单 ID", required = true)

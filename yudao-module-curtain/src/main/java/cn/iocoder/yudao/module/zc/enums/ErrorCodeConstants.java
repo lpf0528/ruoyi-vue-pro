@@ -124,5 +124,7 @@ public interface ErrorCodeConstants {
     ErrorCode WORKSHOP_USER_NOT_EXISTS = new ErrorCode(100059, "车间员工不存在");
     /** 产品批次库存不足，无法完成裁剪操作 */
     ErrorCode PRODUCT_BATCH_INSUFFICIENT_QUANTITY = new ErrorCode(100060, "产品批次库存不足，无法裁剪");
+    /** 用料明细状态不是已配料，无法撤销裁剪 */
+    ErrorCode SALES_ORDER_MATERIAL_NOT_PEILIAO = new ErrorCode(100061, "该用料明细尚未配料，无需撤销");
 }
 

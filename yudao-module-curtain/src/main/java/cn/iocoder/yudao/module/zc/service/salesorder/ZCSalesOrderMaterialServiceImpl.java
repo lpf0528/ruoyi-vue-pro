@@ -6,6 +6,7 @@ import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
@@ -137,6 +138,45 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setNewQuantity(newQuantity);
         inventoryRecord.setChangeQuantity(newQuantity.subtract(oldQuantity));
         inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CAIJIAN.name());
+        inventoryRecord.setOrderId(material.getOrderId());
+        inventoryRecordMapper.insert(inventoryRecord);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelCutMaterial(Long materialId) {
+        // 1. 校验用料明细存在
+        ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(materialId);
+        // 2. 只有已配料的明细才能撤销
+        if (!ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(material.getStatus())) {
+            throw exception(SALES_ORDER_MATERIAL_NOT_PEILIAO);
+        }
+        // 3. 校验批次存在
+        ZcProductBatchDO batch = productBatchMapper.selectById(material.getBatchId());
+        if (batch == null) {
+            throw exception(PRODUCT_BATCH_NOT_EXISTS);
+        }
+
+        // 4. 原子回退批次库存
+        productBatchMapper.increaseQuantity(material.getBatchId(), material.getCutQuantity());
+
+        // 5. 重置用料明细：清空裁剪数量，状态回退为未配料（batchId 保留，方便重新裁剪时复用）
+        // 用 LambdaUpdateWrapper 显式将 cutQuantity 置为 null（updateById 会忽略 null 字段）
+        zCSalesOrderMaterialMapper.update(null, new LambdaUpdateWrapper<ZCSalesOrderMaterialDO>()
+                .eq(ZCSalesOrderMaterialDO::getId, materialId)
+                .set(ZCSalesOrderMaterialDO::getStatus, ZcSalesOrderMaterialStatusEnum.NOT_PEILIAO.name())
+                .set(ZCSalesOrderMaterialDO::getCutQuantity, null));
+
+        // 6. 写入撤销裁剪库存变动记录
+        java.math.BigDecimal oldQuantity = batch.getQuantity();
+        java.math.BigDecimal newQuantity = oldQuantity.add(material.getCutQuantity());
+        ZcInventoryRecordDO inventoryRecord = new ZcInventoryRecordDO();
+        inventoryRecord.setProductId(batch.getProductId());
+        inventoryRecord.setBatchId(material.getBatchId());
+        inventoryRecord.setOldQuantity(oldQuantity);
+        inventoryRecord.setNewQuantity(newQuantity);
+        inventoryRecord.setChangeQuantity(newQuantity.subtract(oldQuantity));
+        inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CANCEL_CAIJIAN.name());
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
     }

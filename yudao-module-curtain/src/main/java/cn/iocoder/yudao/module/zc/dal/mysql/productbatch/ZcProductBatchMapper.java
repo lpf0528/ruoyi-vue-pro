@@ -55,4 +55,13 @@ public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
     @Update("UPDATE zc_product_batch SET quantity = quantity - #{cutQuantity} WHERE id = #{batchId} AND deleted = 0")
     void decreaseQuantity(@Param("batchId") Long batchId, @Param("cutQuantity") BigDecimal cutQuantity);
 
+    /**
+     * 原子回退批次剩余数量（撤销裁剪时调用）
+     *
+     * @param batchId     批次ID
+     * @param cutQuantity 回退数量
+     */
+    @Update("UPDATE zc_product_batch SET quantity = quantity + #{cutQuantity} WHERE id = #{batchId} AND deleted = 0")
+    void increaseQuantity(@Param("batchId") Long batchId, @Param("cutQuantity") BigDecimal cutQuantity);
+
 }

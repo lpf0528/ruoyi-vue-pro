@@ -69,4 +69,15 @@ public interface ZCSalesOrderMaterialService {
      */
     void cutMaterial(@Valid ZcCutMaterialReqVO reqVO);
 
+    /**
+     * 撤销裁剪
+     *
+     * <p>将用料明细状态从已配料（HAVE_PEILIAO）回退为未���料（NOT_PEILIAO），清空批次绑定和裁剪数量，
+     * 同时原子回退批次库存，并写入 CANCEL_CAIJIAN 库存变动记录。
+     * 若用料明细不处于已配料状态，则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#SALES_ORDER_MATERIAL_NOT_PEILIAO}。</p>
+     *
+     * @param materialId 用料明细ID
+     */
+    void cancelCutMaterial(Long materialId);
+
 }
