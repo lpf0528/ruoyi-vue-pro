@@ -11,8 +11,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
-import org.apache.ibatis.annotations.Select;
-
 import java.math.BigDecimal;
 
 /**
@@ -22,9 +20,6 @@ import java.math.BigDecimal;
  */
 @Mapper
 public interface ZcProductBatchMapper extends BaseMapperX<ZcProductBatchDO> {
-
-    @Select("SELECT COUNT(*) + 1 FROM zc_product_batch WHERE product_id = #{productId} AND DATE(create_time) = CURDATE() AND deleted = 0")
-    Integer countTodayBatchSeqByProductId(@Param("productId") Long productId);
 
     default List<Long> selectProductIdsWithBatch(List<Long> productIds) {
         return selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ZcProductBatchDO>()
