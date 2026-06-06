@@ -76,7 +76,8 @@ public class ZCSalesOrderMaterialDO extends BaseDO {
      */
     private String note;
     /**
-     * 状态：NOT_PEILIAO=未配料，HAVE_PEILIAO=已配料
+     * 配料状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum}
+     * 取值：NOT_PEILIAO=未配料，HAVE_PEILIAO=已配料
      */
     private String status;
     /**

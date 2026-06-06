@@ -17,6 +17,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMap
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -121,7 +122,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         updateObj.setId(reqVO.getId());
         updateObj.setBatchId(reqVO.getBatchId());
         updateObj.setCutQuantity(reqVO.getCutQuantity());
-        updateObj.setStatus("HAVE_PEILIAO");
+        updateObj.setStatus(ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name());
         zCSalesOrderMaterialMapper.updateById(updateObj);
         // 原子扣减批次剩余数量，防止并发超卖
         productBatchMapper.decreaseQuantity(reqVO.getBatchId(), reqVO.getCutQuantity());
