@@ -55,4 +55,17 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
                 .eq(ZCSalesOrderMaterialDO::getBatchId, batchId));
     }
 
+    /**
+     * 统计指定订单下处于特定状态的用料明细数量
+     *
+     * @param orderId 销售订单 ID
+     * @param status  用料明细状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum}
+     * @return 匹配数量
+     */
+    default long countByOrderIdAndStatus(Long orderId, String status) {
+        return selectCount(new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
+                .eq(ZCSalesOrderMaterialDO::getOrderId, orderId)
+                .eq(ZCSalesOrderMaterialDO::getStatus, status));
+    }
+
 }

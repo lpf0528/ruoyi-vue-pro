@@ -126,5 +126,9 @@ public interface ErrorCodeConstants {
     ErrorCode PRODUCT_BATCH_INSUFFICIENT_QUANTITY = new ErrorCode(100060, "产品批次库存不足，无法裁剪");
     /** 用料明细状态不是已配料，无法撤销裁剪 */
     ErrorCode SALES_ORDER_MATERIAL_NOT_PEILIAO = new ErrorCode(100061, "该用料明细尚未配料，无需撤销");
+    /**
+     * 取消确认时，订单下存在已裁剪（HAVE_PEILIAO）的用料明细，禁止取消：库存已出库，须先逐条撤销裁剪
+     */
+    ErrorCode SALES_ORDER_HAS_CUT_MATERIAL = new ErrorCode(100062, "订单存在已裁剪的用料，请先撤销全部裁剪后再取消确认");
 }
 

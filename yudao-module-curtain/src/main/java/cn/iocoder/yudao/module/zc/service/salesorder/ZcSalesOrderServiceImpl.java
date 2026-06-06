@@ -56,6 +56,8 @@ import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMap;
@@ -336,7 +338,14 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             throw exception(SALES_ORDER_HAS_RECEIVED_AMOUNT);
         }
 
-        // 3. 更新状态回待确认，清空确认时间
+        // 3. 禁止存在已裁剪用料时取消确认：库存已扣减，须先逐条撤销裁剪归还库存
+        long cutCount = salesOrderMaterialMapper.countByOrderIdAndStatus(
+                id, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name());
+        if (cutCount > 0) {
+            throw exception(SALES_ORDER_HAS_CUT_MATERIAL);
+        }
+
+        // 4. 更新状态回待确认，清空确认时间
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getStatus, "unconfirmed")
                 .set(ZcSalesOrderDO::getConfirmTime, null)
