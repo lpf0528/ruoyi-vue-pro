@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -60,10 +61,11 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
             throw exception(SALES_ORDER_CURTAIN_ALREADY_PACKED);
         }
 
-        // 2. 更新窗帘行状态为已打包
+        // 2. 更新窗帘行状态为已打包，同步记录打包时间
         ZcSalesOrderCurtainDO updateObj = new ZcSalesOrderCurtainDO();
         updateObj.setId(id);
         updateObj.setStatus(ZcSalesOrderStatusEnum.DABAO.name());
+        updateObj.setPackTime(LocalDateTime.now());
         salesOrderCurtainMapper.updateById(updateObj);
 
         // 3. 若订单不处于发货状态，则根据所有窗帘行是否全部已打包来联动更新订单状态
@@ -118,10 +120,11 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
             throw exception(SALES_ORDER_CURTAIN_ALREADY_SHIPPED);
         }
 
-        // 2. 更新窗帘行状态为已发货
+        // 2. 更新窗帘行状态为已发货，同步记录发货时间
         ZcSalesOrderCurtainDO updateObj = new ZcSalesOrderCurtainDO();
         updateObj.setId(id);
         updateObj.setStatus(ZcSalesOrderStatusEnum.FAHUO.name());
+        updateObj.setShipTime(LocalDateTime.now());
         salesOrderCurtainMapper.updateById(updateObj);
 
         // 3. 检查该订单下所有窗帘行是否全部已发货，联动更新订单状态

@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.dal.dataobject.salesorder;
 
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
@@ -82,5 +83,10 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
     @TableField("`index`")
     private Integer index;
 
+    /** 打包时间，执行打包操作时记录 */
+    private LocalDateTime packTime;
+
+    /** 发货时间，执行发货操作时记录 */
+    private LocalDateTime shipTime;
 
 }
