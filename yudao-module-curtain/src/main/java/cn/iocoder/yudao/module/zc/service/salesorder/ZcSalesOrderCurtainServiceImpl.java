@@ -71,6 +71,35 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_SHIP_SUB_TYPE,
+            bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_SHIP_SUCCESS)
+    public void shipCurtain(Long id) {
+        // 1. 校验窗帘行存在
+        ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
+        Long orderId = curtain.getOrderId();
+
+        // 2. 更新窗帘行状态为已发货
+        ZcSalesOrderCurtainDO updateObj = new ZcSalesOrderCurtainDO();
+        updateObj.setId(id);
+        updateObj.setStatus(ZcSalesOrderStatusEnum.FAHUO.name());
+        salesOrderCurtainMapper.updateById(updateObj);
+
+        // 3. 检查该订单下所有窗帘行是否全部已发货，联动更新订单状态
+        List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        boolean allShipped = allCurtains.stream()
+                .allMatch(c -> ZcSalesOrderStatusEnum.FAHUO.name().equals(c.getStatus()));
+        String newOrderStatus = allShipped
+                ? ZcSalesOrderStatusEnum.FAHUO.name()
+                : ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("newOrderStatus",
+                ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
+    }
+
     private ZcSalesOrderCurtainDO validateSalesOrderCurtainExists(Long id) {
         ZcSalesOrderCurtainDO curtain = salesOrderCurtainMapper.selectById(id);
         if (curtain == null) {

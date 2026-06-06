@@ -31,4 +31,13 @@ public class ZcSalesOrderCurtainController {
         return success(true);
     }
 
+    @PutMapping("/ship")
+    @Operation(summary = "发货窗帘行（将窗帘行状态更新为已发货，并联动更新订单状态）")
+    @Parameter(name = "id", description = "窗帘行 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    public CommonResult<Boolean> shipCurtain(@RequestParam("id") Long id) {
+        salesOrderCurtainService.shipCurtain(id);
+        return success(true);
+    }
+
 }

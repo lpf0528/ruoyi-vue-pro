@@ -220,6 +220,8 @@ public interface LogRecordConstants {
     String ZC_SALES_ORDER_CURTAIN_DELETE_SUCCESS = "删除了订单窗帘行【{{#orderCurtainId}}】";
     String ZC_SALES_ORDER_CURTAIN_PACK_SUB_TYPE = "打包窗帘行";
     String ZC_SALES_ORDER_CURTAIN_PACK_SUCCESS = "将窗帘行【{{#id}}】标记为已打包，订单状态联动更新为【{{#newOrderStatus}}】";
+    String ZC_SALES_ORDER_CURTAIN_SHIP_SUB_TYPE = "发货窗帘行";
+    String ZC_SALES_ORDER_CURTAIN_SHIP_SUCCESS = "将窗帘行【{{#id}}】标记为已发货，订单状态联动更新为【{{#newOrderStatus}}】";
 
     // ======================= ZC_SALES_ORDER_STRUCTURE 订单结构行 =======================
 
