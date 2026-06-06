@@ -95,16 +95,16 @@ yudao-module-curtain/
 | **订单履约域** | `ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO`、`ZcSalesOrderProductDO` | **核心域**：成品订单（三层嵌套）+ 产品类订单（面料单，两层扁平）|
 | **收支账单域** | `ZcBillsDO`、`ZcBillOrderItemsDO`、`ZcBillMethodsDO`、`ZcBillAttachmentsDO` | 客户收款单、按订单分摊金额、收款方式配置、附件凭证 |
 | **生产工序域** | `ZcProcessNodeDO`、`ZcOrderProcessRecordDO`、`ZcUserProcessNodeDO` | 工序节点配置（备料/裁剪/缝制/定型/质检/包装等）、订单工序流水记录、员工工序授权 |
-| **基础配置域** | `ZcBrandDO`、`ZcSupplierDO`、`ZcWarehouseDO`、`ZcLogisticsDO`、`ZcInventoryRecordDO` | 品牌、供应商、仓库、物流、库存盘点 |
+| **基础配置域** | `ZcBrandDO`、`ZcSupplierDO`、`ZcWarehouseDO`、`ZcLogisticsDO`、`ZcInventoryRecordDO` | 品牌、供应商、仓库、物流、库存变动记录（含盘点/入库/裁剪/撤销裁剪） |
 
 ### 核心数据模型（DO）
 
 | DO 类 | 表名 | 关键字段说明 |
 |-------|------|------------|
-| `ZcSalesOrderDO` | zc_sales_order | orderNo（自动生成）、customerId、payStatus（unpaid/partial/paid）、status（unconfirmed/pending/processing/completed/cancelled）、confirmTime（非空即已确认）、totalAmount、amount、amountReceived、freight、isExpedited |
+| `ZcSalesOrderDO` | zc_sales_order | orderNo（自动生成）、customerId、payStatus（unpaid/partial/paid）、status（unconfirmed/pending/processing/completed/cancelled）、confirmTime（非空即已确认）、totalAmount、amount、amountReceived、freight、isExpedited、currentNodeName（当前工序名称快照）、sets（套数：成品单=curtains数量，面料单=batchs数量） |
 | `ZcSalesOrderCurtainDO` | zc_sales_order_curtain | orderId、curtainId（款式）、room（房间）、pleatRatioValue（褶倍快照）、mountings（配件 JSON）、discountRate、amount |
 | `ZcSalesOrderStructureDO` | zc_sales_order_structure | orderId、orderCurtainId、structureId、height、width、leftCorner、rightCorner、pasteDirection、installProcessId、openMethod、processType、isShaping、pleatsNum、pleatsDistance、skirtHeight |
-| `ZCSalesOrderMaterialDO` | zc_sales_order_material | orderId、orderStructureId、elementId（组件类型）、productId、batchId、price、quantity、unitValue、discountRate、amount |
+| `ZCSalesOrderMaterialDO` | zc_sales_order_material | orderId、orderStructureId、elementId（组件类型）、productId、batchId、price、quantity、unitValue、discountRate、amount、status（配料状态：NOT_PEILIAO/HAVE_PEILIAO，见 `ZcSalesOrderMaterialStatusEnum`）、cutQuantity（裁剪数量） |
 | `ZcSalesOrderProductDO` | zc_sales_order_product | orderId、productId、batchId、quantity、price、amount、note（产品类订单/面料单的产品批次行） |
 | `ZcBillsDO` | zc_bills | billNo（自动生成）、billDate、billUserId（财务人员）、customerId、discountAmount（优惠）、actualAmount（实收）、billMethodId |
 | `ZcBillOrderItemsDO` | zc_bill_order_items | billId、orderId、allocatedAmount（本次分摊金额） |
@@ -117,6 +117,7 @@ yudao-module-curtain/
 | `ZcCustomerProductPriceDO` | zc_customer_product_price | customerId、productId、authorizedPrice（客户专项授权价） |
 | `ZcCurtainDO` | zc_curtain | name（款式名称）、pleatRatioValue（默认褶倍）、pleatsDistance（褶距） |
 | `ZcCurtainStructureDO` | zc_curtain_structure | name、attributes（`List<String>` 存 JSON，动态属性如长/宽/高） |
+| `ZcInventoryRecordDO` | zc_inventory_record | productId、batchId、oldQuantity、newQuantity、changeQuantity（变化量，正增负减）、operate（操作类型：PANDIAN/RUKU/CAIJIAN/CANCEL_CAIJIAN，见 `ZcInventoryRecordOperateEnum`）、orderId（裁剪/撤销裁剪时关联来源订单，盘点/入库为 null） |
 
 ### 销售订单类型说明
 
@@ -149,6 +150,28 @@ ZcSalesOrder（订单主表）
 - 批量查询款式名称、结构名称、工艺名称、组件名称、产品名称、批次号
 - 在内存中组装嵌套 VO，冗余名称字段，前端无需二次请求
 
+**裁剪出库流程**（`ZCSalesOrderMaterialServiceImpl.cutMaterial`）：
+1. 校验用料明细存在，取出 orderId 供库存记录关联
+2. 校验批次存在且剩余库存 ≥ 裁剪数量（不足时抛 `PRODUCT_BATCH_INSUFFICIENT_QUANTITY`）
+3. 更新用料明细：绑定 batchId、记录 cutQuantity、状态变更为 `HAVE_PEILIAO`
+4. 原子扣减批次剩余数量（`productBatchMapper.decreaseQuantity`，防并发超卖）
+5. 写入 `zc_inventory_record`，operate=`CAIJIAN`，orderId=来源订单
+
+**撤销裁剪流程**（`ZCSalesOrderMaterialServiceImpl.cancelCutMaterial`）：
+1. 校验用料明细存在，状态必须为 `HAVE_PEILIAO`（否则抛 `SALES_ORDER_MATERIAL_NOT_PEILIAO`）
+2. 原子回退批次库存（`productBatchMapper.increaseQuantity`）
+3. 用 `LambdaUpdateWrapper` 显式将 `cutQuantity` 置为 null、状态回退为 `NOT_PEILIAO`（不能用 `updateById`，会忽略 null 字段）
+4. 写入 `zc_inventory_record`，operate=`CANCEL_CAIJIAN`，orderId=来源订单
+
+**入库自动记流水**（`ZcProductBatchServiceImpl.createProductBatch`）：
+- 批次创建成功后立即写入 `zc_inventory_record`，operate=`RUKU`，old=0，new=入库数量
+
+**盘点记流水**（`ZcInventoryRecordServiceImpl.createInventoryRecord`）：
+- 盘点接口写入 operate=`PANDIAN` 的变动记录，并同步更新批次剩余数量和备注（覆盖上次盘点行）
+
+**App 端订单分页接口**（`GET /zc/sales-order/app/page`）：
+- 固定过滤 `status=unconfirmed` 的未确认订单，前端无需传参，用于车间 App 生产工单场景
+
 ### 关键技术特点
 
 **JSON 字段存储**
@@ -170,9 +193,16 @@ ZcSalesOrder（订单主表）
 | 安装工艺 | `installProcessId` | 墙装、顶装、罗马杆等方案 |
 | 配件（Mountings） | `mountings` | 铅块、磁条、铁钩等附件（多选 JSON） |
 
+**关键枚举**
+
+| 枚举类 | 取值 | 说明 |
+|--------|------|------|
+| `ZcSalesOrderMaterialStatusEnum` | `NOT_PEILIAO` / `HAVE_PEILIAO` | 用料明细配料状态（未配料/已配料） |
+| `ZcInventoryRecordOperateEnum` | `PANDIAN` / `RUKU` / `CAIJIAN` / `CANCEL_CAIJIAN` | 库存变动操作类型（盘点/入库/裁剪/撤销裁剪） |
+
 **权限标识规范**：`zc:{资源}:{操作}`，如 `zc:product:create`、`zc:sales-order:query`
 
-**错误码范围**：`100001 ~ 100041`，定义于 `ZcErrorCodeConstants`
+**错误码范围**：`100001 ~ 100061`，定义于 `ErrorCodeConstants`
 
 ### 模块依赖
 - 依赖 `yudao-module-system`：Mapper XML 中 JOIN `system_users` 表获取创建人名称
@@ -188,6 +218,8 @@ ZcSalesOrder（订单主表）
 5. **级联删除**：删除订单前必须校验 `confirmTime == null`（已确认订单禁止删除）；成品订单级联删窗帘行/结构行/用料明细，产品类订单级联删产品行
 6. **工序权限**：员工操作工序记录前需校验 `ZcUserProcessNodeDO` 授权，参考 `ZcOrderProcessRecordServiceImpl`
 7. **收款分摊**：创建/更新收款单时，需校验分摊金额合计 = 实收 + 优惠，参考错误码 `BILL_ALLOCATED_AMOUNT_NOT_MATCH`
+8. **裁剪操作**：`cutMaterial` 扣库存用原子方法 `decreaseQuantity`；`cancelCutMaterial` 回退库存后必须用 `LambdaUpdateWrapper` 将 `cutQuantity` 显式置 null（`updateById` 不会更新 null 字段）；两个操作均需写入 `ZcInventoryRecordDO`
+9. **库存变动记录**：`zc_inventory_record` 已不只是盘点表，所有库存变化（入库/盘点/裁剪/撤销裁剪）都写入，operate 字段区分类型，勿遗漏
 
 ---
 
