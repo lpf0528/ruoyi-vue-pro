@@ -130,5 +130,9 @@ public interface ErrorCodeConstants {
      * 取消确认时，订单下存在已裁剪（HAVE_PEILIAO）的用料明细，禁止取消：库存已出库，须先逐条撤销裁剪
      */
     ErrorCode SALES_ORDER_HAS_CUT_MATERIAL = new ErrorCode(100062, "订单存在已裁剪的用料，请先撤销全部裁剪后再取消确认");
+    /** 打包时，该窗帘行已存在未撤销的打包记录 */
+    ErrorCode SALES_ORDER_CURTAIN_ALREADY_PACKED = new ErrorCode(100063, "该窗帘已打包");
+    /** 发货时，该窗帘行已存在未撤销的发货记录 */
+    ErrorCode SALES_ORDER_CURTAIN_ALREADY_SHIPPED = new ErrorCode(100064, "该窗帘已发货");
 }
 

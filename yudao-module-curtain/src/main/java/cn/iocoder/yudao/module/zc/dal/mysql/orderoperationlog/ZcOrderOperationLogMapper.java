@@ -31,6 +31,22 @@ public interface ZcOrderOperationLogMapper extends BaseMapperX<ZcOrderOperationL
     }
 
     /**
+     * 判断指定对象是否存在未撤销的指定类型操作记录
+     *
+     * @param targetType  操作对象类型，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTargetTypeEnum}
+     * @param targetId    操作对象 ID
+     * @param operateType 操作类型，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTypeEnum}
+     * @return 存在未撤销记录时返回 true
+     */
+    default boolean existsActiveLog(String targetType, Long targetId, String operateType) {
+        return selectCount(Wrappers.<ZcOrderOperationLogDO>lambdaQuery()
+                .eq(ZcOrderOperationLogDO::getTargetType, targetType)
+                .eq(ZcOrderOperationLogDO::getTargetId, targetId)
+                .eq(ZcOrderOperationLogDO::getOperateType, operateType)
+                .eq(ZcOrderOperationLogDO::getRevoked, false)) > 0;
+    }
+
+    /**
      * 分页查询操作记录，支持按订单、对象类型、对象 ID、操作类型、是否撤销过滤
      *
      * @param reqVO 分页查询条件
