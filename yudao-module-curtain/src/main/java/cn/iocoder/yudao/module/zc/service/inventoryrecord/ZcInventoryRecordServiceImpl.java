@@ -18,6 +18,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
 
+import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
@@ -47,8 +48,10 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
             throw exception(PRODUCT_BATCH_NOT_EXISTS);
         }
 
-        // 2. 插入盘点记录
+        // 2. 插入盘点记录，计算变化数量（盘点前 - 盘点后），操作类型固定为盘点
         ZcInventoryRecordDO inventoryRecord = BeanUtils.toBean(createReqVO, ZcInventoryRecordDO.class);
+        inventoryRecord.setChangeQuantity(createReqVO.getOldQuantity().subtract(createReqVO.getNewQuantity()));
+        inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.PANDIAN.name());
         inventoryRecordMapper.insert(inventoryRecord);
 
         // 3. 更新批次剩余数量；若本次盘点填写了备注，则用新备注覆盖上次盘点备注（保留原始非盘点备注）

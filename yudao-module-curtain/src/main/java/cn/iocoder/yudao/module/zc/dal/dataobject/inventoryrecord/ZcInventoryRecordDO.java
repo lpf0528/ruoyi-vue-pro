@@ -49,6 +49,18 @@ public class ZcInventoryRecordDO extends BaseDO {
      * 备注
      */
     private String note;
-
+    /**
+     * 变化数量（old_quantity - new_quantity），正数表示减少，负数表示增加
+     */
+    private BigDecimal changeQuantity;
+    /**
+     * 操作类型，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum}
+     * 取值：PANDIAN / RUKU / CAIJIAN / CANCEL_CAIJIAN
+     */
+    private String operate;
+    /**
+     * 关联订单 ID，裁剪/撤销裁剪时记录来源订单；盘点/入库时为 null
+     */
+    private Long orderId;
 
 }

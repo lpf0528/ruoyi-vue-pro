@@ -86,4 +86,15 @@ public class ZcInventoryRecordRespVO {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createTime;
 
+    @Schema(description = "变化数量（old_quantity - new_quantity），正数表示减少，负数表示增加")
+    @ExcelProperty("变化数量")
+    private BigDecimal changeQuantity;
+
+    @Schema(description = "操作类型：PANDIAN/盘点、RUKU/入库、CAIJIAN/裁剪、CANCEL_CAIJIAN/撤销裁剪")
+    @ExcelProperty("操作类型")
+    private String operate;
+
+    @Schema(description = "关联订单ID，裁剪/撤销裁剪时记录来源订单")
+    private Long orderId;
+
 }
