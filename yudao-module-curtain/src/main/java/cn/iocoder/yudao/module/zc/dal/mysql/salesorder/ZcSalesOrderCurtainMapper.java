@@ -50,4 +50,18 @@ public interface ZcSalesOrderCurtainMapper extends BaseMapperX<ZcSalesOrderCurta
                 .in(ZcSalesOrderCurtainDO::getOrderId, orderIds));
     }
 
+    /**
+     * 批量更新指定订单下所有窗帘行的状态
+     *
+     * <p>用于确认/取消确认订单时，将窗帘行状态与主订单状态保持同步</p>
+     *
+     * @param orderId 销售订单 ID
+     * @param status  目标状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     */
+    default void updateStatusByOrderId(Long orderId, String status) {
+        update(null, Wrappers.<ZcSalesOrderCurtainDO>lambdaUpdate()
+                .set(ZcSalesOrderCurtainDO::getStatus, status)
+                .eq(ZcSalesOrderCurtainDO::getOrderId, orderId));
+    }
+
 }

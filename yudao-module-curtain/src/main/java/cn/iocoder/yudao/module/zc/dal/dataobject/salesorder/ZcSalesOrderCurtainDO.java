@@ -75,5 +75,10 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
      */
     private BigDecimal pleatsDistance;
 
+    /**
+     * 窗帘行状态，冗余自订单主表，随确认/取消确认操作同步更新，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     */
+    private String status;
+
 
 }

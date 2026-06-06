@@ -142,6 +142,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             // 3.1 保存窗帘行，配件列表序列化为 JSON 字符串存储
             ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
             curtainDO.setOrderId(orderId);
+            curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 新建订单默认未确认
             if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
                 curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
             }
@@ -217,6 +218,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             // 5.1 保存窗帘行，配件列表序列化为 JSON 字符串
             ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
             curtainDO.setOrderId(orderId);
+            curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 整单更新时订单必为未确认状态
             if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
                 curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
             }
@@ -298,6 +300,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getConfirmTime, LocalDateTime.now())
                 .eq(ZcSalesOrderDO::getId, id));
 
+        // 同步更新所有窗帘行状态为已确认
+        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+
         // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
             BigDecimal delta = order.getAmount().negate();
@@ -351,6 +356,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .set(ZcSalesOrderDO::getStatus, ZcSalesOrderStatusEnum.UNCONFIRMED.name())
                 .set(ZcSalesOrderDO::getConfirmTime, null)
                 .eq(ZcSalesOrderDO::getId, id));
+
+        // 同步更新所有窗帘行状态回未确认
+        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
 
         // 4. 将订单金额退回客户账户余额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {

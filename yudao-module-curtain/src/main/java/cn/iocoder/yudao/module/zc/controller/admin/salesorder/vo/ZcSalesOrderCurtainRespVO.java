@@ -61,6 +61,10 @@ public class ZcSalesOrderCurtainRespVO {
     @ExcelProperty("褶距")
     private BigDecimal pleatsDistance;
 
+    @Schema(description = "窗帘行状态，参见 zc_order_status 字典")
+    @ExcelProperty("状态")
+    private String status;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
