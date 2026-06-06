@@ -75,6 +75,13 @@ public class ZCSalesOrderMaterialDO extends BaseDO {
      * 备注
      */
     private String note;
-
+    /**
+     * 状态：NOT_PEILIAO=未配料，HAVE_PEILIAO=已配料
+     */
+    private String status;
+    /**
+     * 裁剪数量
+     */
+    private BigDecimal cutQuantity;
 
 }

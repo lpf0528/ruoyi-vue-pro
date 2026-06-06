@@ -27,6 +27,7 @@ import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
+import cn.iocoder.yudao.module.zc.service.salesorder.ZCSalesOrderMaterialService;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderService;
 
 @Tag(name = "管理后台 - 销售订单")
@@ -37,6 +38,8 @@ public class ZcSalesOrderController {
 
     @Resource
     private ZcSalesOrderService salesOrderService;
+    @Resource
+    private ZCSalesOrderMaterialService salesOrderMaterialService;
 
     @PostMapping("/create")
     @Operation(summary = "创建销售订单（整单，含窗帘行→结构行→用料明细）")
@@ -142,6 +145,14 @@ public class ZcSalesOrderController {
         List<ZcSalesOrderRespVO> list = salesOrderService.getSalesOrderPage(pageReqVO).getList();
         // 导出 Excel
         ExcelUtils.write(response, "销售订单.xls", "数据", ZcSalesOrderRespVO.class, list);
+    }
+
+    @PutMapping("/cut-material")
+    @Operation(summary = "成品订单裁剪（绑定批次、记录裁剪数量、扣减批次库存）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cutMaterial(@RequestBody @Valid ZcCutMaterialReqVO reqVO) {
+        salesOrderMaterialService.cutMaterial(reqVO);
+        return success(true);
     }
 
     @GetMapping("/export-pdf")
