@@ -18,8 +18,12 @@ public enum ZcSalesOrderStatusEnum {
     /** 已确认：订单已审核确认，进入生产流程 */
     CONFIRMED("已确认"),
 
+    BUFEN_DABAO("部分打包"),
+
     /** 已打包：生产完成，已完成打包备货 */
     DABAO("已打包"),
+
+    BUFEN_FAHUO("部分发货"),
 
     /** 已发货：货物已发出，等待客户签收 */
     FAHUO("已发货");

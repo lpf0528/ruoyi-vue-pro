@@ -36,4 +36,16 @@ public interface ZcSalesOrderMapper extends BaseMapperX<ZcSalesOrderDO> {
      */
     ZcSalesOrderRespVO selectVOById(@Param("id") Long id);
 
+    /**
+     * 按 ID 更新订单状态
+     *
+     * @param id     销售订单 ID
+     * @param status 目标状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     */
+    default void updateStatusById(Long id, String status) {
+        update(null, com.baomidou.mybatisplus.core.toolkit.Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getStatus, status)
+                .eq(ZcSalesOrderDO::getId, id));
+    }
+
 }
