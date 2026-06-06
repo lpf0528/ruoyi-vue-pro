@@ -30,6 +30,7 @@ import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CO
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_UPDATE;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcOrderTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
@@ -63,6 +64,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
+        salesOrder.setTypes(ZcOrderTypeEnum.FABRIC.name()); // 产品类订单固定为面料单
         salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name()); // 默认：未支付
         salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 默认：未确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
@@ -123,6 +125,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 3. 更新订单主记录，保留系统字段（订单号、状态、结算状态、是否加急不允许覆盖）
         ZcSalesOrderDO updateOrder = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         updateOrder.setOrderNo(existing.getOrderNo());
+        updateOrder.setTypes(existing.getTypes()); // 订单类型不允许更新，保留原值
         updateOrder.setStatus(existing.getStatus());
         updateOrder.setPayStatus(existing.getPayStatus());
         updateOrder.setIsExpedited(existing.getIsExpedited());

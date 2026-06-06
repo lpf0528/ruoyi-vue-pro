@@ -70,11 +70,6 @@ public class ZcSalesOrderProductCreateReqVO {
     @NotEmpty(message = "送货地址不能为空")
     private String deliveryAddress;
 
-    /** 订单类型（如 mianliao、chengpin 等） */
-    @Schema(description = "订单类型")
-    @DiffLogField(name = "订单类型")
-    private String types;
-
     /** 运费，不传默认为 0 */
     @Schema(description = "运费")
     @DiffLogField(name = "运费")
