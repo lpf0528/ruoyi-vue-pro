@@ -37,6 +37,7 @@ import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionU
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcRefTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 
 /**
@@ -138,7 +139,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // actualAmount 为本次实收，discountAmount 为本次优惠，两者合计为本次结算总价值
         if (createReqVO.getCustomerId() != null) {
             adjustAndRecordLog(createReqVO.getCustomerId(), totalSettled,
-                    ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), "COLLECTION_RECORD", billId, billNo, null);
+                    ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), billId, billNo, null);
         }
 
         // 记录操作日志上下文
@@ -192,7 +193,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             BigDecimal oldDiscount = existingBill.getDiscountAmount() == null ? BigDecimal.ZERO : existingBill.getDiscountAmount();
             BigDecimal oldSettledNegate = existingBill.getActualAmount().add(oldDiscount).negate();
             adjustAndRecordLog(existingBill.getCustomerId(), oldSettledNegate,
-                    ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), "COLLECTION_RECORD", existingBill.getId(), existingBill.getBillNo(), "收款单修改-冲回旧记录");
+                    ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), existingBill.getId(), existingBill.getBillNo(), "收款单修改-冲回旧记录");
         }
 
         // 5. 删除旧附件和分摊明细
@@ -246,7 +247,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         Long newCustomerId = updateReqVO.getCustomerId() != null ? updateReqVO.getCustomerId() : existingBill.getCustomerId();
         if (newCustomerId != null) {
             adjustAndRecordLog(newCustomerId, newTotalSettled,
-                    ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), "COLLECTION_RECORD", updateReqVO.getId(), existingBill.getBillNo(), "收款单修改-应用新记录");
+                    ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), updateReqVO.getId(), existingBill.getBillNo(), "收款单修改-应用新记录");
         }
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existingBill, ZcBillsSaveReqVO.class));
@@ -290,7 +291,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             BigDecimal discount = bill.getDiscountAmount() == null ? BigDecimal.ZERO : bill.getDiscountAmount();
             BigDecimal delta = bill.getActualAmount().add(discount).negate();
             adjustAndRecordLog(bill.getCustomerId(), delta,
-                    ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), "COLLECTION_RECORD", bill.getId(), bill.getBillNo(), "收款单删除-冲回");
+                    ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), bill.getId(), bill.getBillNo(), "收款单删除-冲回");
         }
 
         // 记录操作日志上下文
@@ -338,7 +339,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
      * @param customerId 客户 ID
      * @param delta      变动金额（正数增加、负数减少）
      * @param bizType    业务类型（COLLECTION / COLLECTION_VOID 等）
-     * @param refType    关联单据类型（COLLECTION_RECORD 等）
+     * @param refType    关联单据类型，见 {@link ZcRefTypeEnum}
      * @param refId      关联单据主键
      * @param refNo      关联单号快照
      * @param remark     备注

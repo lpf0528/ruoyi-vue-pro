@@ -745,3 +745,122 @@ CREATE TABLE `zc_collection_order_alloc` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收款分摊';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- 字典：订单状态（zc_order_status） id=2301, data=3700~3703
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2301, '订单状态', 'zc_order_status', 0, '智仓销售订单状态', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3700, 1, '未确认', 'UNCONFIRMED', 'zc_order_status', 0, 'info',    '', '订单刚创建，尚未审核确认', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3701, 2, '已确认', 'CONFIRMED',   'zc_order_status', 0, 'primary', '', '订单已审核，进入生产流程', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3702, 3, '已打包', 'DABAO',       'zc_order_status', 0, 'warning', '', '生产完成，已打包备货',     'admin', NOW(), 'admin', NOW(), b'0'),
+(3703, 4, '已发货', 'FAHUO',       'zc_order_status', 0, 'success', '', '货物已发出，等待签收',     'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：订单支付状态（zc_order_pay_status） id=2302, data=3704~3706
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2302, '订单支付状态', 'zc_order_pay_status', 0, '智仓销售订单支付状态', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3704, 1, '未支付',   'UNPAID',      'zc_order_pay_status', 0, 'info',    '', '尚未收到任何款项', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3705, 2, '部分支付', 'PARTIALPAID', 'zc_order_pay_status', 0, 'warning', '', '已收部分款项',     'admin', NOW(), 'admin', NOW(), b'0'),
+(3706, 3, '已支付',   'PAID',        'zc_order_pay_status', 0, 'success', '', '款项已全额到账',   'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：订单类型（zc_order_type） id=2303, data=3707~3708
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2303, '订单类型', 'zc_order_type', 0, '智仓销售订单类型', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3707, 1, '面料单', 'FABRIC',  'zc_order_type', 0, 'default', '', '直接购买产品批次，无工艺配置', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3708, 2, '成品单', 'CURTAIN', 'zc_order_type', 0, 'primary', '', '包含窗帘工艺配置的完整订单',   'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：出货价类型（zc_selling_price_type） id=2304, data=3709~3710
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2304, '出货价类型', 'zc_selling_price_type', 0, '产品版本出货价定价方式', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3709, 1, '统一价', 'FIXED_PRICE', 'zc_selling_price_type', 0, 'primary', '', '所有客户同一售价',  'admin', NOW(), 'admin', NOW(), b'0'),
+(3710, 2, '型号价', 'SKU_PRICE',   'zc_selling_price_type', 0, 'warning', '', '按SKU规格单独定价', 'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：物料分类（zc_product_classify） id=2305, data=3711~3718
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2305, '物料分类', 'zc_product_classify', 0, '产品版本物料分类', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3711, 1, '运费',   'YUNFEI',        'zc_product_classify', 0, 'default', '', '物流运费项',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3712, 2, '样册',   'YANGCE',        'zc_product_classify', 0, 'default', '', '产品样本册',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3713, 3, '其他',   'QITA',          'zc_product_classify', 0, 'default', '', '未归类物料',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3714, 4, '窗帘布', 'CHUANGLIANBU',  'zc_product_classify', 0, 'primary', '', '主面料',             'admin', NOW(), 'admin', NOW(), b'0'),
+(3715, 5, '赠品',   'ZENGPIN',       'zc_product_classify', 0, 'success', '', '随单赠送物品',       'admin', NOW(), 'admin', NOW(), b'0'),
+(3716, 6, '绑带',   'BANGDAI',       'zc_product_classify', 0, 'default', '', '窗帘绑带配件',       'admin', NOW(), 'admin', NOW(), b'0'),
+(3717, 7, '窗帘纱', 'CHUANGLIANSHA', 'zc_product_classify', 0, 'primary', '', '纱帘面料',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3718, 8, '成品',   'CHENGPIN',      'zc_product_classify', 0, 'success', '', '已加工完成的成品帘', 'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：余额变动业务类型（zc_customer_balance_biz_type） id=2306, data=3719~3725
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2306, '余额变动业务类型', 'zc_customer_balance_biz_type', 0, '客户余额变动来源类型', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3719, 1, '订单确认扣减', 'ORDER_CONFIRM',   'zc_customer_balance_biz_type', 0, 'danger',  '', '订单确认时从余额扣除订单金额', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3720, 2, '取消确认回退', 'ORDER_UNCONFIRM', 'zc_customer_balance_biz_type', 0, 'warning', '', '撤销订单确认时退回余额',       'admin', NOW(), 'admin', NOW(), b'0'),
+(3721, 3, '订单更新调整', 'ORDER_CHANGE',    'zc_customer_balance_biz_type', 0, 'info',    '', '订单金额变更时补差额',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3722, 4, '收款入账',     'COLLECTION',      'zc_customer_balance_biz_type', 0, 'success', '', '收款单创建，客户余额增加',     'admin', NOW(), 'admin', NOW(), b'0'),
+(3723, 5, '收款作废冲回', 'COLLECTION_VOID', 'zc_customer_balance_biz_type', 0, 'danger',  '', '收款单删除/作废，冲回余额',    'admin', NOW(), 'admin', NOW(), b'0'),
+(3724, 6, '手工调整',     'MANUAL_ADJUST',   'zc_customer_balance_biz_type', 0, 'info',    '', '后台人工直接调整余额',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3725, 7, '其他',         'OTHER',           'zc_customer_balance_biz_type', 0, 'default', '', '不属于以上类型的余额变动',     'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：粘贴方向（zc_paste_direction） id=2307, data=3726~3728
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2307, '粘贴方向', 'zc_paste_direction', 0, '窗帘粘贴方向', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3726, 1, '正反贴', 'ZFT', 'zc_paste_direction', 0, 'default', '', '正面与背面均可粘贴', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3727, 2, '反贴',   'FT',  'zc_paste_direction', 0, 'default', '', '仅背面粘贴',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3728, 3, '正贴',   'ZT',  'zc_paste_direction', 0, 'default', '', '仅正面粘贴',         'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：打开方式（zc_open_method） id=2308, data=3729~3734
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2308, '打开方式', 'zc_open_method', 0, '窗帘打开方式', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3729, 1, '右开', 'RIGHT_OPEN',  'zc_open_method', 0, 'default', '', '窗帘向右侧拉开',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3730, 2, '左开', 'LEFT_OPEN',   'zc_open_method', 0, 'default', '', '窗帘向左侧拉开',         'admin', NOW(), 'admin', NOW(), b'0'),
+(3731, 3, '四开', 'FOUR_OPEN',   'zc_open_method', 0, 'default', '', '两侧各两幅，共四幅拉开', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3732, 4, '三开', 'THREE_OPEN',  'zc_open_method', 0, 'default', '', '三幅窗帘拉开',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3733, 5, '双开', 'TWO_OPEN',    'zc_open_method', 0, 'default', '', '两幅从中间向两侧拉开',   'admin', NOW(), 'admin', NOW(), b'0'),
+(3734, 6, '单开', 'ONE_OPEN',    'zc_open_method', 0, 'default', '', '单幅窗帘拉开',           'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：加工类型（zc_process_type） id=2309, data=3735~3736
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2309, '加工类型', 'zc_process_type', 0, '窗帘加工计价方式', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3735, 1, '定宽买高', 'DKMG', 'zc_process_type', 0, 'primary', '', '以宽度为基准，按高度计费', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3736, 2, '定高买宽', 'DGMK', 'zc_process_type', 0, 'warning', '', '以高度为基准，按宽度计费', 'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- 字典：关联单据类型（zc_ref_type） id=2310, data=3737~3738
+-- ----------------------------
+INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
+VALUES (2310, '关联单据类型', 'zc_ref_type', 0, '客户余额变动关联单据类型', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
+INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+VALUES
+(3737, 1, '销售单', 'SALES_ORDER',       'zc_ref_type', 0, 'primary', '', '来源于销售订单', 'admin', NOW(), 'admin', NOW(), b'0'),
+(3738, 2, '收款单', 'COLLECTION_RECORD', 'zc_ref_type', 0, 'success', '', '来源于收款单',   'admin', NOW(), 'admin', NOW(), b'0');
