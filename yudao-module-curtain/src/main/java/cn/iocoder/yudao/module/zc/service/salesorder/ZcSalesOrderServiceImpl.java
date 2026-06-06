@@ -122,6 +122,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
         salesOrder.setOrderNo(orderNo);
+        salesOrder.setTypes(ZcOrderTypeEnum.CURTAIN.name()); // 成品订单固定为成品单类型
         salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name()); // 默认：未支付
         salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 默认：未确认
         salesOrder.setIsExpedited(false);    // 默认：非加急
@@ -199,6 +200,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         // 3. 未确认的订单：整单更新主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         updateDO.setOrderNo(null);
+        updateDO.setTypes(null); // 订单类型不允许更新
         updateDO.setPayStatus(null);
         updateDO.setStatus(null);
         updateDO.setIsExpedited(null);

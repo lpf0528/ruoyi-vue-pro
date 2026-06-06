@@ -70,12 +70,6 @@ public class ZcSalesOrderCreateReqVO {
     @DiffLogField(name = "运费")
     private BigDecimal freight;
 
-    /** 订单类型，必填（如 chengpin、面料单等） */
-    @Schema(description = "订单类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "chengpin")
-    @DiffLogField(name = "订单类型")
-    @NotEmpty(message = "订单类型不能为空")
-    private String types;
-
     /** 优惠金额 */
     @Schema(description = "优惠金额")
     @DiffLogField(name = "优惠金额")
