@@ -202,7 +202,8 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
                 .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
                 .set(ZcSalesOrderProductDO::getCutQuantity, reqVO.getCutQuantity())
-                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name()));
+                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderStatusEnum.HAVE_PEILIAO.name()));
+
         // 4. 原子扣减批次剩余数量，防止并发超卖
         productBatchMapper.decreaseQuantity(productLine.getBatchId(), reqVO.getCutQuantity());
         // 5. 写入裁剪出库库存变动记录

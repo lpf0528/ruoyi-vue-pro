@@ -18,6 +18,9 @@ public enum ZcSalesOrderStatusEnum {
     /** 已确认：订单已审核确认，进入生产流程 */
     CONFIRMED("已确认"),
 
+    /** 已配料：已完成裁剪出库，批次库存已扣减 */
+    HAVE_PEILIAO("已配料"),
+
     BUFEN_DABAO("部分打包"),
 
     /** 已打包：生产完成，已完成打包备货 */
