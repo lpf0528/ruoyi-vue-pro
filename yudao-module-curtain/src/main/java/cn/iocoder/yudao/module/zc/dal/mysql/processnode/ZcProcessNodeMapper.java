@@ -20,6 +20,7 @@ public interface ZcProcessNodeMapper extends BaseMapperX<ZcProcessNodeDO> {
     default PageResult<ZcProcessNodeDO> selectPage(ZcProcessNodePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcProcessNodeDO>()
                 .likeIfPresent(ZcProcessNodeDO::getName, reqVO.getName())
+                .eqIfPresent(ZcProcessNodeDO::getGroup, reqVO.getGroup())
                 .betweenIfPresent(ZcProcessNodeDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(ZcProcessNodeDO::getId));
     }

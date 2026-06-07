@@ -35,8 +35,9 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
     @LogRecord(type = ZC_PROCESS_NODE_TYPE, subType = ZC_PROCESS_NODE_CREATE_SUB_TYPE, bizNo = "{{#processNode.id}}",
             success = ZC_PROCESS_NODE_CREATE_SUCCESS)
     public Long createProcessNode(ZcProcessNodeSaveReqVO createReqVO) {
-        // 插入
+        // 插入，分组固定为手工配置（1），不依赖前端传值
         ZcProcessNodeDO processNode = BeanUtils.toBean(createReqVO, ZcProcessNodeDO.class);
+        processNode.setGroup(1);
         processNodeMapper.insert(processNode);
         // 记录操作日志上下文
         LogRecordContext.putVariable("processNode", processNode);
@@ -51,8 +52,9 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
         ZcProcessNodeDO oldProcessNode = validateProcessNodeExists(updateReqVO.getId());
         // 系统内置工序节点（group=0）禁止编辑
         validateProcessNodeNotSystem(oldProcessNode);
-        // 更新
+        // 更新，分组固定为手工配置（1），防止被篡改
         ZcProcessNodeDO updateObj = BeanUtils.toBean(updateReqVO, ZcProcessNodeDO.class);
+        updateObj.setGroup(1);
         processNodeMapper.updateById(updateObj);
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldProcessNode, ZcProcessNodeSaveReqVO.class));

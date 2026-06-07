@@ -16,6 +16,9 @@ public class ZcProcessNodePageReqVO extends PageParam {
     @Schema(description = "工序名称，如：备料、裁剪、缝制、定型、质检、包装", example = "芋艿")
     private String name;
 
+    @Schema(description = "分组：0=系统配置，1=手工配置")
+    private Integer group;
+
     @Schema(description = "创建时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] createTime;
