@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.zc.dal.dataobject.salesorder;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 
@@ -66,5 +67,10 @@ public class ZcSalesOrderProductDO extends BaseDO {
      * 裁剪数量；裁剪后记录实际出库数量，撤销裁剪后置为 null
      */
     private java.math.BigDecimal cutQuantity;
+
+    /**
+     * 发货时间；发货后记录，撤销发货后置为 null；不为 null 时视为已发货
+     */
+    private LocalDateTime shipTime;
 
 }

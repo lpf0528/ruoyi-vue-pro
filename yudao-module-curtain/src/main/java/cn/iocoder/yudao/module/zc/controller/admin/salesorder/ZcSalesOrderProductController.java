@@ -2,7 +2,9 @@ package cn.iocoder.yudao.module.zc.controller.admin.salesorder;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
@@ -103,6 +105,28 @@ public class ZcSalesOrderProductController {
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
     public CommonResult<Boolean> cancelCutProduct(@RequestBody @Valid ZcCancelCutProductReqVO reqVO) {
         salesOrderProductService.cancelCutProduct(reqVO);
+        return success(true);
+    }
+
+    /**
+     * 面料单产品行发货（标记已发货、记录发货时间、联动更新订单状态）
+     */
+    @PutMapping("/ship")
+    @Operation(summary = "面料单产品行发货（标记已发货、记录发货时间、联动更新订单状态）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> shipProduct(@RequestBody @Valid ZcShipProductReqVO reqVO) {
+        salesOrderProductService.shipProduct(reqVO);
+        return success(true);
+    }
+
+    /**
+     * 撤销面料单产品行发货（回退发货状态、清空发货时间、联动更新订单状态）
+     */
+    @PutMapping("/cancel-ship")
+    @Operation(summary = "撤销面料单产品行发货（回退发货状态、清空发货时间、联动更新订单状态）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cancelShipProduct(@RequestBody @Valid ZcCancelShipProductReqVO reqVO) {
+        salesOrderProductService.cancelShipProduct(reqVO);
         return success(true);
     }
 

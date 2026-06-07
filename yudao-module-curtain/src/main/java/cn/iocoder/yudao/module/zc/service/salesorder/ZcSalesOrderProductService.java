@@ -1,7 +1,9 @@
 package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
@@ -79,5 +81,27 @@ public interface ZcSalesOrderProductService {
      * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 产品行未处于已配料状态时抛出
      */
     void cancelCutProduct(@Valid ZcCancelCutProductReqVO reqVO);
+
+    /**
+     * 面料单产品行发货
+     *
+     * <p>将产品行状态变更为 FAHUO，记录发货时间，并联动更新订单主表状态：
+     * 全部产品行已发货 → FAHUO；部分已发货 → BUFEN_FAHUO。</p>
+     *
+     * @param reqVO 发货请求（产品行 ID）
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 产品行已发货时抛出
+     */
+    void shipProduct(@Valid ZcShipProductReqVO reqVO);
+
+    /**
+     * 撤销面料单产品行发货
+     *
+     * <p>将产品行状态回退为发货前状态（已裁剪 → HAVE_PEILIAO，否则 → CONFIRMED），
+     * 清空发货时间，并联动更新订单主表状态。</p>
+     *
+     * @param reqVO 撤销发货请求（产品行 ID）
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 产品行尚未发货时抛出
+     */
+    void cancelShipProduct(@Valid ZcCancelShipProductReqVO reqVO);
 
 }

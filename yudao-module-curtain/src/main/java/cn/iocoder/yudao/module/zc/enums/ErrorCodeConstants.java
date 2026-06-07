@@ -140,5 +140,9 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_CURTAIN_NOT_SHIPPED = new ErrorCode(100066, "该窗帘尚未发货，无需取消");
     /** 面料单产品行尚未配料（cutStatus != HAVE_PEILIAO），无法撤销裁剪 */
     ErrorCode SALES_ORDER_PRODUCT_NOT_PEILIAO = new ErrorCode(100067, "该产品行尚未完成裁剪，无需撤销");
+    /** 面料单产品行已发货（shipTime 不为 null），禁止重复发货 */
+    ErrorCode SALES_ORDER_PRODUCT_ALREADY_SHIPPED = new ErrorCode(100068, "该产品行已发货，请勿重复操作");
+    /** 面料单产品行尚未发货（shipTime 为 null），无需撤销 */
+    ErrorCode SALES_ORDER_PRODUCT_NOT_SHIPPED = new ErrorCode(100069, "该产品行尚未发货，无需撤销");
 }
 

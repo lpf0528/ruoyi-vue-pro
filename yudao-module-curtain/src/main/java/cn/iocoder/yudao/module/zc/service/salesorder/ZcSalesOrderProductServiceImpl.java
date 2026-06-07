@@ -3,7 +3,9 @@ package cn.iocoder.yudao.module.zc.service.salesorder;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcShipProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductBatchCreateVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
@@ -30,6 +32,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -261,6 +264,95 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
         LogRecordContext.putVariable("cutQuantity", productLine.getCutQuantity());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_PRODUCT_TYPE, subType = ZC_SALES_ORDER_PRODUCT_SHIP_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_SALES_ORDER_PRODUCT_SHIP_SUCCESS)
+    public void shipProduct(ZcShipProductReqVO reqVO) {
+        // 1. 校验产品行存在
+        ZcSalesOrderProductDO productLine = validateProductLineExists(reqVO.getId());
+        // 2. 防止重复发货：shipTime 不为 null 表示已发货
+        if (productLine.getShipTime() != null) {
+            throw exception(SALES_ORDER_PRODUCT_ALREADY_SHIPPED);
+        }
+        // 3. 更新产品行：状态变为已发货，记录发货时间
+        salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
+                .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
+                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderStatusEnum.FAHUO.name())
+                .set(ZcSalesOrderProductDO::getShipTime, LocalDateTime.now()));
+        // 4. 读取最新产品行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
+        Long orderId = productLine.getOrderId();
+        List<ZcSalesOrderProductDO> allLines = salesOrderProductMapper.selectListByOrderId(orderId);
+        String newOrderStatus = calculateOrderStatusByLines(allLines);
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("id", reqVO.getId());
+        LogRecordContext.putVariable("newOrderStatus", newOrderStatus);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_PRODUCT_TYPE, subType = ZC_SALES_ORDER_PRODUCT_CANCEL_SHIP_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_SALES_ORDER_PRODUCT_CANCEL_SHIP_SUCCESS)
+    public void cancelShipProduct(ZcCancelShipProductReqVO reqVO) {
+        // 1. 校验产品行存在
+        ZcSalesOrderProductDO productLine = validateProductLineExists(reqVO.getId());
+        // 2. shipTime 为 null 表示尚未发货，无需撤销
+        if (productLine.getShipTime() == null) {
+            throw exception(SALES_ORDER_PRODUCT_NOT_SHIPPED);
+        }
+        // 3. 回退状态：有裁剪记录则回到已配料，否则回到已确认；用 LambdaUpdateWrapper 显式置 shipTime=null
+        String restoredStatus = productLine.getCutQuantity() != null
+                ? ZcSalesOrderStatusEnum.HAVE_PEILIAO.name()
+                : ZcSalesOrderStatusEnum.CONFIRMED.name();
+        salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
+                .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
+                .set(ZcSalesOrderProductDO::getStatus, restoredStatus)
+                .set(ZcSalesOrderProductDO::getShipTime, null));
+        // 4. 读取最新产品行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
+        Long orderId = productLine.getOrderId();
+        List<ZcSalesOrderProductDO> allLines = salesOrderProductMapper.selectListByOrderId(orderId);
+        String newOrderStatus = calculateOrderStatusByLines(allLines);
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("id", reqVO.getId());
+        LogRecordContext.putVariable("newOrderStatus", newOrderStatus);
+    }
+
+    /**
+     * 根据面料单所有产品行的最新状态，按优先级计算订单应展示的聚合状态。
+     *
+     * <p>优先级由高到低：
+     * <ol>
+     *   <li>全部已发货 → FAHUO</li>
+     *   <li>部分已发货 → BUFEN_FAHUO</li>
+     *   <li>全部已打包 → DABAO</li>
+     *   <li>部分已打包 → BUFEN_DABAO</li>
+     *   <li>其余情况（含已配料、已确认等）→ CONFIRMED</li>
+     * </ol>
+     * 此方法在 DB 更新后调用，传入的列表必须是最新查询结果。
+     * </p>
+     */
+    private String calculateOrderStatusByLines(List<ZcSalesOrderProductDO> allLines) {
+        if (allLines.isEmpty()) {
+            return ZcSalesOrderStatusEnum.CONFIRMED.name();
+        }
+        long total = allLines.size();
+        long fahuoCount = allLines.stream()
+                .filter(l -> ZcSalesOrderStatusEnum.FAHUO.name().equals(l.getStatus()))
+                .count();
+        if (fahuoCount == total) return ZcSalesOrderStatusEnum.FAHUO.name();
+        if (fahuoCount > 0) return ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
+
+        long dabaoCount = allLines.stream()
+                .filter(l -> ZcSalesOrderStatusEnum.DABAO.name().equals(l.getStatus()))
+                .count();
+        if (dabaoCount == total) return ZcSalesOrderStatusEnum.DABAO.name();
+        if (dabaoCount > 0) return ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
+
+        return ZcSalesOrderStatusEnum.CONFIRMED.name();
     }
 
     private ZcSalesOrderDO validateSalesOrderExists(Long id) {
