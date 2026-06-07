@@ -154,5 +154,7 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_ALREADY_COMPLETE = new ErrorCode(100071, "订单已完成，请勿重复操作");
     /** 系统内置工序节点（group=0）不允许编辑或删除 */
     ErrorCode PROCESS_NODE_SYSTEM_CANNOT_MODIFY = new ErrorCode(100072, "系统内置工序节点不允许编辑或删除");
+    /** 工序节点名称已存在 */
+    ErrorCode PROCESS_NODE_NAME_EXISTS = new ErrorCode(100073, "工序节点名称已存在，请使用其他名称");
 }
 

@@ -26,6 +26,16 @@ public interface ZcProcessNodeMapper extends BaseMapperX<ZcProcessNodeDO> {
     }
 
     /**
+     * 根据名称查询工序节点（用于唯一性校验）
+     *
+     * @param name 工序节点名称
+     * @return 匹配的工序节点，不存在返回 null
+     */
+    default ZcProcessNodeDO selectByName(String name) {
+        return selectOne(ZcProcessNodeDO::getName, name);
+    }
+
+    /**
      * 查询工序节点配置列表，按排序号升序排列
      *
      * @param reqVO 列表查询条件

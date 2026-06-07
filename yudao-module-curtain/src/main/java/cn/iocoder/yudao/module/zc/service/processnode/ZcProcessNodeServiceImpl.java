@@ -35,6 +35,8 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
     @LogRecord(type = ZC_PROCESS_NODE_TYPE, subType = ZC_PROCESS_NODE_CREATE_SUB_TYPE, bizNo = "{{#processNode.id}}",
             success = ZC_PROCESS_NODE_CREATE_SUCCESS)
     public Long createProcessNode(ZcProcessNodeSaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateProcessNodeNameUnique(null, createReqVO.getName());
         // 插入，分组固定为手工配置（1），不依赖前端传值
         ZcProcessNodeDO processNode = BeanUtils.toBean(createReqVO, ZcProcessNodeDO.class);
         processNode.setGroup(1);
@@ -52,6 +54,8 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
         ZcProcessNodeDO oldProcessNode = validateProcessNodeExists(updateReqVO.getId());
         // 系统内置工序节点（group=0）禁止编辑
         validateProcessNodeNotSystem(oldProcessNode);
+        // 校验名称唯一性（排除自身）
+        validateProcessNodeNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新，分组固定为手工配置（1），防止被篡改
         ZcProcessNodeDO updateObj = BeanUtils.toBean(updateReqVO, ZcProcessNodeDO.class);
         updateObj.setGroup(1);
@@ -82,6 +86,24 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
         nodes.forEach(this::validateProcessNodeNotSystem);
         // 删除
         processNodeMapper.deleteByIds(ids);
+    }
+
+    /**
+     * 校验工序节点名称的唯一性
+     *
+     * @param id   更新时传入自身 ID（排除自身），新增时传 null
+     * @param name 待校验的名称
+     */
+    private void validateProcessNodeNameUnique(Long id, String name) {
+        ZcProcessNodeDO existing = processNodeMapper.selectByName(name);
+        if (existing == null) {
+            return;
+        }
+        // 更新场景：查到的记录是自身，允许通过
+        if (existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(PROCESS_NODE_NAME_EXISTS);
     }
 
     private ZcProcessNodeDO validateProcessNodeExists(Long id) {
