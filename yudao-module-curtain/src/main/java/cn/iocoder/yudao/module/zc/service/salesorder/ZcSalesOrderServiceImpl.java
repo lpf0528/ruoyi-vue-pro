@@ -214,77 +214,57 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
             success = ZC_SALES_ORDER_UPDATE_SUCCESS)
     public void updateSalesOrder(ZcSalesOrderUpdateReqVO updateReqVO) {
-        Long orderId = updateReqVO.getId();
+        ZcSalesOrderDO existing = prepareOrderUpdate(updateReqVO.getId());
+        ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+        clearProtectedFields(updateDO);
+        updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
+        salesOrderMapper.updateById(updateDO);
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
+        LogRecordContext.putVariable("orderNo", existing.getOrderNo());
+        saveCurtainSubRows(updateReqVO.getId(), updateReqVO.getCurtains());
+    }
 
-        // 1. 校验订单存在
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_FABRIC_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = ZC_SALES_ORDER_FABRIC_UPDATE_SUCCESS)
+    public void updateFabricSalesOrder(ZcSalesOrderFabricUpdateReqVO updateReqVO) {
+        ZcSalesOrderDO existing = prepareOrderUpdate(updateReqVO.getId());
+        ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+        clearProtectedFields(updateDO);
+        updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
+        salesOrderMapper.updateById(updateDO);
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderFabricUpdateReqVO.class));
+        LogRecordContext.putVariable("orderNo", existing.getOrderNo());
+        saveCurtainSubRows(updateReqVO.getId(), toStandardCurtainVOs(updateReqVO.getCurtains()));
+    }
+
+    /**
+     * 更新前置操作：校验订单存在且未确认，删除旧的三层子表数据
+     *
+     * @return 旧订单记录（供日志 diff 使用）
+     */
+    private ZcSalesOrderDO prepareOrderUpdate(Long orderId) {
         ZcSalesOrderDO existing = validateSalesOrderExists(orderId);
-
-        // 2. confirm_time 不为空表示已确认，禁止修改任何信息
         if (existing.getConfirmTime() != null) {
             throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
         }
+        // 全量替换：先删旧子表，再由调用方重新插入
+        salesOrderCurtainMapper.deleteByOrderId(orderId);
+        salesOrderStructureMapper.deleteByOrderId(orderId);
+        salesOrderMaterialMapper.deleteByOrderId(orderId);
+        return existing;
+    }
 
-        // 3. 未确认的订单：整单更新主表（orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 不覆写）
-        ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+    /** 清空系统管理字段，防止更新接口覆写不应修改的列 */
+    private void clearProtectedFields(ZcSalesOrderDO updateDO) {
         updateDO.setOrderNo(null);
-        updateDO.setTypes(null); // 订单类型不允许更新
+        updateDO.setTypes(null);
         updateDO.setPayStatus(null);
         updateDO.setStatus(null);
         updateDO.setIsExpedited(null);
         updateDO.setAmountReceived(null);
         updateDO.setConfirmTime(null);
-        updateDO.setSets(CollUtil.isEmpty(updateReqVO.getCurtains()) ? 0 : updateReqVO.getCurtains().size());
-        salesOrderMapper.updateById(updateDO);
-
-        // 4. 删除旧的三层子表数据，再重新插入（全量替换保证一致性）
-        salesOrderCurtainMapper.deleteByOrderId(orderId);
-        salesOrderStructureMapper.deleteByOrderId(orderId);
-        salesOrderMaterialMapper.deleteByOrderId(orderId);
-
-        // 记录操作日志上下文（仅主表字段参与 diff）
-        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
-        LogRecordContext.putVariable("orderNo", existing.getOrderNo());
-
-        // 5. 级联插入新窗帘行 → 结构行 → 用料明细（逻辑与创建相同）
-        if (CollUtil.isEmpty(updateReqVO.getCurtains())) {
-            return;
-        }
-        int curtainIndex = 1;
-        for (ZcSalesOrderCurtainCreateVO curtainVO : updateReqVO.getCurtains()) {
-            // 5.1 保存窗帘行，配件列表序列化为 JSON 字符串
-            ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
-            curtainDO.setOrderId(orderId);
-            curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name()); // 整单更新时订单必为未确认状态
-            curtainDO.setIndex(curtainIndex++);
-            if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
-                curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
-            }
-            salesOrderCurtainMapper.insert(curtainDO);
-            Long orderCurtainId = curtainDO.getId();
-
-            // 5.2 保存结构行
-            if (CollUtil.isEmpty(curtainVO.getStructures())) {
-                continue;
-            }
-            for (ZcSalesOrderStructureCreateVO structureVO : curtainVO.getStructures()) {
-                ZcSalesOrderStructureDO structureDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
-                structureDO.setOrderId(orderId);
-                structureDO.setOrderCurtainId(orderCurtainId);
-                salesOrderStructureMapper.insert(structureDO);
-                Long orderStructureId = structureDO.getId();
-
-                // 5.3 保存用料明细
-                if (CollUtil.isEmpty(structureVO.getMaterials())) {
-                    continue;
-                }
-                for (ZCSalesOrderMaterialCreateVO materialVO : structureVO.getMaterials()) {
-                    ZCSalesOrderMaterialDO materialDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
-                    materialDO.setOrderId(orderId);
-                    materialDO.setOrderStructureId(orderStructureId);
-                    salesOrderMaterialMapper.insert(materialDO);
-                }
-            }
-        }
     }
 
     @Override

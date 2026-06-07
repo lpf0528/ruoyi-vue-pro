@@ -121,29 +121,46 @@ yudao-module-curtain/
 
 ### 销售订单类型说明
 
-ZC 模块存在两类销售订单，共用 `zc_sales_order` 主表，但子行结构不同：
+ZC 模块存在三类销售订单，共用 `zc_sales_order` 主表，但子行结构和接口不同：
 
-**成品订单（窗帘订单）**：四表三层嵌套，通过 `/zc/sales-order` 接口操作
+**成品订单（窗帘订单）**：四表三层嵌套，通过 `/zc/sales-order` 接口操作，`types=CURTAIN`
 ```
 ZcSalesOrder（订单主表）
-└── ZcSalesOrderCurtain（窗帘行，L2）      ← 按款式/房间分行
-    └── ZcSalesOrderStructure（结构行，L3） ← 含尺寸、工艺、褶数等加工参数
+└── ZcSalesOrderCurtain（窗帘行，L2）      ← 按款式/房间分行，curtainId 必填
+    └── ZcSalesOrderStructure（结构行，L3） ← 含尺寸、工艺、褶数等加工参数，structureId 必填
         └── ZCSalesOrderMaterial（用料明细，L4） ← 具体物料、批次、用量、单价
 ```
 
-**产品类订单（面料单）**：两层扁平结构，通过 `/zc/sales-order-product` 接口操作
+**面单（嵌套结构面料单）**：同样三层嵌套，通过 `/zc/sales-order/fabric/create` 和 `/fabric/update` 操作，`types=FABRIC`
+```
+ZcSalesOrder（订单主表）
+└── ZcSalesOrderCurtain（窗帘行，L2）      ← curtainId 可为空（面单无款式概念）
+    └── ZcSalesOrderStructure（结构行，L3） ← structureId 可为空
+        └── ZCSalesOrderMaterial（用料明细，L4） ← 同成品订单
+```
+> 请求 VO 为精简版：`ZcSalesOrderFabricCreateReqVO` / `ZcSalesOrderFabricUpdateReqVO`，
+> 窗帘行用 `ZcSalesOrderFabricCurtainCreateVO`（仅 amount/note/structures），
+> 结构行用 `ZcSalesOrderFabricStructureCreateVO`（仅 materials），
+> Service 层通过 `toStandardCurtainVOs()` 将其转为标准 VO 后复用相同的插入逻辑。
+
+**产品类订单（面料单）**：两层扁平结构，通过 `/zc/sales-order-product` 接口操作，`types=FABRIC`
 ```
 ZcSalesOrder（订单主表）
 └── ZcSalesOrderProduct（产品批次行）  ← 直接购买产品批次，无工艺配置
 ```
 
-**成品订单整单创建流程**（`ZcSalesOrderServiceImpl.createSalesOrder`）：
-1. 生成订单号：`ZC{租户ID}{yyyyMMdd}{5位序号}`，如 `ZC120260519000001`（由 `ZcNoGeneratorRedisDAO.nextOrderSeq()` Redis INCR 保证并发唯一）
-2. 保存订单主记录，初始状态 `payStatus=unpaid`、`status=unconfirmed`
-3. 遍历窗帘行 → 保存，配件列表（mountings）序列化为 JSON 字符串
-4. 遍历结构行 → 保存，关联 orderId + orderCurtainId
-5. 遍历用料明细 → 保存，关联 orderId + orderStructureId
-6. 全程在同一个 `@Transactional` 事务内，失败整体回滚
+**成品订单 / 面单整单创建流程**（`ZcSalesOrderServiceImpl`）：
+
+创建方法（`createSalesOrder` / `createFabricSalesOrder`）共用以下私有方法：
+- `generateOrderNo()` — 生成订单号：`ZC{租户ID}{yyyyMMdd}{5位序号}`，Redis INCR 保证并发唯一
+- `applyOrderDefaults(do, types, sets)` — 设置 payStatus/status/isExpedited/freight/totalAmount 等默认值
+- `saveCurtainSubRows(orderId, curtains)` — 三层嵌套批量插入：窗帘行 → 结构行 → 用料明细
+
+更新方法（`updateSalesOrder` / `updateFabricSalesOrder`）额外共用：
+- `prepareOrderUpdate(orderId)` — 校验订单存在且未确认，删除旧三层子表，返回旧订单（供日志 diff）
+- `clearProtectedFields(do)` — 清空 orderNo/types/payStatus/status 等系统字段，防止误覆写
+
+面单创建/更新时，Service 调 `toStandardCurtainVOs()` 将简化 VO 适配为标准 VO，再统一走 `saveCurtainSubRows()`，**不重复实现插入逻辑**。全程在同一个 `@Transactional` 事务内，失败整体回滚。
 
 **订单详情查询**（`getSalesOrderDetail`）的 N+1 优化：
 - 一次性查出所有窗帘行、结构行、用料行（按 orderId），不循环查询
@@ -211,7 +228,7 @@ ZcSalesOrder（订单主表）
 
 ### 新增 ZC 模块功能时的注意事项
 
-1. **整单 API**：涉及订单创建/更新，优先考虑整单接口（一次请求处理多层嵌套），避免前端多次调用
+1. **整单 API**：涉及订单创建/更新，优先考虑整单接口（一次请求处理多层嵌套），避免前端多次调用。新增订单类型时，若字段与现有类型高度重叠，优先提取私有方法复用，不要复制粘贴逻辑；可通过精简 VO + `toStandardXxxVOs()` 适配层对接共享插入方法
 2. **N+1 防范**：查询含关联名称时，先批量查出 ID 集合，再 `selectBatchIds()` 一次性加载，不要在循环里查数据库
 3. **JSON 字段**：多选类字段（如 mountings、attributes、imageUrls）用 JSON 存储，DO 层用 `JacksonTypeHandler`，Service 层负责序列化/反序列化
 4. **订单号唯一性**：统一使用 `ZcNoGeneratorRedisDAO`（Redis INCR）生成序号，订单用 `nextOrderSeq()`，收款单用 `nextBillSeq()`，批次用 `nextBatchSeq()`，不要再用 `selectCount + 1`

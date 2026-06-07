@@ -58,6 +58,14 @@ public class ZcSalesOrderController {
         return success(salesOrderService.createFabricSalesOrder(createReqVO));
     }
 
+    @PutMapping("/fabric/update")
+    @Operation(summary = "更新面单（类型固定 FABRIC，已确认订单禁止修改）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> updateFabricSalesOrder(@Valid @RequestBody ZcSalesOrderFabricUpdateReqVO updateReqVO) {
+        salesOrderService.updateFabricSalesOrder(updateReqVO);
+        return success(true);
+    }
+
     @PutMapping("/update")
     @Operation(summary = "整单更新销售订单（含窗帘行→结构行→用料明细，已确认订单禁止修改）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")

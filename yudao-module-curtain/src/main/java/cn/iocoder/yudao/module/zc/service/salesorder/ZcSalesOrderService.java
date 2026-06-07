@@ -40,15 +40,21 @@ public interface ZcSalesOrderService {
     /**
      * 整单更新销售订单（含嵌套窗帘行、结构行、用料明细）
      *
-     * <p>以 confirm_time 是否为空判断确认状态：
-     * confirm_time 不为空（已确认）：仅更新品牌/物流/收货人/交付日期/送货地址/运费/优惠金额/订单金额/备注，跳过 curtains；
-     * confirm_time 为空（未确认）：先删除原有三层子表数据再重新插入，整单全量替换。
+     * <p>已确认订单禁止修改。未确认时先删旧子表再重新插入，全量替换。
      * orderNo、payStatus、status、isExpedited、amountReceived、confirmTime 等系统字段不受此接口影响。</p>
      *
      * @param updateReqVO 整单更新请求（含窗帘行→结构行→用料明细三层嵌套）
-     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 若订单不存在则抛出异常
      */
     void updateSalesOrder(@Valid ZcSalesOrderUpdateReqVO updateReqVO);
+
+    /**
+     * 整单更新面单（类型固定 FABRIC，curtainId/structureId 可为空）
+     *
+     * <p>与 {@link #updateSalesOrder} 使用相同的校验和替换逻辑，区别仅在于使用面单简化 VO。</p>
+     *
+     * @param updateReqVO 面单更新请求
+     */
+    void updateFabricSalesOrder(@Valid ZcSalesOrderFabricUpdateReqVO updateReqVO);
 
     /**
      * 删除销售订单
