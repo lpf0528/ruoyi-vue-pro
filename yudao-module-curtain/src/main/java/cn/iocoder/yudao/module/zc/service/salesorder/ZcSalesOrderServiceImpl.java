@@ -114,7 +114,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             success = ZC_SALES_ORDER_CREATE_SUCCESS)
     public Long createSalesOrder(ZcSalesOrderCreateReqVO createReqVO) {
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
-        salesOrder.setOrderNo(generateOrderNo());
+        salesOrder.setOrderNo(generateOrderNo("CP"));
         applyOrderDefaults(salesOrder, ZcOrderTypeEnum.CURTAIN.name(), CollUtil.size(createReqVO.getCurtains()));
         salesOrderMapper.insert(salesOrder);
         LogRecordContext.putVariable("salesOrder", salesOrder);
@@ -128,7 +128,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             success = ZC_SALES_ORDER_FABRIC_CREATE_SUCCESS)
     public Long createFabricSalesOrder(ZcSalesOrderFabricCreateReqVO createReqVO) {
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
-        salesOrder.setOrderNo(generateOrderNo());
+        salesOrder.setOrderNo(generateOrderNo("ML"));
         applyOrderDefaults(salesOrder, ZcOrderTypeEnum.FABRIC.name(), CollUtil.size(createReqVO.getCurtains()));
         salesOrderMapper.insert(salesOrder);
         LogRecordContext.putVariable("salesOrder", salesOrder);
@@ -137,12 +137,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         return salesOrder.getId();
     }
 
-    /** 生成订单号：ZC{租户ID}{yyyyMMdd}{5位序号}，Redis INCR 保证并发唯一 */
-    private String generateOrderNo() {
+    /** 生成订单号：{prefix}{租户ID}{yyyyMMdd}{5位序号}，Redis INCR 保证并发唯一 */
+    private String generateOrderNo(String prefix) {
         Long tenantId = TenantContextHolder.getRequiredTenantId();
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         long seq = noGeneratorRedisDAO.nextOrderSeq(tenantId, date);
-        return String.format("ZC%d%s%05d", tenantId, date, seq);
+        return String.format("%s%d%s%05d", prefix, tenantId, date, seq);
     }
 
     /** 设置订单主表的系统默认字段（类型、状态、运费/总金额兜底为 0） */
