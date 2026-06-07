@@ -1,9 +1,11 @@
 package cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 管理后台 - 产品类销售订单-产品行 Response VO
@@ -64,5 +66,10 @@ public class ZcSalesOrderProductLineRespVO {
     /** 裁剪数量；裁剪后记录实际出库数量，撤销裁剪后为 null */
     @Schema(description = "裁剪数量")
     private java.math.BigDecimal cutQuantity;
+
+    /** 发货时间；发货后记录，撤销发货后为 null */
+    @Schema(description = "发货时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime shipTime;
 
 }
