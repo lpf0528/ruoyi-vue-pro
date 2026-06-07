@@ -32,7 +32,9 @@ public enum ZcSalesOrderStatusEnum {
     BUFEN_FAHUO("部分发货"),
 
     /** 已发货：货物已发出，等待客户签收 */
-    FAHUO("已发货");
+    FAHUO("已发货"),
+
+    COMPLETE("完成");
 
     /** 中文名称 */
     private final String label;

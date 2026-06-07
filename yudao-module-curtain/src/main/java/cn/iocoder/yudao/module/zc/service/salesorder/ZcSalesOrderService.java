@@ -90,6 +90,15 @@ public interface ZcSalesOrderService {
     void cancelConfirmSalesOrder(Long id);
 
     /**
+     * 完成销售订单
+     *
+     * <p>将订单状态从 fahuo（已发货）变更为 complete（完成）。</p>
+     *
+     * @param id 销售订单 ID
+     */
+    void completeSalesOrder(Long id);
+
+    /**
      * 标记销售订单为加急
      *
      * <p>将订单的 is_expedited 设置为 true，不限当前订单状态。</p>

@@ -198,6 +198,8 @@ public interface LogRecordConstants {
     String ZC_SALES_ORDER_CANCEL_CONFIRM_SUCCESS = "取消确认了销售订单【{{#orderNo}}】";
     String ZC_SALES_ORDER_MARK_EXPEDITED_SUB_TYPE = "标记加急";
     String ZC_SALES_ORDER_MARK_EXPEDITED_SUCCESS = "将销售订单【{{#orderNo}}】标记为加急";
+    String ZC_SALES_ORDER_COMPLETE_SUB_TYPE = "完成销售订单";
+    String ZC_SALES_ORDER_COMPLETE_SUCCESS = "完成了销售订单【{{#orderNo}}】";
 
     // ======================= ZC_SALES_ORDER_PRODUCT 面料单 =======================
 

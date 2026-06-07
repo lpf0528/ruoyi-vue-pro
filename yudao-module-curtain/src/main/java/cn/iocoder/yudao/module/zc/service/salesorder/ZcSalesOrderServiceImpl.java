@@ -404,6 +404,26 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_COMPLETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = ZC_SALES_ORDER_COMPLETE_SUCCESS)
+    public void completeSalesOrder(Long id) {
+        // 1. 校验订单存在，且状态不是未确认（未确认订单禁止直接完成）
+        ZcSalesOrderDO order = validateSalesOrderExists(id);
+        if (ZcSalesOrderStatusEnum.UNCONFIRMED.name().equals(order.getStatus())) {
+            throw exception(SALES_ORDER_UNCONFIRMED_CANNOT_COMPLETE);
+        }
+
+        // 2. 更新订单状态为完成
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getStatus, ZcSalesOrderStatusEnum.COMPLETE.name())
+                .eq(ZcSalesOrderDO::getId, id));
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
+    }
+
+    @Override
     @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_MARK_EXPEDITED_SUB_TYPE, bizNo = "{{#orderId}}",
             success = ZC_SALES_ORDER_MARK_EXPEDITED_SUCCESS)
     public void markExpedited(Long orderId) {

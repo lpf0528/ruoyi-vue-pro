@@ -144,5 +144,9 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_PRODUCT_ALREADY_SHIPPED = new ErrorCode(100068, "该产品行已发货，请勿重复操作");
     /** 面料单产品行尚未发货（shipTime 为 null），无需撤销 */
     ErrorCode SALES_ORDER_PRODUCT_NOT_SHIPPED = new ErrorCode(100069, "该产品行尚未发货，无需撤销");
+    /**
+     * 完成订单时，订单处于未确认状态，无法执行完成操作
+     */
+    ErrorCode SALES_ORDER_UNCONFIRMED_CANNOT_COMPLETE = new ErrorCode(100070, "未确认的订单无法标记为完成");
 }
 

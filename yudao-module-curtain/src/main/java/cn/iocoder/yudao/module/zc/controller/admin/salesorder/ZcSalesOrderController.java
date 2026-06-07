@@ -135,6 +135,15 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
+    @PutMapping("/complete")
+    @Operation(summary = "完成销售订单（只要订单不是UNCONFIRMED（未确认），均可调用 /complete")
+    @Parameter(name = "id", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> completeSalesOrder(@RequestParam("id") Long id) {
+        salesOrderService.completeSalesOrder(id);
+        return success(true);
+    }
+
     @GetMapping("/export-excel")
     @Operation(summary = "导出销售订单 Excel")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:export')")
