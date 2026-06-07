@@ -49,10 +49,4 @@ public class ZcSalesOrderPageReqVO extends PageParam {
     @Schema(description = "是否加急")
     private Boolean isExpedited;
 
-    @Schema(description = "是否包含未确认订单（status = unconfirmed），为 false 时过滤掉未确认订单，默认 null/true 全部包含")
-    private Boolean includeUnconfirmed;
-
-    @Schema(description = "是否排除已完成订单（status = complete），为 true 时过滤掉已完成订单")
-    private Boolean excludeComplete;
-
 }

@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 
+import cn.hutool.core.collection.CollUtil;
+
 import javax.validation.constraints.*;
 import javax.validation.*;
 import javax.servlet.http.*;
@@ -27,6 +29,7 @@ import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZCSalesOrderMaterialService;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderService;
 
@@ -100,12 +103,16 @@ public class ZcSalesOrderController {
     }
 
     @GetMapping("/app/page")
-    @Operation(summary = "获得销售订单分页（已确认且未完成，自动过滤 unconfirmed 和 complete 状态的订单）")
+    @Operation(summary = "获得销售订单分页（支持订单状态多选筛选，默认排除未确认和已完成状态）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
     public CommonResult<PageResult<ZcSalesOrderRespVO>> getSalesOrderAppPage(@Valid ZcSalesOrderPageReqVO pageReqVO) {
-        // 固定过滤未确认订单和已完成订单，前端无需传此参数
-        pageReqVO.setIncludeUnconfirmed(false);
-        pageReqVO.setExcludeComplete(true);
+        // 前端未传 status 时，默认排除"未确认"和"完成"状态，仅展示生产中的订单
+        if (CollUtil.isEmpty(pageReqVO.getStatus())) {
+            pageReqVO.setStatus(Arrays.stream(ZcSalesOrderStatusEnum.values())
+                    .filter(s -> s != ZcSalesOrderStatusEnum.UNCONFIRMED && s != ZcSalesOrderStatusEnum.COMPLETE)
+                    .map(ZcSalesOrderStatusEnum::name)
+                    .collect(java.util.stream.Collectors.toList()));
+        }
         return success(salesOrderService.getSalesOrderPage(pageReqVO));
     }
 
