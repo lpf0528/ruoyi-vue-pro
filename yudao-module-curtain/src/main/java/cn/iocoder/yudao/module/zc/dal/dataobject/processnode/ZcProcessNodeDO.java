@@ -39,6 +39,13 @@ public class ZcProcessNodeDO extends BaseDO {
      * 工序描述/操作说明
      */
     private String description;
+    /**
+     * 分组：0=系统配置，1=手工配置
+     *
+     * <p>group 为 MySQL 保留字，使用 @TableField 显式映射列名</p>
+     */
+    @TableField("`group`")
+    private Integer group;
 
 
 }

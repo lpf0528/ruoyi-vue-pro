@@ -28,6 +28,10 @@ public class ZcProcessNodeRespVO {
     @ExcelProperty("工序描述/操作说明")
     private String description;
 
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED)
+    @ExcelProperty("分组")
+    private Integer group;
+
     @Schema(description = "创建者", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建者")
     private String creator;

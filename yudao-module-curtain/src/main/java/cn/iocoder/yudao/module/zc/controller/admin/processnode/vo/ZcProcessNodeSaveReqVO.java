@@ -27,4 +27,9 @@ public class ZcProcessNodeSaveReqVO {
     @DiffLogField(name = "工序描述")
     private String description;
 
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED)
+    @DiffLogField(name = "分组")
+    @NotNull(message = "分组不能为空")
+    private Integer group;
+
 }
