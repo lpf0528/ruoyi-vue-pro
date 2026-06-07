@@ -18,7 +18,10 @@
             t1.quantity,
             t1.price,
             t1.amount,
-            t1.note
+            t1.note,
+            t1.`index`,
+            t1.status,
+            t1.cut_quantity
         FROM zc_sales_order_product t1
             LEFT JOIN zc_product       t2 ON t1.product_id = t2.id AND t2.deleted = 0
             LEFT JOIN zc_product_batch t3 ON t1.batch_id   = t3.id AND t3.deleted = 0

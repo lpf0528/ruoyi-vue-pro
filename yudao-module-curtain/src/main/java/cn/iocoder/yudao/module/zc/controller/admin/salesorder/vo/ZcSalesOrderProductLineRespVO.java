@@ -61,4 +61,8 @@ public class ZcSalesOrderProductLineRespVO {
     @Schema(description = "产品行状态，参见 zc_order_status 字典")
     private String status;
 
+    /** 裁剪数量；裁剪后记录实际出库数量，撤销裁剪后为 null */
+    @Schema(description = "裁剪数量")
+    private java.math.BigDecimal cutQuantity;
+
 }
