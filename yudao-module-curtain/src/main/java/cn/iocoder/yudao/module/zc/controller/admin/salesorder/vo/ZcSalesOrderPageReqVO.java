@@ -40,8 +40,8 @@ public class ZcSalesOrderPageReqVO extends PageParam {
     @Schema(description = "结算状态（多选），可选值：paid / unpaid / partialpaid", example = "[\"paid\",\"unpaid\"]")
     private List<String> payStatus;
 
-    @Schema(description = "状态", example = "2")
-    private String status;
+    @Schema(description = "订单状态（多选），可选值参见 ZcSalesOrderStatusEnum，如 [\"confirmed\",\"fahuo\"]", example = "[\"confirmed\"]")
+    private List<String> status;
 
     @Schema(description = "是否已确认：true=已确认（confirm_time 不为空），false=未确认（confirm_time 为空）")
     private Boolean isConfirm;
@@ -51,5 +51,8 @@ public class ZcSalesOrderPageReqVO extends PageParam {
 
     @Schema(description = "是否包含未确认订单（status = unconfirmed），为 false 时过滤掉未确认订单，默认 null/true 全部包含")
     private Boolean includeUnconfirmed;
+
+    @Schema(description = "是否排除已完成订单（status = complete），为 true 时过滤掉已完成订单")
+    private Boolean excludeComplete;
 
 }
