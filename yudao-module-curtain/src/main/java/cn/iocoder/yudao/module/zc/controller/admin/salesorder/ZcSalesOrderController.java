@@ -51,6 +51,13 @@ public class ZcSalesOrderController {
         return success(salesOrderService.createSalesOrder(createReqVO));
     }
 
+    @PostMapping("/fabric/create")
+    @Operation(summary = "创建面单（类型固定 FABRIC，curtainId/structureId 可为空，含窗帘行→结构行→用料明细）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:create')")
+    public CommonResult<Long> createFabricSalesOrder(@Valid @RequestBody ZcSalesOrderFabricCreateReqVO createReqVO) {
+        return success(salesOrderService.createFabricSalesOrder(createReqVO));
+    }
+
     @PutMapping("/update")
     @Operation(summary = "整单更新销售订单（含窗帘行→结构行→用料明细，已确认订单禁止修改）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")

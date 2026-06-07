@@ -184,6 +184,75 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_FABRIC_CREATE_SUB_TYPE, bizNo = "{{#salesOrder.id}}",
+            success = ZC_SALES_ORDER_FABRIC_CREATE_SUCCESS)
+    public Long createFabricSalesOrder(ZcSalesOrderFabricCreateReqVO createReqVO) {
+        // 1. 生成订单号：ZC{租户ID}{yyyyMMdd}{5位序号}，Redis INCR 保证并发唯一
+        Long tenantId = TenantContextHolder.getRequiredTenantId();
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        long seq = noGeneratorRedisDAO.nextOrderSeq(tenantId, date);
+        String orderNo = String.format("ZC%d%s%05d", tenantId, date, seq);
+
+        // 2. 保存订单主记录，类型固定为面单（FABRIC）
+        ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
+        salesOrder.setOrderNo(orderNo);
+        salesOrder.setTypes(ZcOrderTypeEnum.FABRIC.name()); // 面单固定为面单类型
+        salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name());
+        salesOrder.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+        salesOrder.setIsExpedited(false);
+        salesOrder.setSets(CollUtil.isEmpty(createReqVO.getCurtains()) ? 0 : createReqVO.getCurtains().size());
+        if (salesOrder.getFreight() == null) {
+            salesOrder.setFreight(java.math.BigDecimal.ZERO);
+        }
+        if (salesOrder.getTotalAmount() == null) {
+            salesOrder.setTotalAmount(java.math.BigDecimal.ZERO);
+        }
+        salesOrderMapper.insert(salesOrder);
+        Long orderId = salesOrder.getId();
+        LogRecordContext.putVariable("salesOrder", salesOrder);
+
+        // 3. 级联保存窗帘行 → 结构行 → 用料明细（逻辑与成品订单相同，仅 curtainId/structureId 可为空）
+        if (CollUtil.isEmpty(createReqVO.getCurtains())) {
+            return orderId;
+        }
+        int curtainIndex = 1;
+        for (ZcSalesOrderFabricCurtainCreateVO curtainVO : createReqVO.getCurtains()) {
+            // 3.1 保存窗帘行
+            ZcSalesOrderCurtainDO curtainDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
+            curtainDO.setOrderId(orderId);
+            curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+            curtainDO.setIndex(curtainIndex++);
+            salesOrderCurtainMapper.insert(curtainDO);
+            Long orderCurtainId = curtainDO.getId();
+
+            // 3.2 保存结构行
+            if (CollUtil.isEmpty(curtainVO.getStructures())) {
+                continue;
+            }
+            for (ZcSalesOrderFabricStructureCreateVO structureVO : curtainVO.getStructures()) {
+                ZcSalesOrderStructureDO structureDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
+                structureDO.setOrderId(orderId);
+                structureDO.setOrderCurtainId(orderCurtainId);
+                salesOrderStructureMapper.insert(structureDO);
+                Long orderStructureId = structureDO.getId();
+
+                // 3.3 保存用料明细
+                if (CollUtil.isEmpty(structureVO.getMaterials())) {
+                    continue;
+                }
+                for (ZCSalesOrderMaterialCreateVO materialVO : structureVO.getMaterials()) {
+                    ZCSalesOrderMaterialDO materialDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
+                    materialDO.setOrderId(orderId);
+                    materialDO.setOrderStructureId(orderStructureId);
+                    salesOrderMaterialMapper.insert(materialDO);
+                }
+            }
+        }
+        return orderId;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
             success = ZC_SALES_ORDER_UPDATE_SUCCESS)
     public void updateSalesOrder(ZcSalesOrderUpdateReqVO updateReqVO) {

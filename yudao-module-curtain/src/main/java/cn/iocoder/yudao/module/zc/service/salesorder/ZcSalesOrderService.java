@@ -27,6 +27,17 @@ public interface ZcSalesOrderService {
     Long createSalesOrder(@Valid ZcSalesOrderCreateReqVO createReqVO);
 
     /**
+     * 整单创建面单（类型固定为 FABRIC，curtainId / structureId 均可为空）
+     *
+     * <p>与 {@link #createSalesOrder} 使用相同的三层嵌套插入逻辑，
+     * 区别仅在于订单类型写入 FABRIC，且不强制要求绑定具体款式或结构。</p>
+     *
+     * @param createReqVO 面单创建请求（curtainId / structureId 可为空）
+     * @return 新订单 ID
+     */
+    Long createFabricSalesOrder(@Valid ZcSalesOrderFabricCreateReqVO createReqVO);
+
+    /**
      * 整单更新销售订单（含嵌套窗帘行、结构行、用料明细）
      *
      * <p>以 confirm_time 是否为空判断确认状态：
