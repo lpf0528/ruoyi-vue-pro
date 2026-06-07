@@ -49,6 +49,8 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
     public void updateProcessNode(ZcProcessNodeSaveReqVO updateReqVO) {
         // 校验存在
         ZcProcessNodeDO oldProcessNode = validateProcessNodeExists(updateReqVO.getId());
+        // 系统内置工序节点（group=0）禁止编辑
+        validateProcessNodeNotSystem(oldProcessNode);
         // 更新
         ZcProcessNodeDO updateObj = BeanUtils.toBean(updateReqVO, ZcProcessNodeDO.class);
         processNodeMapper.updateById(updateObj);
@@ -63,6 +65,8 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
     public void deleteProcessNode(Long id) {
         // 校验存在
         ZcProcessNodeDO processNode = validateProcessNodeExists(id);
+        // 系统内置工序节点（group=0）禁止删除
+        validateProcessNodeNotSystem(processNode);
         // 记录操作日志上下文
         LogRecordContext.putVariable("processNodeName", processNode.getName());
         // 删除
@@ -71,6 +75,9 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
 
     @Override
     public void deleteProcessNodeListByIds(List<Long> ids) {
+        // 批量校验：系统内置工序节点（group=0）禁止删除
+        List<ZcProcessNodeDO> nodes = processNodeMapper.selectBatchIds(ids);
+        nodes.forEach(this::validateProcessNodeNotSystem);
         // 删除
         processNodeMapper.deleteByIds(ids);
     }
@@ -81,6 +88,17 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
             throw exception(PROCESS_NODE_NOT_EXISTS);
         }
         return processNode;
+    }
+
+    /**
+     * 校验工序节点不是系统内置节点（group=0），否则抛出异常
+     *
+     * @param processNode 待校验的工序节点
+     */
+    private void validateProcessNodeNotSystem(ZcProcessNodeDO processNode) {
+        if (Integer.valueOf(0).equals(processNode.getGroup())) {
+            throw exception(PROCESS_NODE_SYSTEM_CANNOT_MODIFY);
+        }
     }
 
     @Override

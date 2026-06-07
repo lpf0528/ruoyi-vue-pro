@@ -152,5 +152,7 @@ public interface ErrorCodeConstants {
      * 完成订单时，订单已经是完成状态，禁止重复操作
      */
     ErrorCode SALES_ORDER_ALREADY_COMPLETE = new ErrorCode(100071, "订单已完成，请勿重复操作");
+    /** 系统内置工序节点（group=0）不允许编辑或删除 */
+    ErrorCode PROCESS_NODE_SYSTEM_CANNOT_MODIFY = new ErrorCode(100072, "系统内置工序节点不允许编辑或删除");
 }
 
