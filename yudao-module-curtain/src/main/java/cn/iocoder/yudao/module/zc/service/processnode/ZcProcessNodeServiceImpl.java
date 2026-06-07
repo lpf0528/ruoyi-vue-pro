@@ -95,15 +95,9 @@ public class ZcProcessNodeServiceImpl implements ZcProcessNodeService {
      * @param name 待校验的名称
      */
     private void validateProcessNodeNameUnique(Long id, String name) {
-        ZcProcessNodeDO existing = processNodeMapper.selectByName(name);
-        if (existing == null) {
-            return;
+        if (processNodeMapper.existsByName(name, id)) {
+            throw exception(PROCESS_NODE_NAME_EXISTS);
         }
-        // 更新场景：查到的记录是自身，允许通过
-        if (existing.getId().equals(id)) {
-            return;
-        }
-        throw exception(PROCESS_NODE_NAME_EXISTS);
     }
 
     private ZcProcessNodeDO validateProcessNodeExists(Long id) {

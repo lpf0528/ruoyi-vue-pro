@@ -26,13 +26,16 @@ public interface ZcProcessNodeMapper extends BaseMapperX<ZcProcessNodeDO> {
     }
 
     /**
-     * 根据名称查询工序节点（用于唯一性校验）
+     * 校验工序节点名称是否已被其他记录占用
      *
-     * @param name 工序节点名称
-     * @return 匹配的工序节点，不存在返回 null
+     * @param name      工序节点名称
+     * @param excludeId 需排除的记录 ID（更新时传入自身 ID，新增时传 null）
+     * @return true=名称已存在
      */
-    default ZcProcessNodeDO selectByName(String name) {
-        return selectOne(ZcProcessNodeDO::getName, name);
+    default boolean existsByName(String name, Long excludeId) {
+        return selectCount(new LambdaQueryWrapperX<ZcProcessNodeDO>()
+                .eq(ZcProcessNodeDO::getName, name)
+                .ne(excludeId != null, ZcProcessNodeDO::getId, excludeId)) > 0;
     }
 
     /**
