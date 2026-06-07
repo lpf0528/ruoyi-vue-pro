@@ -408,10 +408,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_COMPLETE_SUB_TYPE, bizNo = "{{#id}}",
             success = ZC_SALES_ORDER_COMPLETE_SUCCESS)
     public void completeSalesOrder(Long id) {
-        // 1. 校验订单存在，且状态不是未确认（未确认订单禁止直接完成）
+        // 1. 校验订单存在，且状态不是未确认（未确认订单禁止直接完成），且未重复完成
         ZcSalesOrderDO order = validateSalesOrderExists(id);
         if (ZcSalesOrderStatusEnum.UNCONFIRMED.name().equals(order.getStatus())) {
             throw exception(SALES_ORDER_UNCONFIRMED_CANNOT_COMPLETE);
+        }
+        if (ZcSalesOrderStatusEnum.COMPLETE.name().equals(order.getStatus())) {
+            throw exception(SALES_ORDER_ALREADY_COMPLETE);
         }
 
         // 2. 更新订单状态为完成

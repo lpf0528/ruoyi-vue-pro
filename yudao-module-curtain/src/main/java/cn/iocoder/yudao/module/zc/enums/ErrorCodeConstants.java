@@ -148,5 +148,9 @@ public interface ErrorCodeConstants {
      * 完成订单时，订单处于未确认状态，无法执行完成操作
      */
     ErrorCode SALES_ORDER_UNCONFIRMED_CANNOT_COMPLETE = new ErrorCode(100070, "未确认的订单无法标记为完成");
+    /**
+     * 完成订单时，订单已经是完成状态，禁止重复操作
+     */
+    ErrorCode SALES_ORDER_ALREADY_COMPLETE = new ErrorCode(100071, "订单已完成，请勿重复操作");
 }
 
