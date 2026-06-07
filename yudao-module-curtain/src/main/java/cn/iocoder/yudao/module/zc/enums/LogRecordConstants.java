@@ -208,6 +208,10 @@ public interface LogRecordConstants {
     String ZC_SALES_ORDER_PRODUCT_UPDATE_SUCCESS = "更新了面料单【{{#orderNo}}】: {_DIFF{#updateReqVO}}";
     String ZC_SALES_ORDER_PRODUCT_DELETE_SUB_TYPE = "删除面料单";
     String ZC_SALES_ORDER_PRODUCT_DELETE_SUCCESS = "删除了面料单【{{#orderNo}}】";
+    String ZC_SALES_ORDER_PRODUCT_CUT_SUB_TYPE = "裁剪面料单产品行";
+    String ZC_SALES_ORDER_PRODUCT_CUT_SUCCESS = "裁剪了面料单产品行【{{#reqVO.id}}】，批次【{{#batchNo}}】，裁剪数量 {{#reqVO.cutQuantity}}";
+    String ZC_SALES_ORDER_PRODUCT_CANCEL_CUT_SUB_TYPE = "撤销裁剪面料单产品行";
+    String ZC_SALES_ORDER_PRODUCT_CANCEL_CUT_SUCCESS = "撤销裁剪了面料单产品行【{{#reqVO.id}}】，批次【{{#batchNo}}】，回退数量 {{#cutQuantity}}";
 
     // ======================= ZC_SALES_ORDER_CURTAIN 订单窗帘行 =======================
 

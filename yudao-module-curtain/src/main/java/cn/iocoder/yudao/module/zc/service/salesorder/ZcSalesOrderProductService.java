@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.salesorder;
 
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
@@ -55,5 +57,27 @@ public interface ZcSalesOrderProductService {
      * @return 面料单详情 VO；若订单不存在则抛出业务异常
      */
     ZcSalesOrderProductDetailRespVO getSalesOrderProductDetail(Long id);
+
+    /**
+     * 面料单产品行裁剪出库
+     *
+     * <p>使用产品行上已绑定的 batchId，扣减批次库存，记录裁剪数量，
+     * 将产品行配料状态更新为 HAVE_PEILIAO，并写入库存变动流水。</p>
+     *
+     * @param reqVO 裁剪请求（产品行 ID + 裁剪数量）
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 批次不存在或库存不足时抛出
+     */
+    void cutProduct(@Valid ZcCutProductReqVO reqVO);
+
+    /**
+     * 撤销面料单产品行裁剪
+     *
+     * <p>回退批次库存，清空裁剪数量，将产品行配料状态重置为 NOT_PEILIAO，
+     * 并写入撤销裁剪库存变动流水。</p>
+     *
+     * @param reqVO 撤销裁剪请求（产品行 ID）
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 产品行未处于已配料状态时抛出
+     */
+    void cancelCutProduct(@Valid ZcCancelCutProductReqVO reqVO);
 
 }

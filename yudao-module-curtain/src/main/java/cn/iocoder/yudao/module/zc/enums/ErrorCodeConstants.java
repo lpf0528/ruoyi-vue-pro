@@ -138,5 +138,7 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_CURTAIN_NOT_PACKED = new ErrorCode(100065, "该窗帘尚未打包，无需取消");
     /** 取消发货时，该窗帘行尚未发货 */
     ErrorCode SALES_ORDER_CURTAIN_NOT_SHIPPED = new ErrorCode(100066, "该窗帘尚未发货，无需取消");
+    /** 面料单产品行尚未配料（cutStatus != HAVE_PEILIAO），无法撤销裁剪 */
+    ErrorCode SALES_ORDER_PRODUCT_NOT_PEILIAO = new ErrorCode(100067, "该产品行尚未完成裁剪，无需撤销");
 }
 

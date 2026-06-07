@@ -1,6 +1,8 @@
 package cn.iocoder.yudao.module.zc.controller.admin.salesorder;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
@@ -80,6 +82,28 @@ public class ZcSalesOrderProductController {
     public CommonResult<ZcSalesOrderProductDetailRespVO> getSalesOrderProductDetail(
             @RequestParam("id") Long id) {
         return success(salesOrderProductService.getSalesOrderProductDetail(id));
+    }
+
+    /**
+     * 面料单产品行裁剪（扣减批次库存、记录裁剪数量、更新配料状态）
+     */
+    @PutMapping("/cut")
+    @Operation(summary = "面料单产品行裁剪（扣减批次库存、记录裁剪数量、更新配料状态）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cutProduct(@RequestBody @Valid ZcCutProductReqVO reqVO) {
+        salesOrderProductService.cutProduct(reqVO);
+        return success(true);
+    }
+
+    /**
+     * 撤销面料单产品行裁剪（回退批次库存、清空裁剪数量、写入撤销裁剪记录）
+     */
+    @PutMapping("/cancel-cut")
+    @Operation(summary = "撤销面料单产品行裁剪（回退批次库存、清空裁剪数量、写入撤销裁剪记录）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cancelCutProduct(@RequestBody @Valid ZcCancelCutProductReqVO reqVO) {
+        salesOrderProductService.cancelCutProduct(reqVO);
+        return success(true);
     }
 
 }

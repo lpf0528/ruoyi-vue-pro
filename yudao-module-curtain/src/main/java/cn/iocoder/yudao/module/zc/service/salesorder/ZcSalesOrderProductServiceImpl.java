@@ -2,17 +2,24 @@ package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCancelCutProductReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcCutProductReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductBatchCreateVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductCreateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductLineRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderRespVO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderProductDO;
+import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderProductMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -21,16 +28,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_DELETE;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_NOT_EXISTS;
-import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.SALES_ORDER_CONFIRMED_CANNOT_UPDATE;
+import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderTypeEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 
@@ -49,6 +57,10 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
     private ZcSalesOrderProductMapper salesOrderProductMapper;
     @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
+    @Resource
+    private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZcInventoryRecordMapper inventoryRecordMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -168,12 +180,102 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         return respVO;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_PRODUCT_TYPE, subType = ZC_SALES_ORDER_PRODUCT_CUT_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_SALES_ORDER_PRODUCT_CUT_SUCCESS)
+    public void cutProduct(ZcCutProductReqVO reqVO) {
+        // 1. 校验产品行存在，取出 batchId 和 orderId
+        ZcSalesOrderProductDO productLine = validateProductLineExists(reqVO.getId());
+        if (productLine.getBatchId() == null) {
+            throw exception(PRODUCT_BATCH_NOT_EXISTS);
+        }
+        // 2. 校验批次存在且库存充足
+        ZcProductBatchDO batch = productBatchMapper.selectById(productLine.getBatchId());
+        if (batch == null) {
+            throw exception(PRODUCT_BATCH_NOT_EXISTS);
+        }
+        if (batch.getQuantity().compareTo(reqVO.getCutQuantity()) < 0) {
+            throw exception(PRODUCT_BATCH_INSUFFICIENT_QUANTITY);
+        }
+        // 3. 更新产品行：记录裁剪数量、状态变更为已配料
+        salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
+                .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
+                .set(ZcSalesOrderProductDO::getCutQuantity, reqVO.getCutQuantity())
+                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name()));
+        // 4. 原子扣减批次剩余数量，防止并发超卖
+        productBatchMapper.decreaseQuantity(productLine.getBatchId(), reqVO.getCutQuantity());
+        // 5. 写入裁剪出库库存变动记录
+        BigDecimal oldQuantity = batch.getQuantity();
+        BigDecimal newQuantity = oldQuantity.subtract(reqVO.getCutQuantity());
+        ZcInventoryRecordDO inventoryRecord = new ZcInventoryRecordDO();
+        inventoryRecord.setProductId(batch.getProductId());
+        inventoryRecord.setBatchId(productLine.getBatchId());
+        inventoryRecord.setOldQuantity(oldQuantity);
+        inventoryRecord.setNewQuantity(newQuantity);
+        inventoryRecord.setChangeQuantity(newQuantity.subtract(oldQuantity));
+        inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CAIJIAN.name());
+        inventoryRecord.setOrderId(productLine.getOrderId());
+        inventoryRecordMapper.insert(inventoryRecord);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("batchNo", batch.getBatchNo());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = ZC_SALES_ORDER_PRODUCT_TYPE, subType = ZC_SALES_ORDER_PRODUCT_CANCEL_CUT_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_SALES_ORDER_PRODUCT_CANCEL_CUT_SUCCESS)
+    public void cancelCutProduct(ZcCancelCutProductReqVO reqVO) {
+        // 1. 校验产品行存在
+        ZcSalesOrderProductDO productLine = validateProductLineExists(reqVO.getId());
+        // 2. 只有已配料的产品行才能撤销
+        if (!ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(productLine.getStatus())) {
+            throw exception(SALES_ORDER_PRODUCT_NOT_PEILIAO);
+        }
+        // 3. 校验批次存在
+        ZcProductBatchDO batch = productBatchMapper.selectById(productLine.getBatchId());
+        if (batch == null) {
+            throw exception(PRODUCT_BATCH_NOT_EXISTS);
+        }
+        // 4. 原子回退批次库存
+        productBatchMapper.increaseQuantity(productLine.getBatchId(), productLine.getCutQuantity());
+        // 5. 重置产品行：清空裁剪数量，状态回退为未配料
+        // 用 LambdaUpdateWrapper 显式将 cutQuantity 置为 null（updateById 会忽略 null 字段）
+        salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
+                .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
+                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderMaterialStatusEnum.NOT_PEILIAO.name())
+                .set(ZcSalesOrderProductDO::getCutQuantity, null));
+        // 6. 写入撤销裁剪库存变动记录
+        BigDecimal oldQuantity = batch.getQuantity();
+        BigDecimal newQuantity = oldQuantity.add(productLine.getCutQuantity());
+        ZcInventoryRecordDO inventoryRecord = new ZcInventoryRecordDO();
+        inventoryRecord.setProductId(batch.getProductId());
+        inventoryRecord.setBatchId(productLine.getBatchId());
+        inventoryRecord.setOldQuantity(oldQuantity);
+        inventoryRecord.setNewQuantity(newQuantity);
+        inventoryRecord.setChangeQuantity(newQuantity.subtract(oldQuantity));
+        inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.CANCEL_CAIJIAN.name());
+        inventoryRecord.setOrderId(productLine.getOrderId());
+        inventoryRecordMapper.insert(inventoryRecord);
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("batchNo", batch.getBatchNo());
+        LogRecordContext.putVariable("cutQuantity", productLine.getCutQuantity());
+    }
+
     private ZcSalesOrderDO validateSalesOrderExists(Long id) {
         ZcSalesOrderDO order = salesOrderMapper.selectById(id);
         if (order == null) {
             throw exception(SALES_ORDER_NOT_EXISTS);
         }
         return order;
+    }
+
+    private ZcSalesOrderProductDO validateProductLineExists(Long id) {
+        ZcSalesOrderProductDO productLine = salesOrderProductMapper.selectById(id);
+        if (productLine == null) {
+            throw exception(SALES_ORDER_PRODUCT_NOT_EXISTS);
+        }
+        return productLine;
     }
 
 }

@@ -56,8 +56,15 @@ public class ZcSalesOrderProductDO extends BaseDO {
     private Integer index;
 
     /**
-     * 产品行状态，冗余自订单主表，随确认/取消确认操作同步更新，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}
+     * 产品行状态；确认/取消确认时同步订单主表状态（参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum}），
+     * 裁剪操作后改写为配料状态（参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum}）：
+     * HAVE_PEILIAO = 已配料，NOT_PEILIAO = 撤销裁剪后重置
      */
     private String status;
+
+    /**
+     * 裁剪数量；裁剪后记录实际出库数量，撤销裁剪后置为 null
+     */
+    private java.math.BigDecimal cutQuantity;
 
 }

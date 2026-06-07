@@ -14,7 +14,9 @@
       "Bash(xargs grep -l \"SalesOrderProduct\")",
       "Bash(xargs grep -l \"SalesOrderDetail\\\\|SalesOrderController\\\\|salesOrderController\")",
       "Bash(gh repo *)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(cd /d \"D:\\\\workplace\\\\ruoyi-vue-pro\")",
+      "Bash(mvn compile *)"
     ]
   }
 }
