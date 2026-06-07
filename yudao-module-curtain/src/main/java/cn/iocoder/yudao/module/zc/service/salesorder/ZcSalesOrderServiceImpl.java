@@ -318,11 +318,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .eq(ZcSalesOrderDO::getId, id));
 
         // 根据订单类型同步更新子行状态：面料单更新产品行，成品单更新窗帘行
-        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
-            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
-        } else {
-            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
-        }
+//        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
+//            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
+//        } else {
+//            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
+//        }
+        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
 
         // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
@@ -379,11 +380,12 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .eq(ZcSalesOrderDO::getId, id));
 
         // 根据订单类型同步更新子行状态回未确认：面料单更新产品行，成品单更新窗帘行
-        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
-            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
-        } else {
-            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
-        }
+//        if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
+//            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+//        } else {
+//            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+//        }
+        salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.UNCONFIRMED.name());
 
         // 4. 将订单金额退回客户账户余额，并记录余额变动流水
         if (order.getCustomerId() != null && order.getAmount() != null) {
