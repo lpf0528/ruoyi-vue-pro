@@ -19,6 +19,9 @@ public enum ZcSalesOrderStatusEnum {
     CONFIRMED("已确认"),
 
     /** 已配料：已完成裁剪出库，批次库存已扣减 */
+    NOT_PEILIAO("未配料"),
+
+    /** 已配料：已完成裁剪出库，批次库存已扣减 */
     HAVE_PEILIAO("已配料"),
 
     BUFEN_DABAO("部分打包"),

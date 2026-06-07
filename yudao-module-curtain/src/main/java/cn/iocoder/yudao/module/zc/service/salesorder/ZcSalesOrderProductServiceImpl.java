@@ -230,7 +230,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 1. 校验产品行存在
         ZcSalesOrderProductDO productLine = validateProductLineExists(reqVO.getId());
         // 2. 只有已配料的产品行才能撤销
-        if (!ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(productLine.getStatus())) {
+        if (!ZcSalesOrderStatusEnum.HAVE_PEILIAO.name().equals(productLine.getStatus())) {
             throw exception(SALES_ORDER_PRODUCT_NOT_PEILIAO);
         }
         // 3. 校验批次存在
@@ -244,7 +244,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         // 用 LambdaUpdateWrapper 显式将 cutQuantity 置为 null（updateById 会忽略 null 字段）
         salesOrderProductMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderProductDO>()
                 .eq(ZcSalesOrderProductDO::getId, reqVO.getId())
-                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderMaterialStatusEnum.NOT_PEILIAO.name())
+                .set(ZcSalesOrderProductDO::getStatus, ZcSalesOrderStatusEnum.NOT_PEILIAO.name())
                 .set(ZcSalesOrderProductDO::getCutQuantity, null));
         // 6. 写入撤销裁剪库存变动记录
         BigDecimal oldQuantity = batch.getQuantity();

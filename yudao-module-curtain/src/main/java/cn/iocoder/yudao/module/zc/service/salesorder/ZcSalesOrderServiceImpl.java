@@ -312,9 +312,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
 
         // 根据订单类型同步更新子行状态：面料单更新产品行，成品单更新窗帘行
         if (ZcOrderTypeEnum.FABRIC.name().equals(order.getTypes())) {
-            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+            salesOrderProductMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
         } else {
-            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.CONFIRMED.name());
+            salesOrderCurtainMapper.updateStatusByOrderId(id, ZcSalesOrderStatusEnum.NOT_PEILIAO.name());
         }
 
         // 3. 从客户账户余额中扣除订单金额，并记录余额变动流水

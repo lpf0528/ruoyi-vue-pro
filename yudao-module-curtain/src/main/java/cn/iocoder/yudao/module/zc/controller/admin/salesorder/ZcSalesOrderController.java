@@ -147,7 +147,7 @@ public class ZcSalesOrderController {
         ExcelUtils.write(response, "销售订单.xls", "数据", ZcSalesOrderRespVO.class, list);
     }
 
-    @PutMapping("/cut-material")
+    @PutMapping("/cut")
     @Operation(summary = "成品订单裁剪（绑定批次、记录裁剪数量、扣减批次库存）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
     public CommonResult<Boolean> cutMaterial(@RequestBody @Valid ZcCutMaterialReqVO reqVO) {
@@ -155,7 +155,7 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
-    @PutMapping("/cancel-cut-material")
+    @PutMapping("/cancel-cut")
     @Operation(summary = "撤销裁剪（回退批次库存、清空配料绑定、写入撤销裁剪记录）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
     public CommonResult<Boolean> cancelCutMaterial(@RequestBody @Valid ZcCancelCutMaterialReqVO reqVO) {
