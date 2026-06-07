@@ -63,23 +63,11 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         updateObj.setPackTime(LocalDateTime.now());
         salesOrderCurtainMapper.updateById(updateObj);
 
-        // 3. 若订单不处于发货状态，则根据所有窗帘行是否全部已打包来联动更新订单状态
+        // 3. 读取最新窗帘行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
         ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
-        String newOrderStatus;
-        if (order != null
-                && !ZcSalesOrderStatusEnum.BUFEN_FAHUO.name().equals(order.getStatus())
-                && !ZcSalesOrderStatusEnum.FAHUO.name().equals(order.getStatus())) {
-            List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
-            boolean allPacked = allCurtains.stream()
-                    .allMatch(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()));
-            newOrderStatus = allPacked
-                    ? ZcSalesOrderStatusEnum.DABAO.name()
-                    : ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
-            salesOrderMapper.updateStatusById(orderId, newOrderStatus);
-        } else {
-            // 订单已在发货状态，不回退订单状态，以发货状态为准
-            newOrderStatus = order != null ? order.getStatus() : "";
-        }
+        List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
         // 4. 写入操作记录
         orderOperationLogService.createLog(ZcOrderOperationLogDO.builder()
@@ -93,7 +81,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .orderAfterStatus(newOrderStatus)
                 .build());
 
-        // 记录操作日志上下文
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
     }
@@ -120,14 +107,10 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         updateObj.setShipTime(LocalDateTime.now());
         salesOrderCurtainMapper.updateById(updateObj);
 
-        // 3. 检查该订单下所有窗帘行是否全部已发货，联动更新订单状态
+        // 3. 读取最新窗帘行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
         ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
         List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
-        boolean allShipped = allCurtains.stream()
-                .allMatch(c -> ZcSalesOrderStatusEnum.FAHUO.name().equals(c.getStatus()));
-        String newOrderStatus = allShipped
-                ? ZcSalesOrderStatusEnum.FAHUO.name()
-                : ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
+        String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
         salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
         // 4. 写入操作记录
@@ -142,7 +125,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .orderAfterStatus(newOrderStatus)
                 .build());
 
-        // 记录操作日志上下文
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
     }
@@ -172,28 +154,11 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .set(ZcSalesOrderCurtainDO::getPackTime, null)
                 .eq(ZcSalesOrderCurtainDO::getId, id));
 
-        // 3. 若订单不处于发货状态，则根据剩余已打包窗帘行数量联动更新订单状态
+        // 3. 读取最新窗帘行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
         ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
-        String newOrderStatus;
-        if (order != null
-                && !ZcSalesOrderStatusEnum.BUFEN_FAHUO.name().equals(order.getStatus())
-                && !ZcSalesOrderStatusEnum.FAHUO.name().equals(order.getStatus())) {
-            List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
-            long dabaoCount = allCurtains.stream()
-                    .filter(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()))
-                    .count();
-            if (dabaoCount == 0) {
-                newOrderStatus = ZcSalesOrderStatusEnum.CONFIRMED.name();
-            } else if (dabaoCount == (long) allCurtains.size()) {
-                newOrderStatus = ZcSalesOrderStatusEnum.DABAO.name();
-            } else {
-                newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
-            }
-            salesOrderMapper.updateStatusById(orderId, newOrderStatus);
-        } else {
-            // 订单已在发货状态，不改变订单状态
-            newOrderStatus = order != null ? order.getStatus() : "";
-        }
+        List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
+        salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
         // 4. 写入取消打包操作记录
         orderOperationLogService.createLog(ZcOrderOperationLogDO.builder()
@@ -235,32 +200,10 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .set(ZcSalesOrderCurtainDO::getShipTime, null)
                 .eq(ZcSalesOrderCurtainDO::getId, id));
 
-        // 3. 重新查询所有窗帘行（含本次已回退的行），联动更新订单状态
+        // 3. 读取最新窗帘行列表（DB 更新已生效），按状态优先级联动更新订单主表状态
         ZcSalesOrderDO order = salesOrderMapper.selectById(orderId);
         List<ZcSalesOrderCurtainDO> allCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
-        long fahuoCount = allCurtains.stream()
-                .filter(c -> ZcSalesOrderStatusEnum.FAHUO.name().equals(c.getStatus()))
-                .count();
-        String newOrderStatus;
-        if (fahuoCount > 0 && fahuoCount < (long) allCurtains.size()) {
-            // 仍有部分窗帘行处于已发货状态
-            newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
-        } else if (fahuoCount == (long) allCurtains.size()) {
-            // 全部已发货（理论上不会出现，刚刚撤销了一条）
-            newOrderStatus = ZcSalesOrderStatusEnum.FAHUO.name();
-        } else {
-            // 无已发货行，根据已打包数量决定订单状态
-            long dabaoCount = allCurtains.stream()
-                    .filter(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()))
-                    .count();
-            if (dabaoCount == 0) {
-                newOrderStatus = ZcSalesOrderStatusEnum.CONFIRMED.name();
-            } else if (dabaoCount == (long) allCurtains.size()) {
-                newOrderStatus = ZcSalesOrderStatusEnum.DABAO.name();
-            } else {
-                newOrderStatus = ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
-            }
-        }
+        String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
         salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
         // 4. 写入取消发货操作记录
@@ -277,6 +220,40 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
+    }
+
+    /**
+     * 根据成品订单所有窗帘行的最新状态，按优先级计算订单应展示的聚合状态。
+     *
+     * <p>优先级由高到低：
+     * <ol>
+     *   <li>全部已发货 → FAHUO</li>
+     *   <li>部分已发货 → BUFEN_FAHUO</li>
+     *   <li>全部已打包 → DABAO</li>
+     *   <li>部分已打包 → BUFEN_DABAO</li>
+     *   <li>其余情况（含已确认等）→ CONFIRMED</li>
+     * </ol>
+     * 此方法须在 DB 更新后调用，传入的列表必须是最新查询结果。
+     * </p>
+     */
+    private String calculateOrderStatusByCurtains(List<ZcSalesOrderCurtainDO> allCurtains) {
+        if (allCurtains.isEmpty()) {
+            return ZcSalesOrderStatusEnum.CONFIRMED.name();
+        }
+        long total = allCurtains.size();
+        long fahuoCount = allCurtains.stream()
+                .filter(c -> ZcSalesOrderStatusEnum.FAHUO.name().equals(c.getStatus()))
+                .count();
+        if (fahuoCount == total) return ZcSalesOrderStatusEnum.FAHUO.name();
+        if (fahuoCount > 0) return ZcSalesOrderStatusEnum.BUFEN_FAHUO.name();
+
+        long dabaoCount = allCurtains.stream()
+                .filter(c -> ZcSalesOrderStatusEnum.DABAO.name().equals(c.getStatus()))
+                .count();
+        if (dabaoCount == total) return ZcSalesOrderStatusEnum.DABAO.name();
+        if (dabaoCount > 0) return ZcSalesOrderStatusEnum.BUFEN_DABAO.name();
+
+        return ZcSalesOrderStatusEnum.CONFIRMED.name();
     }
 
     private ZcSalesOrderCurtainDO validateSalesOrderCurtainExists(Long id) {
