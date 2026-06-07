@@ -20,4 +20,7 @@ public class ZcWorkshopUserSaveReqVO {
     @NotNull(message = "状态不能为空")
     private Integer status;
 
+    @Schema(description = "工序节点 IDs", example = "[1, 2, 3]")
+    private List<Long> nodeIds;
+
 }

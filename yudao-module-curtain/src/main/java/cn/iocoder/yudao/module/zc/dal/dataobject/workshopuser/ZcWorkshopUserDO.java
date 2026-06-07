@@ -5,6 +5,7 @@ import java.util.*;
 import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 
 /**
@@ -36,5 +37,10 @@ public class ZcWorkshopUserDO extends BaseDO {
      */
     private Integer status;
 
+    /**
+     * 工序节点 IDs，关联 ZcProcessNodeDO，存 JSON 数组
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<Long> nodeIds;
 
 }

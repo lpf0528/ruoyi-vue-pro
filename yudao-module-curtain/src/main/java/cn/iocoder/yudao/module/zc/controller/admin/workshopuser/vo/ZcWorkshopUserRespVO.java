@@ -24,6 +24,9 @@ public class ZcWorkshopUserRespVO {
     @ExcelProperty("状态")
     private Integer status;
 
+    @Schema(description = "工序节点 IDs", example = "[1, 2, 3]")
+    private List<Long> nodeIds;
+
     @Schema(description = "创建者", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建者")
     private String creator;

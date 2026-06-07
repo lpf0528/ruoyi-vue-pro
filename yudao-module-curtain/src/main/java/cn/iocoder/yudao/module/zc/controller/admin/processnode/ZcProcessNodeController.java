@@ -90,9 +90,12 @@ public class ZcProcessNodeController {
     }
 
     @GetMapping("/simple-list")
-    @Operation(summary = "获得工序节点配置精简列表", description = "主要用于前端的下拉选项")
-    public CommonResult<List<ZcProcessNodeSimpleRespVO>> getProcessNodeSimpleList() {
-        List<ZcProcessNodeDO> list = processNodeService.getProcessNodeList(new ZcProcessNodeListReqVO());
+    @Operation(summary = "获得工序节点配置精简列表", description = "主要用于前端的下拉选项；group=0 系统配置，group=1 手工配置，不传返回全部")
+    @Parameter(name = "group", description = "分组：0=系统配置，1=手工配置", example = "1")
+    public CommonResult<List<ZcProcessNodeSimpleRespVO>> getProcessNodeSimpleList(
+            @RequestParam(value = "group", required = false) Integer group) {
+        List<ZcProcessNodeDO> list = processNodeService.getProcessNodeList(
+                new ZcProcessNodeListReqVO().setGroup(group));
         return success(convertList(list, item -> new ZcProcessNodeSimpleRespVO()
                 .setId(item.getId())
                 .setName(item.getName())));

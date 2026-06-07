@@ -33,6 +33,7 @@ public interface ZcProcessNodeMapper extends BaseMapperX<ZcProcessNodeDO> {
      */
     default List<ZcProcessNodeDO> selectList(ZcProcessNodeListReqVO reqVO) {
         return selectList(new LambdaQueryWrapperX<ZcProcessNodeDO>()
+                .eqIfPresent(ZcProcessNodeDO::getGroup, reqVO.getGroup())
                 .orderByAsc(ZcProcessNodeDO::getSort));
     }
 
