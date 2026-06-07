@@ -22,4 +22,8 @@ public class ZcCurtainInstallProcessSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
+    @Schema(description = "关联工序节点 ID 列表", example = "[1, 2, 3]")
+    @DiffLogField(name = "工序节点")
+    private List<Long> nodeIds;
+
 }

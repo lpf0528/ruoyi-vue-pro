@@ -96,7 +96,8 @@ public class ZcCurtainInstallProcessController {
                 new ZcCurtainInstallProcessListReqVO());
         return success(convertList(list, item -> new ZcCurtainInstallProcessSimpleRespVO()
                 .setId(item.getId())
-                .setName(item.getName())));
+                .setName(item.getName())
+                .setNodeIds(item.getNodeIds())));
     }
 
     @GetMapping("/export-excel")

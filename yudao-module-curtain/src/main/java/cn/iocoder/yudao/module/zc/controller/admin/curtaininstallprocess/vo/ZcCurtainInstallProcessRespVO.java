@@ -24,6 +24,10 @@ public class ZcCurtainInstallProcessRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "关联工序节点 ID 列表", example = "[1, 2, 3]")
+    @ExcelIgnore
+    private List<Long> nodeIds;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;
