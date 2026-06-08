@@ -1,16 +1,18 @@
 package cn.iocoder.yudao.module.zc.service.processnode;
 
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
-import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
-import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordCompleteReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.workshopuser.ZcWorkshopUserMapper;
+import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -23,7 +25,6 @@ import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
-import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
 /**
@@ -42,12 +43,12 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
-    private ZcUserProcessNodeService userProcessNodeService;
+    private ZcWorkshopUserMapper workshopUserMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE, bizNo = "{{#record.id}}",
-            success = ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS)
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE,
+            bizNo = "{{#record.id}}", success = ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS)
     public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
         // 1. 校验订单存在，且处于已确认状态（确认后方可记录工序）
         ZcSalesOrderDO order = validateSalesOrderExists(reqVO.getOrderId());
@@ -55,20 +56,27 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(SALES_ORDER_STATUS_CANNOT_PROCESS);
         }
 
-        // 2. 校验当前登录员工是否有权限操作该节点（必须在其绑定列表内）
-        userProcessNodeService.validateCurrentUserCanOperateNode(reqVO.getNodeId());
-
-        // 3. 读取节点名称，快照存入记录，防止节点名称后续修改导致历史记录失真
+        // 2. 校验工序节点存在，并快照节点名称
         ZcProcessNodeDO node = processNodeMapper.selectById(reqVO.getNodeId());
         if (node == null) {
             throw exception(PROCESS_NODE_NOT_EXISTS);
         }
 
-        // 4. 保存工序记录，状态默认为进行中
+        // 3. 若指定了车间员工，校验该员工存在且已绑定所选节点
+        if (reqVO.getWorkshopUserId() != null) {
+            ZcWorkshopUserDO workshopUser = workshopUserMapper.selectById(reqVO.getWorkshopUserId());
+            if (workshopUser == null) {
+                throw exception(WORKSHOP_USER_NOT_EXISTS);
+            }
+            if (workshopUser.getNodeIds() == null || !workshopUser.getNodeIds().contains(reqVO.getNodeId())) {
+                throw exception(USER_PROCESS_NODE_NOT_AUTHORIZED);
+            }
+        }
+
+        // 4. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
         ZcOrderProcessRecordDO record = BeanUtils.toBean(reqVO, ZcOrderProcessRecordDO.class);
         record.setNodeName(node.getName());
-        record.setStatus(1); // 1=进行中
-        record.setOperatorUserId(SecurityFrameworkUtils.getLoginUserId());
+        record.setStatus(1);
         processRecordMapper.insert(record);
 
         // 5. 同步更新订单当前工序名称（状态保持 CONFIRMED，由打包/发货操作推进后续状态）
@@ -76,38 +84,39 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
 
-        // 记录操作日志上下文
         LogRecordContext.putVariable("orderNo", order.getOrderNo());
         LogRecordContext.putVariable("nodeName", node.getName());
         return record.getId();
     }
 
     @Override
-    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_COMPLETE_SUB_TYPE, bizNo = "{{#reqVO.id}}",
-            success = ZC_ORDER_PROCESS_RECORD_COMPLETE_SUCCESS)
-    public void completeProcessRecord(ZcOrderProcessRecordCompleteReqVO reqVO) {
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_REVOKE_SUB_TYPE,
+            bizNo = "{{#reqVO.id}}", success = ZC_ORDER_PROCESS_RECORD_REVOKE_SUCCESS)
+    public void revokeProcessRecord(ZcOrderProcessRecordRevokeReqVO reqVO) {
         ZcOrderProcessRecordDO record = validateProcessRecordExists(reqVO.getId());
-        // 更新状态为已完成，写入完成备注
+        // 只有完成状态（status=1）的记录才允许撤销
+        if (Integer.valueOf(2).equals(record.getStatus())) {
+            throw exception(ORDER_PROCESS_RECORD_ALREADY_REVOKED);
+        }
         processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
-                .set(ZcOrderProcessRecordDO::getStatus, 2) // 2=已完成
+                .set(ZcOrderProcessRecordDO::getStatus, 2)
                 .set(ZcOrderProcessRecordDO::getNote, reqVO.getNote())
                 .eq(ZcOrderProcessRecordDO::getId, reqVO.getId()));
-        // 记录操作日志上下文
+
         ZcSalesOrderDO order = validateSalesOrderExists(record.getOrderId());
         LogRecordContext.putVariable("orderNo", order.getOrderNo());
         LogRecordContext.putVariable("nodeName", record.getNodeName());
     }
 
     @Override
-    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_DELETE_SUB_TYPE, bizNo = "{{#id}}",
-            success = ZC_ORDER_PROCESS_RECORD_DELETE_SUCCESS)
+    @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_DELETE_SUB_TYPE,
+            bizNo = "{{#id}}", success = ZC_ORDER_PROCESS_RECORD_DELETE_SUCCESS)
     public void deleteProcessRecord(Long id) {
         ZcOrderProcessRecordDO record = validateProcessRecordExists(id);
-        // 已完成的记录不允许删除，防止历史数据被篡改
-        if (Integer.valueOf(2).equals(record.getStatus())) {
+        // 已完成（status=1）的记录不允许直接删除，必须先撤销
+        if (Integer.valueOf(1).equals(record.getStatus())) {
             throw exception(ORDER_PROCESS_RECORD_ALREADY_COMPLETED);
         }
-        // 记录操作日志上下文
         LogRecordContext.putVariable("recordId", id);
         processRecordMapper.deleteById(id);
     }

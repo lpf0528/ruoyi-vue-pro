@@ -33,30 +33,30 @@ public class ZcUserProcessNodeController {
 
     @Resource
     private ZcUserProcessNodeService userProcessNodeService;
-//    废弃
-//    @PostMapping("/save")
-//    @Operation(summary = "保存员工工序节点绑定（覆盖式）",
-//            description = "传入 nodeIds 列表，覆盖该员工原有绑定；传空列表则清除所有绑定")
-//    @PreAuthorize("@ss.hasPermission('zc:user-process-node:save')")
-//    public CommonResult<Boolean> saveUserProcessNodes(@Valid @RequestBody ZcUserProcessNodeSaveReqVO reqVO) {
-//        userProcessNodeService.saveUserProcessNodes(reqVO);
-//        return success(true);
-//    }
-//
-//    @GetMapping("/list")
-//    @Operation(summary = "获取某员工已绑定的工序节点列表（管理员用）")
-//    @Parameter(name = "userId", description = "员工用户 ID", required = true)
-//    @PreAuthorize("@ss.hasPermission('zc:user-process-node:query')")
-//    public CommonResult<List<ZcProcessNodeRespVO>> getUserProcessNodeList(@RequestParam("userId") Long userId) {
-//        return success(userProcessNodeService.getUserProcessNodeList(userId));
-//    }
-//
-//    @GetMapping("/my-nodes")
-//    @Operation(summary = "获取我自己可操作的工序节点列表",
-//            description = "员工在新增工序记录前调用，用于填充节点下拉选项")
-//    @PreAuthorize("@ss.hasPermission('zc:order-process-record:create')")
-//    public CommonResult<List<ZcProcessNodeRespVO>> getMyProcessNodeList() {
-//        return success(userProcessNodeService.getMyProcessNodeList());
-//    }
+
+    @PostMapping("/save")
+    @Operation(summary = "保存员工工序节点绑定（覆盖式）",
+            description = "传入 nodeIds 列表，覆盖该员工原有绑定；传空列表则清除所有绑定")
+    @PreAuthorize("@ss.hasPermission('zc:user-process-node:save')")
+    public CommonResult<Boolean> saveUserProcessNodes(@Valid @RequestBody ZcUserProcessNodeSaveReqVO reqVO) {
+        userProcessNodeService.saveUserProcessNodes(reqVO);
+        return success(true);
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "获取某员工已绑定的工序节点列表（管理员用）")
+    @Parameter(name = "userId", description = "员工用户 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:user-process-node:query')")
+    public CommonResult<List<ZcProcessNodeRespVO>> getUserProcessNodeList(@RequestParam("userId") Long userId) {
+        return success(userProcessNodeService.getUserProcessNodeList(userId));
+    }
+
+    @GetMapping("/my-nodes")
+    @Operation(summary = "获取我自己可操作的工序节点列表",
+            description = "员工在新增工序记录前调用，用于填充节点下拉选项")
+    @PreAuthorize("@ss.hasPermission('zc:order-process-record:create')")
+    public CommonResult<List<ZcProcessNodeRespVO>> getMyProcessNodeList() {
+        return success(userProcessNodeService.getMyProcessNodeList());
+    }
 
 }

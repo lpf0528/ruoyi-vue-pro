@@ -16,7 +16,9 @@
       "Bash(gh repo *)",
       "WebFetch(domain:github.com)",
       "Bash(cd /d \"D:\\\\workplace\\\\ruoyi-vue-pro\")",
-      "Bash(mvn compile *)"
+      "Bash(mvn compile *)",
+      "Bash(xargs grep -l \"process_record\")",
+      "Bash(xargs grep -l \"workshop_user\\\\|WorkshopUser\\\\|workshop\")"
     ]
   }
 }

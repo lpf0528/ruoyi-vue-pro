@@ -42,8 +42,10 @@ public interface ErrorCodeConstants {
     ErrorCode USER_PROCESS_NODE_NOT_AUTHORIZED = new ErrorCode(100031, "您没有操作该工序节点的权限，请联系管理员分配");
     /** 订单不处于生产流程中（非 pending/processing），不能新增工序记录 */
     ErrorCode SALES_ORDER_STATUS_CANNOT_PROCESS = new ErrorCode(100032, "订单不在生产流程中，无法新增工序记录");
-    /** 工序记录已完成，不允许删除，防止历史数据被篡改 */
-    ErrorCode ORDER_PROCESS_RECORD_ALREADY_COMPLETED = new ErrorCode(100033, "工序记录已完成，不允许删除");
+    /** 工序记录已完成，需先撤销才能删除，防止历史数据被篡改 */
+    ErrorCode ORDER_PROCESS_RECORD_ALREADY_COMPLETED = new ErrorCode(100033, "工序记录已完成，请先撤销后再删除");
+    /** 工序记录已撤销，不允许重复撤销 */
+    ErrorCode ORDER_PROCESS_RECORD_ALREADY_REVOKED = new ErrorCode(100075, "工序记录已撤销，不允许重复撤销");
     /**
      * 取消确认时，订单已存在收款记录，不允许取消：否则客户余额会凭空增加
      */

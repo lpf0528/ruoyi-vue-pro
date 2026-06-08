@@ -298,8 +298,8 @@ public interface LogRecordConstants {
     String ZC_ORDER_PROCESS_RECORD_TYPE = "ZC 订单工序记录";
     String ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE = "创建订单工序记录";
     String ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS = "创建了订单【{{#orderNo}}】的工序记录【{{#nodeName}}】";
-    String ZC_ORDER_PROCESS_RECORD_COMPLETE_SUB_TYPE = "完成订单工序";
-    String ZC_ORDER_PROCESS_RECORD_COMPLETE_SUCCESS = "完成了订单【{{#orderNo}}】的工序【{{#nodeName}}】";
+    String ZC_ORDER_PROCESS_RECORD_REVOKE_SUB_TYPE = "撤销订单工序记录";
+    String ZC_ORDER_PROCESS_RECORD_REVOKE_SUCCESS = "撤销了订单【{{#orderNo}}】的工序记录【{{#nodeName}}】";
     String ZC_ORDER_PROCESS_RECORD_DELETE_SUB_TYPE = "删除订单工序记录";
     String ZC_ORDER_PROCESS_RECORD_DELETE_SUCCESS = "删除了订单工序记录【{{#recordId}}】";
 

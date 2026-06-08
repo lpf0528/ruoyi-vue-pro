@@ -1,8 +1,8 @@
 package cn.iocoder.yudao.module.zc.controller.admin.processnode;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordCompleteReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +21,8 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 /**
  * 管理后台 - 订单工序记录 Controller
  *
- * <p>工厂员工通过此接口推进订单的加工进度，
+ * <p>工厂员工通过此接口记录订单各工序的完成情况（完成即记录），
+ * 支持撤销和删除（仅允许删除已撤销的记录），
  * 管理员和客户通过 {@code /list} 接口查看订单工序时间线。</p>
  *
  * @author 01Coder
@@ -36,23 +37,23 @@ public class ZcOrderProcessRecordController {
     private ZcOrderProcessRecordService processRecordService;
 
     @PostMapping("/create")
-    @Operation(summary = "新增工序记录（开始某道工序）",
-            description = "员工只能选择自己已绑定的节点；订单必须处于待生产或生产中状态")
+    @Operation(summary = "新增工序记录（记录某道工序已完成）",
+            description = "记录一经创建即表示工序完成（status=1）；若指定车间员工，该员工须已绑定所选节点")
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:create')")
     public CommonResult<Long> createProcessRecord(@Valid @RequestBody ZcOrderProcessRecordSaveReqVO reqVO) {
         return success(processRecordService.createProcessRecord(reqVO));
     }
 
-    @PutMapping("/complete")
-    @Operation(summary = "标记工序完成")
+    @PutMapping("/revoke")
+    @Operation(summary = "撤销工序记录", description = "将已完成（status=1）的记录撤销为 status=2，撤销后可删除")
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:update')")
-    public CommonResult<Boolean> completeProcessRecord(@Valid @RequestBody ZcOrderProcessRecordCompleteReqVO reqVO) {
-        processRecordService.completeProcessRecord(reqVO);
+    public CommonResult<Boolean> revokeProcessRecord(@Valid @RequestBody ZcOrderProcessRecordRevokeReqVO reqVO) {
+        processRecordService.revokeProcessRecord(reqVO);
         return success(true);
     }
 
     @DeleteMapping("/delete")
-    @Operation(summary = "删除工序记录（仅允许删除进行中的记录）")
+    @Operation(summary = "删除工序记录（仅允许删除已撤销的记录）")
     @Parameter(name = "id", description = "记录 ID", required = true)
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:delete')")
     public CommonResult<Boolean> deleteProcessRecord(@RequestParam("id") Long id) {
