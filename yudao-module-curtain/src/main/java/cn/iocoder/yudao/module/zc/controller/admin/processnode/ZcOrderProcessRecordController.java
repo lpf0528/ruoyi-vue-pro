@@ -7,6 +7,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcess
 import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -63,11 +64,15 @@ public class ZcOrderProcessRecordController {
 
     @GetMapping("/list")
     @Operation(summary = "获取订单工序时间线（按时间升序）")
-    @Parameter(name = "orderId", description = "订单 ID", required = true)
+    @Parameters({
+            @Parameter(name = "orderId", description = "订单 ID，不传则返回全部"),
+            @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部")
+    })
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
     public CommonResult<List<ZcOrderProcessRecordRespVO>> getProcessRecordList(
-            @RequestParam("orderId") Long orderId) {
-        return success(processRecordService.getProcessRecordList(orderId));
+            @RequestParam(value = "orderId", required = false) Long orderId,
+            @RequestParam(value = "masterId", required = false) Long masterId) {
+        return success(processRecordService.getProcessRecordList(orderId, masterId));
     }
 
 }

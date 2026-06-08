@@ -52,9 +52,10 @@ public interface ZcOrderProcessRecordService {
     /**
      * 获取订单的工序时间线，按创建时间升序排列（含车间员工名称）
      *
-     * @param orderId 订单 ID
+     * @param orderId  订单 ID，为 null 时不过滤
+     * @param masterId 主操作人员 ID，为 null 时不过滤
      * @return 工序记录列表
      */
-    List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId);
+    List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId, Long masterId);
 
 }

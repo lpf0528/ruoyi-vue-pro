@@ -26,7 +26,8 @@
         LEFT JOIN zc_workshop_user tm ON t1.master_id = tm.id AND tm.deleted = 0
         LEFT JOIN zc_workshop_user ta ON t1.assistant_id = ta.id AND ta.deleted = 0
         WHERE t1.deleted = 0
-          AND t1.order_id = #{orderId}
+          <if test="orderId != null">AND t1.order_id = #{orderId}</if>
+          <if test="masterId != null">AND t1.master_id = #{masterId}</if>
         ORDER BY t1.create_time ASC
     </select>
 
