@@ -156,5 +156,7 @@ public interface ErrorCodeConstants {
     ErrorCode PROCESS_NODE_SYSTEM_CANNOT_MODIFY = new ErrorCode(100072, "系统内置工序节点不允许编辑或删除");
     /** 工序节点名称已存在 */
     ErrorCode PROCESS_NODE_NAME_EXISTS = new ErrorCode(100073, "工序节点名称已存在，请使用其他名称");
+    /** 码注册记录不存在 */
+    ErrorCode BARCODE_REGISTRY_NOT_EXISTS = new ErrorCode(100074, "码注册记录不存在");
 }
 

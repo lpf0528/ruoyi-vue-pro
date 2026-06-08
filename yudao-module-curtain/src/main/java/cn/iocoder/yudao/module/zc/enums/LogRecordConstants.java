@@ -309,4 +309,10 @@ public interface LogRecordConstants {
     String ZC_USER_PROCESS_NODE_SAVE_SUB_TYPE = "保存员工工序授权";
     String ZC_USER_PROCESS_NODE_SAVE_SUCCESS = "保存了用户【{getAdminUserById{#userId}}】的工序授权，共 {{#nodeCount}} 个节点";
 
+    // ======================= ZC_BARCODE_REGISTRY 码注册表 =======================
+
+    String ZC_BARCODE_REGISTRY_TYPE = "ZC 码注册表";
+    String ZC_BARCODE_REGISTRY_CREATE_SUB_TYPE = "生成二维码";
+    String ZC_BARCODE_REGISTRY_CREATE_SUCCESS = "生成了【{{#registry.codeType}}】类型的二维码，codeId={{#registry.codeId}}";
+
 }
