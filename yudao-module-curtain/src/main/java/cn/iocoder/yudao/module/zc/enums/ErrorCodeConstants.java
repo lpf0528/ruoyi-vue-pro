@@ -46,6 +46,8 @@ public interface ErrorCodeConstants {
     ErrorCode ORDER_PROCESS_RECORD_ALREADY_COMPLETED = new ErrorCode(100033, "工序记录已完成，请先撤销后再删除");
     /** 工序记录已撤销，不允许重复撤销 */
     ErrorCode ORDER_PROCESS_RECORD_ALREADY_REVOKED = new ErrorCode(100075, "工序记录已撤销，不允许重复撤销");
+    /** 该工序节点已执行过，不允许重复记录 */
+    ErrorCode ORDER_PROCESS_RECORD_NODE_DUPLICATED = new ErrorCode(100076, "该工序节点已执行过，不允许重复记录");
     /**
      * 取消确认时，订单已存在收款记录，不允许取消：否则客户余额会凭空增加
      */

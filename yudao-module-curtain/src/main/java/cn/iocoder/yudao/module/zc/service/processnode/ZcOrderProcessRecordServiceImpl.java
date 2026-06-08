@@ -62,21 +62,29 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(PROCESS_NODE_NOT_EXISTS);
         }
 
-        // 3. 校验主操作人员存在
+        // 3. 校验在相同范围内（orderId + 非 null 的 curtainId/structureId/materialId）该节点尚未执行
+        //    已撤销（status=2）的记录不计，允许撤销后重新记录
+        if (processRecordMapper.selectCompletedRecord(
+                reqVO.getOrderId(), reqVO.getCurtainId(),
+                reqVO.getStructureId(), reqVO.getMaterialId(), reqVO.getNodeId()) != null) {
+            throw exception(ORDER_PROCESS_RECORD_NODE_DUPLICATED);
+        }
+
+        // 4. 校验主操作人员存在
         validateWorkshopUserExists(reqVO.getMasterId());
 
-        // 4. 若指定了副操作人员，校验其存在
+        // 5. 若指定了副操作人员，校验其存在
         if (reqVO.getAssistantId() != null) {
             validateWorkshopUserExists(reqVO.getAssistantId());
         }
 
-        // 5. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
+        // 6. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
         ZcOrderProcessRecordDO record = BeanUtils.toBean(reqVO, ZcOrderProcessRecordDO.class);
         record.setNodeName(node.getName());
         record.setStatus(1);
         processRecordMapper.insert(record);
 
-        // 6. 同步更新订单当前工序名称快照，方便列表页直接展示进度
+        // 7. 同步更新订单当前工序名称快照，方便列表页直接展示进度
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
