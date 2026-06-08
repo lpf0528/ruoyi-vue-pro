@@ -97,7 +97,8 @@ public class ZcWorkshopUserController {
                 new ZcWorkshopUserListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus()));
         return success(convertList(list, item -> new ZcWorkshopUserSimpleRespVO()
                 .setId(item.getId())
-                .setName(item.getName())));
+                .setName(item.getName())
+                .setNodeIds(item.getNodeIds())));
     }
 
     @GetMapping("/export-excel")

@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 /**
  * 管理后台 - 车间员工精简 Response VO
  *
@@ -23,5 +25,9 @@ public class ZcWorkshopUserSimpleRespVO {
     /** 员工姓名 */
     @Schema(description = "名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
+
+    /** 授权工序节点 ID 列表，关联 ZcProcessNodeDO */
+    @Schema(description = "授权工序节点 ID 列表")
+    private List<Long> nodeIds;
 
 }
