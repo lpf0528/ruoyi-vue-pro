@@ -37,19 +37,19 @@ public class ZcOrderProcessRecordDO extends BaseDO {
      */
     private Long orderId;
     /**
-     * 关联窗帘行 ID，关联 zc_sales_order_curtain.id
+     * 关联窗帘行 ID，关联 zc_sales_order_curtain.id，可为空
      */
     private Long curtainId;
     /**
-     * 关联结构行 ID，关联 zc_sales_order_structure.id
+     * 关联结构行 ID，关联 zc_sales_order_structure.id，可为空
      */
     private Long structureId;
     /**
-     * 关联用料明细 ID，关联 zc_sales_order_material.id
+     * 关联用料明细 ID，关联 zc_sales_order_material.id，可为空
      */
     private Long materialId;
     /**
-     * 工序节点 ID，null 时表示自定义工序，关联 zc_process_node.id
+     * 工序节点 ID，关联 zc_process_node.id
      */
     private Long nodeId;
     /**
