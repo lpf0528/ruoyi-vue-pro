@@ -567,6 +567,16 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         return result;
     }
 
+    @Override
+    public ZcSalesOrderDetailRespVO getSalesOrderDetailByOrderNo(String orderNo) {
+        // 按订单号精确查出主键，再复用已有的详情组装逻辑
+        ZcSalesOrderDO order = salesOrderMapper.selectOne(ZcSalesOrderDO::getOrderNo, orderNo);
+        if (order == null) {
+            throw exception(SALES_ORDER_NOT_EXISTS);
+        }
+        return getSalesOrderDetail(order.getId());
+    }
+
     // ======================== PDF 生成 ========================
 
     @Override

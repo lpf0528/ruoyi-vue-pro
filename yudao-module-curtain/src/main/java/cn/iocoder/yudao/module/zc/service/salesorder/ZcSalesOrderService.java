@@ -145,4 +145,15 @@ public interface ZcSalesOrderService {
      */
     ZcSalesOrderDetailRespVO getSalesOrderDetail(Long orderId);
 
+    /**
+     * 按订单号获得销售订单完整详情（主表信息 + 三层嵌套明细）
+     *
+     * <p>先按 orderNo 精确匹配查出订单 ID，再复用 {@link #getSalesOrderDetail(Long)} 逻辑返回完整详情。</p>
+     *
+     * @param orderNo 销售订单编号，如 ZC1020240101000001
+     * @return 销售订单完整详情（含 curtains 嵌套节点）
+     * @throws cn.iocoder.yudao.framework.common.exception.ServiceException 订单不存在时抛出
+     */
+    ZcSalesOrderDetailRespVO getSalesOrderDetailByOrderNo(String orderNo);
+
 }

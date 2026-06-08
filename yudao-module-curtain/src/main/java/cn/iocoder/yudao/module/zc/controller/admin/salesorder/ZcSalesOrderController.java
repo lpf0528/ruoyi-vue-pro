@@ -6,9 +6,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.Operation;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 
 import javax.validation.constraints.*;
 import javax.validation.*;
@@ -103,10 +105,17 @@ public class ZcSalesOrderController {
 
     @GetMapping("/detail")
     @Operation(summary = "获得销售订单完整详情（主表信息 + 窗帘→结构→用料 三层嵌套）")
-    @Parameter(name = "id", description = "销售订单编号", required = true, example = "1024")
+    @Parameters({
+            @Parameter(name = "id",      description = "销售订单 ID，与 orderNo 二选一", example = "1024"),
+            @Parameter(name = "orderNo", description = "销售订单编号，与 id 二选一，优先级高于 id", example = "ZC1020240101000001")
+    })
     @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
     public CommonResult<ZcSalesOrderDetailRespVO> getSalesOrderDetail(
-            @RequestParam("id") Long id) {
+            @RequestParam(value = "id",      required = false) Long id,
+            @RequestParam(value = "orderNo", required = false) String orderNo) {
+        if (StrUtil.isNotBlank(orderNo)) {
+            return success(salesOrderService.getSalesOrderDetailByOrderNo(orderNo));
+        }
         return success(salesOrderService.getSalesOrderDetail(id));
     }
 
