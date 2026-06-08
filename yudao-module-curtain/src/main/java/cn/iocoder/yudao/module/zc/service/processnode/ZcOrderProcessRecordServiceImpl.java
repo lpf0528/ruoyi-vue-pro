@@ -62,24 +62,21 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(PROCESS_NODE_NOT_EXISTS);
         }
 
-        // 3. 若指定了车间员工，校验该员工存在且已绑定所选节点
-        if (reqVO.getWorkshopUserId() != null) {
-            ZcWorkshopUserDO workshopUser = workshopUserMapper.selectById(reqVO.getWorkshopUserId());
-            if (workshopUser == null) {
-                throw exception(WORKSHOP_USER_NOT_EXISTS);
-            }
-            if (workshopUser.getNodeIds() == null || !workshopUser.getNodeIds().contains(reqVO.getNodeId())) {
-                throw exception(USER_PROCESS_NODE_NOT_AUTHORIZED);
-            }
+        // 3. 校验主操作人员存在
+        validateWorkshopUserExists(reqVO.getMasterId());
+
+        // 4. 若指定了副操作人员，校验其存在
+        if (reqVO.getAssistantId() != null) {
+            validateWorkshopUserExists(reqVO.getAssistantId());
         }
 
-        // 4. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
+        // 5. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
         ZcOrderProcessRecordDO record = BeanUtils.toBean(reqVO, ZcOrderProcessRecordDO.class);
         record.setNodeName(node.getName());
         record.setStatus(1);
         processRecordMapper.insert(record);
 
-        // 5. 同步更新订单当前工序名称（状态保持 CONFIRMED，由打包/发货操作推进后续状态）
+        // 6. 同步更新订单当前工序名称快照，方便列表页直接展示进度
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));
@@ -140,6 +137,18 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(ORDER_PROCESS_RECORD_NOT_EXISTS);
         }
         return record;
+    }
+
+    /**
+     * 校验车间员工存在
+     *
+     * @param workshopUserId 车间员工 ID
+     */
+    private void validateWorkshopUserExists(Long workshopUserId) {
+        ZcWorkshopUserDO user = workshopUserMapper.selectById(workshopUserId);
+        if (user == null) {
+            throw exception(WORKSHOP_USER_NOT_EXISTS);
+        }
     }
 
 }
