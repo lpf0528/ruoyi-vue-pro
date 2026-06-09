@@ -7,16 +7,23 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
+import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
 import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import com.mzt.logapi.context.LogRecordContext;
@@ -42,6 +49,12 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZcProductBatchMapper productBatchMapper;
     @Resource
     private ZcInventoryRecordMapper inventoryRecordMapper;
+    @Resource
+    private ZcProcessNodeMapper processNodeMapper;
+    @Resource
+    private ZcOrderProcessRecordMapper processRecordMapper;
+    @Resource
+    private ZcSalesOrderMapper salesOrderMapper;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -143,6 +156,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
 
+        // 查找系统配置的"配料"工序节点（group=0），有则自动创建工序完成记录
+        createPeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), reqVO.getId());
+
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
     }
@@ -187,9 +203,68 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
 
+        // 撤销该用料明细对应的"配料"工序完成记录（若存在）
+        revokePeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), materialId);
+
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
         LogRecordContext.putVariable("cutQuantity", material.getCutQuantity());
+    }
+
+    /**
+     * 在裁剪完成后，自动创建"配料"工序完成记录
+     *
+     * <p>仅处理系统配置（group=0）且名称为"配料"的工序节点；
+     * 若该明细已存在完成状态的配料记录则跳过（幂等保护）。</p>
+     *
+     * @param orderId     销售订单 ID
+     * @param structureId 结构行 ID
+     * @param materialId  用料明细 ID
+     */
+    private void createPeiliaoProcessRecord(Long orderId, Long structureId, Long materialId) {
+        ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
+                .eq(ZcProcessNodeDO::getGroup, 0)
+                .eq(ZcProcessNodeDO::getName, "配料"));
+        processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
+                .orderId(orderId)
+                .structureId(structureId)
+                .materialId(materialId)
+                .nodeId(node != null ? node.getId() : null)
+                .nodeName(node != null ? node.getName() : "配料")
+                .status(1)
+                .build());
+        // 同步更新订单当前工序名称快照
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getCurrentNodeName, "配料")
+                .eq(ZcSalesOrderDO::getId, orderId));
+    }
+
+    /**
+     * 在撤销裁剪后，将对应"配料"工序记录状态改为撤销（status=2）
+     *
+     * <p>仅处理系统配置（group=0）且名称为"配料"的工序节点；
+     * 若找不到对应完成记录则静默跳过。</p>
+     *
+     * @param orderId     销售订单 ID
+     * @param structureId 结构行 ID
+     * @param materialId  用料明细 ID
+     */
+    private void revokePeiliaoProcessRecord(Long orderId, Long structureId, Long materialId) {
+        ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
+                .eq(ZcProcessNodeDO::getGroup, 0)
+                .eq(ZcProcessNodeDO::getName, "配料"));
+        if (node == null) {
+            return;
+        }
+        // structureId 可能为 null（面单场景），用 selectCompletedRecord 内的 eqIfPresent 避免 null=null 永假问题
+        ZcOrderProcessRecordDO record = processRecordMapper.selectCompletedRecord(
+                orderId, null, structureId, materialId, node.getId());
+        if (record == null) {
+            return;
+        }
+        processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
+                .set(ZcOrderProcessRecordDO::getStatus, 2)
+                .eq(ZcOrderProcessRecordDO::getId, record.getId()));
     }
 
 }
