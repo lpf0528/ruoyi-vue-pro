@@ -33,7 +33,7 @@
         WHERE t1.deleted = 0
           <if test="orderId != null">AND t1.order_id = #{orderId}</if>
           <if test="masterId != null">AND t1.master_id = #{masterId}</if>
-        ORDER BY t1.create_time ASC
+        ORDER BY t1.create_time DESC
     </select>
 
 </mapper>

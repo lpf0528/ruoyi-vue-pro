@@ -63,7 +63,7 @@ public class ZcOrderProcessRecordController {
     }
 
     @GetMapping("/list")
-    @Operation(summary = "获取订单工序时间线（按时间升序）")
+    @Operation(summary = "获取订单工序时间线（按时间降序）")
     @Parameters({
             @Parameter(name = "orderId", description = "订单 ID，不传则返回全部"),
             @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部")
