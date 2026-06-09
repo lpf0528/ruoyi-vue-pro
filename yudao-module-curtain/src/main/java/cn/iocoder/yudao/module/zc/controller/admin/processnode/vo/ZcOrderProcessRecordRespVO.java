@@ -40,6 +40,9 @@ public class ZcOrderProcessRecordRespVO {
     @Schema(description = "工序名称（快照）")
     private String nodeName;
 
+    @Schema(description = "工序节点分组：0=系统配置，1=手工配置")
+    private Integer nodeGroup;
+
     @Schema(description = "状态：1=完成，2=撤销")
     private Integer status;
 

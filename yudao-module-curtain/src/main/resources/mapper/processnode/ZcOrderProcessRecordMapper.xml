@@ -15,6 +15,7 @@
             t1.material_id,
             t1.node_id,
             t1.node_name,
+            pn.`group` AS node_group,
             t1.status,
             t1.master_id,
             tm.name AS master_name,
@@ -28,6 +29,7 @@
         LEFT JOIN zc_sales_order so ON t1.order_id = so.id AND so.deleted = 0
         LEFT JOIN zc_sales_order_curtain soc ON t1.curtain_id = soc.id AND soc.deleted = 0
         LEFT JOIN zc_curtain c ON soc.curtain_id = c.id AND c.deleted = 0
+        LEFT JOIN zc_process_node pn ON t1.node_id = pn.id AND pn.deleted = 0
         LEFT JOIN zc_workshop_user tm ON t1.master_id = tm.id AND tm.deleted = 0
         LEFT JOIN zc_workshop_user ta ON t1.assistant_id = ta.id AND ta.deleted = 0
         WHERE t1.deleted = 0
