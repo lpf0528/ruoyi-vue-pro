@@ -33,6 +33,10 @@
         WHERE t1.deleted = 0
           <if test="orderId != null">AND t1.order_id = #{orderId}</if>
           <if test="masterId != null">AND t1.master_id = #{masterId}</if>
+          <if test="curtainId != null">AND t1.curtain_id = #{curtainId}</if>
+          <if test="structureId != null">AND t1.structure_id = #{structureId}</if>
+          <if test="materialId != null">AND t1.material_id = #{materialId}</if>
+          <if test="nodeId != null">AND t1.node_id = #{nodeId}</if>
         ORDER BY t1.create_time DESC
     </select>
 

@@ -66,13 +66,21 @@ public class ZcOrderProcessRecordController {
     @Operation(summary = "获取订单工序时间线（按时间降序）")
     @Parameters({
             @Parameter(name = "orderId", description = "订单 ID，不传则返回全部"),
-            @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部")
+            @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部"),
+            @Parameter(name = "curtainId", description = "窗帘行 ID，不传则返回全部"),
+            @Parameter(name = "structureId", description = "结构行 ID，不传则返回全部"),
+            @Parameter(name = "materialId", description = "用料明细 ID，不传则返回全部"),
+            @Parameter(name = "nodeId", description = "工序节点 ID，不传则返回全部")
     })
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
     public CommonResult<List<ZcOrderProcessRecordRespVO>> getProcessRecordList(
             @RequestParam(value = "orderId", required = false) Long orderId,
-            @RequestParam(value = "masterId", required = false) Long masterId) {
-        return success(processRecordService.getProcessRecordList(orderId, masterId));
+            @RequestParam(value = "masterId", required = false) Long masterId,
+            @RequestParam(value = "curtainId", required = false) Long curtainId,
+            @RequestParam(value = "structureId", required = false) Long structureId,
+            @RequestParam(value = "materialId", required = false) Long materialId,
+            @RequestParam(value = "nodeId", required = false) Long nodeId) {
+        return success(processRecordService.getProcessRecordList(orderId, masterId, curtainId, structureId, materialId, nodeId));
     }
 
 }

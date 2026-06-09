@@ -18,14 +18,22 @@ import java.util.List;
 public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRecordDO> {
 
     /**
-     * 查询订单的工序记录（含操作人名称），按创建时间升序排列
+     * 查询订单的工序记录（含操作人名称），按创建时间降序排列
      *
-     * @param orderId  订单 ID
-     * @param masterId 主操作人员 ID，为 null 时不过滤
+     * @param orderId     订单 ID，为 null 时不过滤
+     * @param masterId    主操作人员 ID，为 null 时不过滤
+     * @param curtainId   窗帘行 ID，为 null 时不过滤
+     * @param structureId 结构行 ID，为 null 时不过滤
+     * @param materialId  用料明细 ID，为 null 时不过滤
+     * @param nodeId      工序节点 ID，为 null 时不过滤
      * @return 工序记录列表
      */
     List<ZcOrderProcessRecordRespVO> selectListWithUserByOrderId(@Param("orderId") Long orderId,
-                                                                  @Param("masterId") Long masterId);
+                                                                  @Param("masterId") Long masterId,
+                                                                  @Param("curtainId") Long curtainId,
+                                                                  @Param("structureId") Long structureId,
+                                                                  @Param("materialId") Long materialId,
+                                                                  @Param("nodeId") Long nodeId);
 
     /**
      * 查询指定范围内某工序节点是否已存在有效记录（status=1，未撤销）
