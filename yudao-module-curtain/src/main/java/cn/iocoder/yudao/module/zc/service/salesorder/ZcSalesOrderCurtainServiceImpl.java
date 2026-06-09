@@ -23,7 +23,9 @@ import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTargetTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
+import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
 import cn.iocoder.yudao.module.zc.service.orderoperationlog.ZcOrderOperationLogService;
+import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
@@ -48,6 +50,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     private ZcProcessNodeMapper processNodeMapper;
     @Resource
     private ZcOrderProcessRecordMapper processRecordMapper;
+    @Resource
+    private ZcWorkshopUserService workshopUserService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -149,6 +153,22 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .orderAfterStatus(newOrderStatus)
                 .build());
 
+        // 5. 查询系统配置的发货工序节点，写入已完成的工序流水记录
+        //    节点不存在时 nodeId 置 null，nodeName 兜底为"发货"
+        ZcProcessNodeDO shipNode = processNodeMapper.selectOne(
+                Wrappers.<ZcProcessNodeDO>lambdaQuery()
+                        .eq(ZcProcessNodeDO::getName, "发货")
+                        .eq(ZcProcessNodeDO::getGroup, 0));
+        processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
+                .orderId(orderId)
+                .curtainId(id)
+                .nodeId(shipNode != null ? shipNode.getId() : null)
+                .nodeName(shipNode != null ? shipNode.getName() : "发货")
+                .status(1)  // 1=完成
+                .masterId(masterId)
+                .assistantId(assistantId)
+                .build());
+
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
     }
@@ -183,7 +203,11 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
         salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
-        // 4. 查询系统配置的打包工序节点，将该窗帘行已完成的打包工序记录撤销（status 改为 2）
+        // 4. 查询操作员姓名，构建撤销备注
+        ZcWorkshopUserDO masterUser = workshopUserService.getWorkshopUser(masterId);
+        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId);
+
+        // 5. 查询系统配置的打包工序节点，将该窗帘行已完成的打包工序记录撤销（status 改为 2），并写入备注
         ZcProcessNodeDO packNode = processNodeMapper.selectOne(
                 Wrappers.<ZcProcessNodeDO>lambdaQuery()
                         .eq(ZcProcessNodeDO::getName, "打包")
@@ -191,6 +215,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         if (packNode != null) {
             processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
                     .set(ZcOrderProcessRecordDO::getStatus, 2)
+                    .set(ZcOrderProcessRecordDO::getNote, cancelNote)
                     .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
                     .eq(ZcOrderProcessRecordDO::getCurtainId, id)
                     .eq(ZcOrderProcessRecordDO::getNodeId, packNode.getId())
@@ -242,6 +267,25 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .afterStatus(restoredStatus)
                 .orderAfterStatus(newOrderStatus)
                 .build());
+
+        // 5. 查询操作员姓名，构建撤销备注
+        ZcWorkshopUserDO masterUser = workshopUserService.getWorkshopUser(masterId);
+        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId);
+
+        // 6. 查询系统配置的发货工序节点，将该窗帘行已完成的发货工序记录撤销（status 改为 2），并写入备注
+        ZcProcessNodeDO shipNode = processNodeMapper.selectOne(
+                Wrappers.<ZcProcessNodeDO>lambdaQuery()
+                        .eq(ZcProcessNodeDO::getName, "发货")
+                        .eq(ZcProcessNodeDO::getGroup, 0));
+        if (shipNode != null) {
+            processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
+                    .set(ZcOrderProcessRecordDO::getStatus, 2)
+                    .set(ZcOrderProcessRecordDO::getNote, cancelNote)
+                    .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
+                    .eq(ZcOrderProcessRecordDO::getCurtainId, id)
+                    .eq(ZcOrderProcessRecordDO::getNodeId, shipNode.getId())
+                    .eq(ZcOrderProcessRecordDO::getStatus, 1));
+        }
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
