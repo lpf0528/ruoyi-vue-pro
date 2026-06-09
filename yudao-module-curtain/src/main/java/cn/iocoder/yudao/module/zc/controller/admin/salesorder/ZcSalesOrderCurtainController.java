@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderCurtainCancelReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderCurtainOperateReqVO;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderCurtainService;
 
@@ -42,16 +43,16 @@ public class ZcSalesOrderCurtainController {
     @PutMapping("/cancel-pack")
     @Operation(summary = "取消打包窗帘行（回退窗帘行状态并联动更新订单状态；若订单已在发货状态则不改变订单状态）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
-    public CommonResult<Boolean> cancelPackCurtain(@RequestBody @Valid ZcSalesOrderCurtainOperateReqVO reqVO) {
-        salesOrderCurtainService.cancelPackCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId());
+    public CommonResult<Boolean> cancelPackCurtain(@RequestBody @Valid ZcSalesOrderCurtainCancelReqVO reqVO) {
+        salesOrderCurtainService.cancelPackCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId(), reqVO.getReason());
         return success(true);
     }
 
     @PutMapping("/cancel-ship")
     @Operation(summary = "取消发货窗帘行（回退窗帘行状态并联动更新订单状态）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
-    public CommonResult<Boolean> cancelShipCurtain(@RequestBody @Valid ZcSalesOrderCurtainOperateReqVO reqVO) {
-        salesOrderCurtainService.cancelShipCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId());
+    public CommonResult<Boolean> cancelShipCurtain(@RequestBody @Valid ZcSalesOrderCurtainCancelReqVO reqVO) {
+        salesOrderCurtainService.cancelShipCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId(), reqVO.getReason());
         return success(true);
     }
 

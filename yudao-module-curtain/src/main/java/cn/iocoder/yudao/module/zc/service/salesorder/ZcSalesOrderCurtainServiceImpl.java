@@ -177,7 +177,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUCCESS)
-    public void cancelPackCurtain(Long id, Long masterId, Long assistantId) {
+    public void cancelPackCurtain(Long id, Long masterId, Long assistantId, String reason) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
@@ -203,9 +203,10 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
         String newOrderStatus = calculateOrderStatusByCurtains(allCurtains);
         salesOrderMapper.updateStatusById(orderId, newOrderStatus);
 
-        // 4. 查询操作员姓名，构建撤销备注
+        // 4. 查询操作员姓名，构建撤销备注（格式：取消的操作员是：{姓名}，原因：{reason}）
         ZcWorkshopUserDO masterUser = workshopUserService.getWorkshopUser(masterId);
-        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId);
+        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId)
+                + (reason != null && !reason.isEmpty() ? "，原因：" + reason : "");
 
         // 5. 查询系统配置的打包工序节点，将该窗帘行已完成的打包工序记录撤销（status 改为 2），并写入备注
         ZcProcessNodeDO packNode = processNodeMapper.selectOne(
@@ -230,7 +231,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUCCESS)
-    public void cancelShipCurtain(Long id, Long masterId, Long assistantId) {
+    public void cancelShipCurtain(Long id, Long masterId, Long assistantId, String reason) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
@@ -268,9 +269,10 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .orderAfterStatus(newOrderStatus)
                 .build());
 
-        // 5. 查询操作员姓名，构建撤销备注
+        // 5. 查询操作员姓名，构建撤销备注（格式：取消的操作员是：{姓名}，原因：{reason}）
         ZcWorkshopUserDO masterUser = workshopUserService.getWorkshopUser(masterId);
-        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId);
+        String cancelNote = "取消的操作员是：" + (masterUser != null ? masterUser.getName() : masterId)
+                + (reason != null && !reason.isEmpty() ? "，原因：" + reason : "");
 
         // 6. 查询系统配置的发货工序节点，将该窗帘行已完成的发货工序记录撤销（status 改为 2），并写入备注
         ZcProcessNodeDO shipNode = processNodeMapper.selectOne(

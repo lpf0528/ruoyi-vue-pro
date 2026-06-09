@@ -16,8 +16,9 @@ public interface ZcSalesOrderCurtainService {
      * @param id          窗帘行 ID
      * @param masterId    主操作人员 ID
      * @param assistantId 副操作人员 ID（可为空）
+     * @param reason      取消原因（可为空）
      */
-    void cancelShipCurtain(Long id, Long masterId, Long assistantId);
+    void cancelShipCurtain(Long id, Long masterId, Long assistantId, String reason);
 
     /**
      * 打包窗帘行
@@ -42,8 +43,9 @@ public interface ZcSalesOrderCurtainService {
      * @param id          窗帘行 ID
      * @param masterId    主操作人员 ID
      * @param assistantId 副操作人员 ID（可为空）
+     * @param reason      取消原因（可为空）
      */
-    void cancelPackCurtain(Long id, Long masterId, Long assistantId);
+    void cancelPackCurtain(Long id, Long masterId, Long assistantId, String reason);
 
     /**
      * 发货窗帘行
