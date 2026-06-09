@@ -19,6 +19,12 @@ public class ZcOrderProcessRecordRespVO {
     @Schema(description = "销售订单 ID")
     private Long orderId;
 
+    @Schema(description = "订单号")
+    private String orderNo;
+
+    @Schema(description = "窗帘款式名称")
+    private String curtainName;
+
     @Schema(description = "窗帘行 ID")
     private Long curtainId;
 
