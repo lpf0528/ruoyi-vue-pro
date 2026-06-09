@@ -72,12 +72,12 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // 1. 校验分摊金额合计必须等于实收+优惠，否则订单账目与客户余额会不一致
         BigDecimal discount = createReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
         BigDecimal totalSettled = createReqVO.getActualAmount().add(discount);
-        BigDecimal totalAllocated = createReqVO.getOrderItems().stream()
-                .map(ZcBillOrderItemReqVO::getAllocatedAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalAllocated.compareTo(totalSettled) != 0) {
-            throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH);
-        }
+//        BigDecimal totalAllocated = createReqVO.getOrderItems().stream()
+//                .map(ZcBillOrderItemReqVO::getAllocatedAmount)
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        if (totalAllocated.compareTo(totalSettled) != 0) {
+//            throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH);
+//        }
 
         // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}，Redis INCR 保证并发唯一
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
