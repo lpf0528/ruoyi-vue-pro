@@ -24,6 +24,8 @@ import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
+import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum;
 import com.mzt.logapi.context.LogRecordContext;
@@ -55,6 +57,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZcOrderProcessRecordMapper processRecordMapper;
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
+    @Resource
+    private ZcWorkshopUserService workshopUserService;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -157,7 +161,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecordMapper.insert(inventoryRecord);
 
         // 查找系统配置的"配料"工序节点（group=0），有则自动创建工序完成记录
-        createPeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), reqVO.getId());
+        createPeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), reqVO.getId(),
+                reqVO.getMasterId(), reqVO.getAssistantId());
 
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
@@ -166,8 +171,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     @Override
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUB_TYPE,
-            bizNo = "{{#materialId}}", success = ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUCCESS)
-    public void cancelCutMaterial(Long materialId) {
+            bizNo = "{{#reqVO.materialId}}", success = ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUCCESS)
+    public void cancelCutMaterial(ZcCancelCutMaterialReqVO reqVO) {
+        Long materialId = reqVO.getMaterialId();
         // 1. 校验用料明细存在
         ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(materialId);
         // 2. 只有已配料的明细才能撤销
@@ -203,8 +209,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecord.setOrderId(material.getOrderId());
         inventoryRecordMapper.insert(inventoryRecord);
 
-        // 撤销该用料明细对应的"配料"工序完成记录（若存在）
-        revokePeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), materialId);
+        // 撤销该用料明细对应的"配料"工序完成记录（若存在），写入操作人信息
+        revokePeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), materialId,
+                reqVO.getMasterId(), reqVO.getAssistantId());
 
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
@@ -220,8 +227,11 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      * @param orderId     销售订单 ID
      * @param structureId 结构行 ID
      * @param materialId  用料明细 ID
+     * @param masterId    主操作人员 ID
+     * @param assistantId 副操作人员 ID，可为空
      */
-    private void createPeiliaoProcessRecord(Long orderId, Long structureId, Long materialId) {
+    private void createPeiliaoProcessRecord(Long orderId, Long structureId, Long materialId,
+                                            Long masterId, Long assistantId) {
         ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
                 .eq(ZcProcessNodeDO::getGroup, 0)
                 .eq(ZcProcessNodeDO::getName, "配料"));
@@ -232,6 +242,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
                 .nodeId(node != null ? node.getId() : null)
                 .nodeName(node != null ? node.getName() : "配料")
                 .status(1)
+                .masterId(masterId)
+                .assistantId(assistantId)
                 .build());
         // 同步更新订单当前工序名称快照
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
@@ -240,7 +252,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     }
 
     /**
-     * 在撤销裁剪后，将对应"配料"工序记录状态改为撤销（status=2）
+     * 在撤销裁剪后，将对应"配料"工序记录状态改为撤销（status=2），并写入操作人信息至 note
      *
      * <p>仅处理系统配置（group=0）且名称为"配料"的工序节点；
      * 若找不到对应完成记录则静默跳过。</p>
@@ -248,8 +260,11 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      * @param orderId     销售订单 ID
      * @param structureId 结构行 ID
      * @param materialId  用料明细 ID
+     * @param masterId    主操作人员 ID
+     * @param assistantId 副操作人员 ID，可为空
      */
-    private void revokePeiliaoProcessRecord(Long orderId, Long structureId, Long materialId) {
+    private void revokePeiliaoProcessRecord(Long orderId, Long structureId, Long materialId,
+                                            Long masterId, Long assistantId) {
         ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
                 .eq(ZcProcessNodeDO::getGroup, 0)
                 .eq(ZcProcessNodeDO::getName, "配料"));
@@ -262,8 +277,16 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         if (record == null) {
             return;
         }
+        // 查询操作员姓名，构建撤销备注
+        ZcWorkshopUserDO masterUser = workshopUserService.getWorkshopUser(masterId);
+        String cancelNote = "撤销人：" + (masterUser != null ? masterUser.getName() : masterId);
+        if (assistantId != null) {
+            ZcWorkshopUserDO assistantUser = workshopUserService.getWorkshopUser(assistantId);
+            cancelNote += "，副操作人：" + (assistantUser != null ? assistantUser.getName() : assistantId);
+        }
         processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
                 .set(ZcOrderProcessRecordDO::getStatus, 2)
+                .set(ZcOrderProcessRecordDO::getNote, cancelNote)
                 .eq(ZcOrderProcessRecordDO::getId, record.getId()));
     }
 

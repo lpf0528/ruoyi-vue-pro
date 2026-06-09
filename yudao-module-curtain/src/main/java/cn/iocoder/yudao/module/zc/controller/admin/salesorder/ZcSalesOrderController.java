@@ -200,7 +200,7 @@ public class ZcSalesOrderController {
     @Operation(summary = "撤销裁剪（回退批次库存、清空配料绑定、写入撤销裁剪记录）")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
     public CommonResult<Boolean> cancelCutMaterial(@RequestBody @Valid ZcCancelCutMaterialReqVO reqVO) {
-        salesOrderMaterialService.cancelCutMaterial(reqVO.getMaterialId());
+        salesOrderMaterialService.cancelCutMaterial(reqVO);
         return success(true);
     }
 

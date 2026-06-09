@@ -75,8 +75,8 @@ public interface ZCSalesOrderMaterialService {
      * 同时原子回退批次库存，并写入 CANCEL_CAIJIAN 库存变动记录。
      * 若用料明细不处于已配料状态，则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#SALES_ORDER_MATERIAL_NOT_PEILIAO}。</p>
      *
-     * @param materialId 用料明细ID
+     * @param reqVO 撤销裁剪请求（用料明细ID、主操作人、副操作人）
      */
-    void cancelCutMaterial(Long materialId);
+    void cancelCutMaterial(@Valid ZcCancelCutMaterialReqVO reqVO);
 
 }
