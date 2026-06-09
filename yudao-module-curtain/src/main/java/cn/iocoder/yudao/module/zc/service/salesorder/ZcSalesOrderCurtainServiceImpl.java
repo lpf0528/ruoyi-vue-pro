@@ -53,7 +53,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_PACK_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_PACK_SUCCESS)
-    public void packCurtain(Long id) {
+    public void packCurtain(Long id, Long masterId, Long assistantId) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
@@ -101,6 +101,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .nodeId(packNode != null ? packNode.getId() : null)
                 .nodeName(packNode != null ? packNode.getName() : "打包")
                 .status(1)  // 1=完成
+                .masterId(masterId)
+                .assistantId(assistantId)
                 .build());
 
         LogRecordContext.putVariable("newOrderStatus",
@@ -111,7 +113,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_SHIP_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_SHIP_SUCCESS)
-    public void shipCurtain(Long id) {
+    public void shipCurtain(Long id, Long masterId, Long assistantId) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
@@ -155,7 +157,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_PACK_SUCCESS)
-    public void cancelPackCurtain(Long id) {
+    public void cancelPackCurtain(Long id, Long masterId, Long assistantId) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
@@ -203,7 +205,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Transactional(rollbackFor = Exception.class)
     @LogRecord(type = ZC_SALES_ORDER_CURTAIN_TYPE, subType = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUB_TYPE,
             bizNo = "{{#id}}", success = ZC_SALES_ORDER_CURTAIN_CANCEL_SHIP_SUCCESS)
-    public void cancelShipCurtain(Long id) {
+    public void cancelShipCurtain(Long id, Long masterId, Long assistantId) {
         // 1. 校验窗帘行存在，记录操作前状态
         ZcSalesOrderCurtainDO curtain = validateSalesOrderCurtainExists(id);
         Long orderId = curtain.getOrderId();
