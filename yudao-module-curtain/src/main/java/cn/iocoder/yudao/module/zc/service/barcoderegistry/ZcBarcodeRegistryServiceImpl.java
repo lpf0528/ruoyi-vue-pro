@@ -28,7 +28,7 @@ public class ZcBarcodeRegistryServiceImpl implements ZcBarcodeRegistryService {
 
     @Override
     @LogRecord(type = ZC_BARCODE_REGISTRY_TYPE, subType = ZC_BARCODE_REGISTRY_CREATE_SUB_TYPE,
-            bizNo = "{{#registry.codeId}}", success = ZC_BARCODE_REGISTRY_CREATE_SUCCESS)
+            bizNo = "{{#registry.id}}", success = ZC_BARCODE_REGISTRY_CREATE_SUCCESS)
     public String createBarcodeRegistry(ZcBarcodeRegistryCreateReqVO createReqVO) {
         ZcBarcodeRegistryDO registry = BeanUtils.toBean(createReqVO, ZcBarcodeRegistryDO.class);
         // 服务端生成全局唯一的 UUID 作为 codeId，确保二维码不重复
