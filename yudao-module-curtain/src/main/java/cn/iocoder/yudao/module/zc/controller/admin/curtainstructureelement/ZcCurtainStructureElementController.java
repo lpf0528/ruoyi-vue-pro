@@ -96,6 +96,7 @@ public class ZcCurtainStructureElementController {
         return success(convertList(list, item -> new ZcCurtainStructureElementSimpleRespVO()
                 .setId(item.getId())
                 .setName(item.getName())
+                .setIsPrint(item.getIsPrint())
         ));
     }
 

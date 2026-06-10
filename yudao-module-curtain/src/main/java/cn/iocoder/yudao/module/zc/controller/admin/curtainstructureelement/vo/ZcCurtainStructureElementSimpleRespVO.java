@@ -15,4 +15,7 @@ public class ZcCurtainStructureElementSimpleRespVO {
     @Schema(description = "组件名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
+    @Schema(description = "是否打印")
+    private Boolean isPrint;
+
 }

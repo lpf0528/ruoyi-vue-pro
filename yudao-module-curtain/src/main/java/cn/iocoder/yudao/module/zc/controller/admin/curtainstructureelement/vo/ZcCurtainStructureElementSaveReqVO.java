@@ -26,4 +26,8 @@ public class ZcCurtainStructureElementSaveReqVO {
     @DiffLogField(name = "版本")
     private Long versionId;
 
+    @Schema(description = "是否打印", example = "true")
+    @DiffLogField(name = "是否打印")
+    private Boolean isPrint;
+
 }

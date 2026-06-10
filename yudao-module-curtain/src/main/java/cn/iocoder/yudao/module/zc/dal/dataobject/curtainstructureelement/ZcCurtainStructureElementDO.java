@@ -39,6 +39,11 @@ public class ZcCurtainStructureElementDO extends BaseDO {
      * 版本
      */
     private Long versionId;
+    /**
+     * 是否打印，true=是，false=否，默认为 true
+     */
+    @TableField("is_print")
+    private Boolean isPrint;
 
 
 }
