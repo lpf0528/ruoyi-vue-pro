@@ -25,4 +25,22 @@ public interface ZcBarcodeRegistryMapper extends BaseMapperX<ZcBarcodeRegistryDO
                 .last("LIMIT 1"));
     }
 
+    /**
+     * 根据去重三元组查询注册记录（用于幂等创建）
+     *
+     * <p>tenant_id 由 MyBatis-Plus 租户插件自动追加，无需显式传入</p>
+     *
+     * @param codeType    码类型
+     * @param targetRoute 跳转路由
+     * @param contentHash code_content 规范化 SHA-256 指纹
+     * @return 已存在的注册记录，不存在时返回 null
+     */
+    default ZcBarcodeRegistryDO selectByDedup(String codeType, String targetRoute, String contentHash) {
+        return selectOne(new LambdaQueryWrapperX<ZcBarcodeRegistryDO>()
+                .eq(ZcBarcodeRegistryDO::getCodeType, codeType)
+                .eq(ZcBarcodeRegistryDO::getTargetRoute, targetRoute)
+                .eq(ZcBarcodeRegistryDO::getContentHash, contentHash)
+                .last("LIMIT 1"));
+    }
+
 }

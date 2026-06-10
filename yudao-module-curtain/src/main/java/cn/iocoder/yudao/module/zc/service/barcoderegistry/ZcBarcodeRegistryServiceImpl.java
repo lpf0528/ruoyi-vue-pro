@@ -5,8 +5,10 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.zc.controller.admin.barcoderegistry.vo.ZcBarcodeRegistryCreateReqVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.barcoderegistry.ZcBarcodeRegistryDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.barcoderegistry.ZcBarcodeRegistryMapper;
+import cn.iocoder.yudao.module.zc.framework.util.ContentHashUtil;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -30,11 +32,32 @@ public class ZcBarcodeRegistryServiceImpl implements ZcBarcodeRegistryService {
     @LogRecord(type = ZC_BARCODE_REGISTRY_TYPE, subType = ZC_BARCODE_REGISTRY_CREATE_SUB_TYPE,
             bizNo = "{{#registry.id}}", success = ZC_BARCODE_REGISTRY_CREATE_SUCCESS)
     public String createBarcodeRegistry(ZcBarcodeRegistryCreateReqVO createReqVO) {
+        // 1. 计算 code_content 规范化指纹，用于去重查询
+        String contentHash = ContentHashUtil.hash(createReqVO.getCodeContent());
+
+        // 2. 先查询是否已存在相同记录（同一租户下 codeType + targetRoute + contentHash 联合唯一）
+        ZcBarcodeRegistryDO existing = barcodeRegistryMapper.selectByDedup(
+                createReqVO.getCodeType(), createReqVO.getTargetRoute(), contentHash);
+        if (existing != null) {
+            LogRecordContext.putVariable("registry", existing);
+            return existing.getCodeId();
+        }
+
+        // 3. 不存在则新建记录
         ZcBarcodeRegistryDO registry = BeanUtils.toBean(createReqVO, ZcBarcodeRegistryDO.class);
-        // 服务端生成全局唯一的 UUID 作为 codeId，确保二维码不重复
         registry.setCodeId(IdUtil.fastSimpleUUID());
-        barcodeRegistryMapper.insert(registry);
-        // 记录操作日志上下文
+        registry.setContentHash(contentHash);
+
+        try {
+            barcodeRegistryMapper.insert(registry);
+        } catch (DuplicateKeyException e) {
+            // 并发场景下唯一索引冲突，重新查询返回已有记录
+            ZcBarcodeRegistryDO concurrent = barcodeRegistryMapper.selectByDedup(
+                    createReqVO.getCodeType(), createReqVO.getTargetRoute(), contentHash);
+            LogRecordContext.putVariable("registry", concurrent);
+            return concurrent.getCodeId();
+        }
+
         LogRecordContext.putVariable("registry", registry);
         return registry.getCodeId();
     }

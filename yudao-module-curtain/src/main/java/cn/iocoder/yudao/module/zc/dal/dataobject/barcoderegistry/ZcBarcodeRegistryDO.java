@@ -48,4 +48,9 @@ public class ZcBarcodeRegistryDO extends BaseDO {
      */
     private String codeContent;
 
+    /**
+     * code_content 规范化后的 SHA-256 指纹（key 排序后拼接再哈希），与 code_type、target_route 联合唯一，用于去重
+     */
+    private String contentHash;
+
 }
