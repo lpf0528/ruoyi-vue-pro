@@ -31,4 +31,8 @@ public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO
     @Schema(description = "批次条码")
     private String barcode;
 
+    /** 组件是否打印，来自 zc_curtain_structure_element.is_print */
+    @Schema(description = "组件是否打印")
+    private Boolean elementIsPrint;
+
 }
