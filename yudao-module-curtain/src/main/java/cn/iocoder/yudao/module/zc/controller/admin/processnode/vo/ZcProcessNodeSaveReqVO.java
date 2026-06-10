@@ -18,9 +18,8 @@ public class ZcProcessNodeSaveReqVO {
     @NotEmpty(message = "工序名称，如：备料、裁剪、缝制、定型、质检、包装不能为空")
     private String name;
 
-    @Schema(description = "排序号，数字越小越靠前", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "排序号，数字越小越靠前", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     @DiffLogField(name = "排序号")
-    @NotNull(message = "排序号，数字越小越靠前不能为空")
     private Integer sort;
 
     @Schema(description = "工序描述/操作说明", example = "随便")
