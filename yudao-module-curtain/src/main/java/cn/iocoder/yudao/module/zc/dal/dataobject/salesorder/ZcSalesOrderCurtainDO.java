@@ -60,8 +60,10 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
      */
     private String image2;
     /**
-     * 配件多选
+     * 配件多选（JSON 数组字符串），整单更新时前端可传空列表将其置空，
+     * 需要 ALWAYS 策略才能在 updateById 中将该字段置为 null
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String mountings;
     /**
      * 备注

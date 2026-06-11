@@ -9,14 +9,21 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /**
- * 管理后台 - 销售订单结构行（嵌套创建）VO
+ * 管理后台 - 销售订单结构行（嵌套创建/更新）VO
  *
- * <p>用于订单整单创建接口中内嵌的结构行，
+ * <p>用于订单整单创建/更新接口中内嵌的结构行。
+ * 整单更新时：有 id 的行执行 UPDATE，无 id 的行执行 INSERT，不在请求中的行执行 DELETE。
  * orderId / orderCurtainId 由 Service 层根据父级 ID 自动填充，无需前端传入。</p>
  */
-@Schema(description = "管理后台 - 销售订单结构行（嵌套创建）VO")
+@Schema(description = "管理后台 - 销售订单结构行（嵌套创建/更新）VO")
 @Data
 public class ZcSalesOrderStructureCreateVO {
+
+    /**
+     * 结构行 ID，整单更新时传入表示更新已有行，不传或为 null 表示新增行
+     */
+    @Schema(description = "结构行 ID（更新时传入，新增时不传）", example = "20001")
+    private Long id;
 
     /** 结构款式 ID，必填 */
     @Schema(description = "结构", requiredMode = Schema.RequiredMode.REQUIRED, example = "17209")

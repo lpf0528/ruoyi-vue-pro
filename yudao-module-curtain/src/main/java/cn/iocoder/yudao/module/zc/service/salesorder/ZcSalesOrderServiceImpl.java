@@ -190,17 +190,168 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
     }
 
-    /** 将面单简化窗帘 VO 转为标准窗帘 VO，以便复用 saveCurtainSubRows */
+    /**
+     * 三路 merge 更新三层子表：UPDATE 有 id 的行 / INSERT 无 id 的行 / DELETE 不在请求中的行。
+     *
+     * <p>保护规则：
+     * <ul>
+     *   <li>窗帘行：status / packTime / shipTime 不覆盖（由确认/打包/发货流程驱动）</li>
+     *   <li>用料明细：status / cutQuantity 不覆盖；已裁剪行（HAVE_PEILIAO）的 batchId 不覆盖</li>
+     *   <li>前置拦截：若待删除的用料明细中存在 HAVE_PEILIAO 行，直接抛异常，防止库存状态不一致</li>
+     * </ul>
+     * </p>
+     */
+    private void mergeCurtainSubRows(Long orderId, List<ZcSalesOrderCurtainCreateVO> curtains) {
+        if (CollUtil.isEmpty(curtains)) return;
+
+        // ① 一次性加载当前三层子表，避免后续 N+1
+        List<ZcSalesOrderCurtainDO> existingCurtains = salesOrderCurtainMapper.selectListByOrderId(orderId);
+        List<ZcSalesOrderStructureDO> existingStructures = salesOrderStructureMapper.selectListByOrderId(orderId);
+        List<ZCSalesOrderMaterialDO> existingMaterials = salesOrderMaterialMapper.selectListByOrderId(orderId);
+
+        Map<Long, ZcSalesOrderCurtainDO> existingCurtainMap = convertMap(existingCurtains, ZcSalesOrderCurtainDO::getId);
+        Map<Long, ZcSalesOrderStructureDO> existingStructureMap = convertMap(existingStructures, ZcSalesOrderStructureDO::getId);
+        Map<Long, ZCSalesOrderMaterialDO> existingMaterialMap = convertMap(existingMaterials, ZCSalesOrderMaterialDO::getId);
+
+        // ② 收集请求中所有 ID，用于确定哪些行需要被删除
+        Set<Long> requestCurtainIds = new HashSet<>();
+        Set<Long> requestStructureIds = new HashSet<>();
+        Set<Long> requestMaterialIds = new HashSet<>();
+        for (ZcSalesOrderCurtainCreateVO curtainVO : curtains) {
+            if (curtainVO.getId() != null) requestCurtainIds.add(curtainVO.getId());
+            if (CollUtil.isNotEmpty(curtainVO.getStructures())) {
+                for (ZcSalesOrderStructureCreateVO structureVO : curtainVO.getStructures()) {
+                    if (structureVO.getId() != null) requestStructureIds.add(structureVO.getId());
+                    if (CollUtil.isNotEmpty(structureVO.getMaterials())) {
+                        structureVO.getMaterials().stream()
+                                .filter(m -> m.getId() != null)
+                                .forEach(m -> requestMaterialIds.add(m.getId()));
+                    }
+                }
+            }
+        }
+
+        // ③ 前置校验：待删除的用料明细中不允许有 HAVE_PEILIAO 行（库存已出库，须先撤销裁剪）
+        existingMaterials.stream()
+                .filter(m -> !requestMaterialIds.contains(m.getId()))
+                .filter(m -> ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(m.getStatus()))
+                .findFirst()
+                .ifPresent(m -> { throw exception(SALES_ORDER_MATERIAL_CANNOT_DELETE_WHEN_CUT); });
+
+        // ④ 逐层 upsert
+        int curtainIndex = 1;
+        for (ZcSalesOrderCurtainCreateVO curtainVO : curtains) {
+            String mountingsJson = CollUtil.isNotEmpty(curtainVO.getMountings())
+                    ? JSONUtil.toJsonStr(curtainVO.getMountings()) : null;
+            Long orderCurtainId;
+
+            if (curtainVO.getId() != null && existingCurtainMap.containsKey(curtainVO.getId())) {
+                // UPDATE 已有窗帘行
+                ZcSalesOrderCurtainDO updateDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
+                updateDO.setMountings(mountingsJson); // 手动赋值（VO/DO 类型不同，toBean 不会复制）
+                updateDO.setIndex(curtainIndex);
+                // status/packTime/shipTime 置 null → updateById 不覆盖
+                updateDO.setStatus(null);
+                updateDO.setPackTime(null);
+                updateDO.setShipTime(null);
+                salesOrderCurtainMapper.updateById(updateDO);
+                orderCurtainId = curtainVO.getId();
+            } else {
+                // INSERT 新窗帘行
+                ZcSalesOrderCurtainDO newDO = BeanUtils.toBean(curtainVO, ZcSalesOrderCurtainDO.class);
+                newDO.setId(null); // 防止前端传入无效 ID 被当作主键
+                newDO.setOrderId(orderId);
+                newDO.setMountings(mountingsJson);
+                newDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name());
+                newDO.setIndex(curtainIndex);
+                salesOrderCurtainMapper.insert(newDO);
+                orderCurtainId = newDO.getId();
+            }
+            curtainIndex++;
+
+            if (CollUtil.isEmpty(curtainVO.getStructures())) continue;
+            for (ZcSalesOrderStructureCreateVO structureVO : curtainVO.getStructures()) {
+                Long orderStructureId;
+
+                if (structureVO.getId() != null && existingStructureMap.containsKey(structureVO.getId())) {
+                    // UPDATE 已有结构行
+                    ZcSalesOrderStructureDO updateDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
+                    updateDO.setOrderCurtainId(orderCurtainId); // 允许行跨窗帘挪动
+                    salesOrderStructureMapper.updateById(updateDO);
+                    orderStructureId = structureVO.getId();
+                } else {
+                    // INSERT 新结构行
+                    ZcSalesOrderStructureDO newDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
+                    newDO.setId(null);
+                    newDO.setOrderId(orderId);
+                    newDO.setOrderCurtainId(orderCurtainId);
+                    salesOrderStructureMapper.insert(newDO);
+                    orderStructureId = newDO.getId();
+                }
+
+                if (CollUtil.isEmpty(structureVO.getMaterials())) continue;
+                for (ZCSalesOrderMaterialCreateVO materialVO : structureVO.getMaterials()) {
+                    if (materialVO.getId() != null && existingMaterialMap.containsKey(materialVO.getId())) {
+                        // UPDATE 已有用料明细，保护系统字段
+                        ZCSalesOrderMaterialDO existing = existingMaterialMap.get(materialVO.getId());
+                        ZCSalesOrderMaterialDO updateDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
+                        updateDO.setOrderStructureId(orderStructureId);
+                        // status / cutQuantity 由裁剪流程维护，置 null 确保 updateById 不覆盖
+                        updateDO.setStatus(null);
+                        updateDO.setCutQuantity(null);
+                        // 已裁剪行的 batchId 与库存扣减绑定，不允许修改
+                        if (ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(existing.getStatus())) {
+                            updateDO.setBatchId(null);
+                        }
+                        salesOrderMaterialMapper.updateById(updateDO);
+                    } else {
+                        // INSERT 新用料明细
+                        ZCSalesOrderMaterialDO newDO = BeanUtils.toBean(materialVO, ZCSalesOrderMaterialDO.class);
+                        newDO.setId(null);
+                        newDO.setOrderId(orderId);
+                        newDO.setOrderStructureId(orderStructureId);
+                        salesOrderMaterialMapper.insert(newDO);
+                    }
+                }
+            }
+        }
+
+        // ⑤ 删除不在请求中的行（由内向外：先用料明细 → 结构行 → 窗帘行）
+        Set<Long> materialsToDelete = existingMaterials.stream()
+                .map(ZCSalesOrderMaterialDO::getId)
+                .filter(id -> !requestMaterialIds.contains(id))
+                .collect(Collectors.toSet());
+        Set<Long> structuresToDelete = existingStructures.stream()
+                .map(ZcSalesOrderStructureDO::getId)
+                .filter(id -> !requestStructureIds.contains(id))
+                .collect(Collectors.toSet());
+        Set<Long> curtainsToDelete = existingCurtains.stream()
+                .map(ZcSalesOrderCurtainDO::getId)
+                .filter(id -> !requestCurtainIds.contains(id))
+                .collect(Collectors.toSet());
+
+        if (CollUtil.isNotEmpty(materialsToDelete)) salesOrderMaterialMapper.deleteBatchIds(materialsToDelete);
+        if (CollUtil.isNotEmpty(structuresToDelete)) salesOrderStructureMapper.deleteBatchIds(structuresToDelete);
+        if (CollUtil.isNotEmpty(curtainsToDelete)) salesOrderCurtainMapper.deleteBatchIds(curtainsToDelete);
+    }
+
+    /**
+     * 将面单简化窗帘 VO 转为标准窗帘 VO，以便复用 mergeCurtainSubRows。
+     *
+     * <p>透传各层的 id 字段，使 merge 逻辑能正确识别更新/新增行。</p>
+     */
     private List<ZcSalesOrderCurtainCreateVO> toStandardCurtainVOs(
             List<ZcSalesOrderFabricCurtainCreateVO> fabricCurtains) {
         if (CollUtil.isEmpty(fabricCurtains)) return Collections.emptyList();
         return fabricCurtains.stream().map(fc -> {
             ZcSalesOrderCurtainCreateVO c = new ZcSalesOrderCurtainCreateVO();
+            c.setId(fc.getId()); // 透传 id，供 merge 区分更新/新增
             c.setAmount(fc.getAmount());
             c.setNote(fc.getNote());
             if (CollUtil.isNotEmpty(fc.getStructures())) {
                 c.setStructures(fc.getStructures().stream().map(fs -> {
                     ZcSalesOrderStructureCreateVO s = new ZcSalesOrderStructureCreateVO();
+                    s.setId(fs.getId()); // 透传 id，供 merge 区分更新/新增
                     s.setMaterials(fs.getMaterials());
                     return s;
                 }).collect(Collectors.toList()));
@@ -221,7 +372,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
         LogRecordContext.putVariable("orderNo", existing.getOrderNo());
-        saveCurtainSubRows(updateReqVO.getId(), updateReqVO.getCurtains());
+        mergeCurtainSubRows(updateReqVO.getId(), updateReqVO.getCurtains());
     }
 
     @Override
@@ -236,11 +387,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderFabricUpdateReqVO.class));
         LogRecordContext.putVariable("orderNo", existing.getOrderNo());
-        saveCurtainSubRows(updateReqVO.getId(), toStandardCurtainVOs(updateReqVO.getCurtains()));
+        mergeCurtainSubRows(updateReqVO.getId(), toStandardCurtainVOs(updateReqVO.getCurtains()));
     }
 
     /**
-     * 更新前置操作：校验订单存在且未确认，删除旧的三层子表数据
+     * 更新前置校验：订单必须存在且未确认（confirmTime 为 null）
+     *
+     * <p>不再提前删除子表，子表的增删改由 {@link #mergeCurtainSubRows} 完成。</p>
      *
      * @return 旧订单记录（供日志 diff 使用）
      */
@@ -249,10 +402,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (existing.getConfirmTime() != null) {
             throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
         }
-        // 全量替换：先删旧子表，再由调用方重新插入
-        salesOrderCurtainMapper.deleteByOrderId(orderId);
-        salesOrderStructureMapper.deleteByOrderId(orderId);
-        salesOrderMaterialMapper.deleteByOrderId(orderId);
         return existing;
     }
 

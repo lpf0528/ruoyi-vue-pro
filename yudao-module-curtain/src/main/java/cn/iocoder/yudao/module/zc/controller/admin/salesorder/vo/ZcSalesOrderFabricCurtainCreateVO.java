@@ -8,11 +8,17 @@ import java.util.List;
 import javax.validation.Valid;
 
 /**
- * 管理后台 - 面单窗帘行（嵌套创建）VO
+ * 管理后台 - 面单窗帘行（嵌套创建/更新）VO
  */
-@Schema(description = "管理后台 - 面单窗帘行（嵌套创建）VO")
+@Schema(description = "管理后台 - 面单窗帘行（嵌套创建/更新）VO")
 @Data
 public class ZcSalesOrderFabricCurtainCreateVO {
+
+    /**
+     * 窗帘行 ID，整单更新时传入表示更新已有行，不传或为 null 表示新增行
+     */
+    @Schema(description = "窗帘行 ID（更新时传入，新增时不传）", example = "10001")
+    private Long id;
 
     /** 应收金额 */
     @Schema(description = "应收金额")

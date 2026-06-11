@@ -162,5 +162,10 @@ public interface ErrorCodeConstants {
     ErrorCode PROCESS_NODE_NAME_EXISTS = new ErrorCode(100073, "工序节点名称已存在，请使用其他名称");
     /** 码注册记录不存在 */
     ErrorCode BARCODE_REGISTRY_NOT_EXISTS = new ErrorCode(100074, "码注册记录不存在");
+    /**
+     * 整单更新时，待删除的用料明细中存在已裁剪（HAVE_PEILIAO）行，禁止删除；
+     * 需先逐条撤销裁剪归还库存，才能从订单中移除该行
+     */
+    ErrorCode SALES_ORDER_MATERIAL_CANNOT_DELETE_WHEN_CUT = new ErrorCode(100077, "存在已裁剪的用料明细，请先撤销裁剪后再保存订单");
 }
 
