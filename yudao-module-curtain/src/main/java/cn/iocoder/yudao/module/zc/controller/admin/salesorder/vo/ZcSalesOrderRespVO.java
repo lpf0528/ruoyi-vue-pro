@@ -125,4 +125,8 @@ public class ZcSalesOrderRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @Schema(description = "当前工序名称快照（订单推进工序时更新）")
+    @ExcelProperty("当前工序")
+    private String currentNodeName;
+
 }

@@ -50,6 +50,10 @@ public class ZcSalesOrderFabricCreateReqVO {
     @Schema(description = "送货地址")
     private String deliveryAddress;
 
+    /** 交付日期 */
+    @Schema(description = "交付日期")
+    private LocalDate deliveryDate;
+
     /** 订单金额 */
     @Schema(description = "订单金额")
     private BigDecimal amount;
