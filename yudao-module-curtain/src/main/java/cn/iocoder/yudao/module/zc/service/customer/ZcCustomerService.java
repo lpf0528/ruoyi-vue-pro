@@ -7,6 +7,8 @@ import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
+import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.ZcCustomerImportExcelVO;
+import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.ZcCustomerImportRespVO;
 
 /**
  * 客户资料 Service 接口
@@ -72,5 +74,17 @@ public interface ZcCustomerService {
      * @param delta      余额变动金额，正数增加，负数减少
      */
     void adjustBalance(Long customerId, BigDecimal delta);
+
+    /**
+     * 批量导入客户资料
+     *
+     * <p>以简称作为唯一键：简称不存在则新增，已存在且 isUpdateSupport=true 则更新，
+     * 已存在且 isUpdateSupport=false 则记录为失败。</p>
+     *
+     * @param importCustomers 导入数据列表，不能为空
+     * @param isUpdateSupport 是否支持更新已存在的客户
+     * @return 导入结果（创建数、更新数、失败集合）
+     */
+    ZcCustomerImportRespVO importCustomerList(List<ZcCustomerImportExcelVO> importCustomers, boolean isUpdateSupport);
 
 }

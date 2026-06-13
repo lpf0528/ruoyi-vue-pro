@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.Operation;
 
 import javax.validation.constraints.*;
@@ -29,6 +30,7 @@ import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "管理后台 - 客户资料")
 @RestController
@@ -109,6 +111,44 @@ public class ZcCustomerController {
         List<ZcCustomerRespVO> list = customerService.getCustomerPage(pageReqVO).getList();
         // 导出 Excel
         ExcelUtils.write(response, "客户资料.xls", "数据", ZcCustomerRespVO.class, list);
+    }
+
+    @GetMapping("/get-import-template")
+    @Operation(summary = "下载客户资料导入模板")
+    @PreAuthorize("@ss.hasPermission('zc:customer:import')")
+    public void importTemplate(HttpServletResponse response) throws IOException {
+        // 构造示例数据，帮助用户了解各列格式
+        List<ZcCustomerImportExcelVO> list = Arrays.asList(
+                ZcCustomerImportExcelVO.builder()
+                        .shortName("示例客户A").name("示例客户A有限公司")
+                        .contactName("张三").deliveryAddress("广东省广州市天河区XX路1号")
+                        .mobile("13800138000").mobile2("13900139000")
+                        .logisticName("顺丰速运").brandName("品牌名称示例")
+                        .note("备注信息示例").build(),
+                ZcCustomerImportExcelVO.builder()
+                        .shortName("示例客户B").name("示例客户B贸易公司")
+                        .contactName("李四").deliveryAddress("广东省深圳市南山区XX街2号")
+                        .mobile("13700137000").mobile2("")
+                        .logisticName("").brandName("")
+                        .note("").build()
+        );
+        ExcelUtils.write(response, "客户资料导入模板.xls", "客户列表", ZcCustomerImportExcelVO.class, list);
+    }
+
+    @PostMapping("/import-excel")
+    @Operation(summary = "导入客户资料 Excel")
+    @Parameters({
+            @Parameter(name = "file", description = "Excel 文件", required = true),
+            @Parameter(name = "updateSupport", description = "是否支持更新已存在的客户，默认 false", example = "false")
+    })
+    @PreAuthorize("@ss.hasPermission('zc:customer:import')")
+    @ApiAccessLog(operateType = IMPORT)
+    public CommonResult<ZcCustomerImportRespVO> importExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "updateSupport", required = false, defaultValue = "false") Boolean updateSupport)
+            throws Exception {
+        List<ZcCustomerImportExcelVO> list = ExcelUtils.read(file, ZcCustomerImportExcelVO.class);
+        return success(customerService.importCustomerList(list, updateSupport));
     }
 
 }

@@ -1,21 +1,32 @@
 package cn.iocoder.yudao.module.zc.service.customer;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
+import cn.iocoder.yudao.module.zc.controller.admin.brand.vo.ZcBrandListReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsListReqVO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.brand.ZcBrandDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.logistics.ZcLogisticsDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillsDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.brand.ZcBrandMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.customer.ZcCustomerMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.logistics.ZcLogisticsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mzt.logapi.context.LogRecordContext;
@@ -43,6 +54,12 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
 
     @Resource
     private ZcBillsMapper billsMapper;
+
+    @Resource
+    private ZcLogisticsMapper logisticsMapper;
+
+    @Resource
+    private ZcBrandMapper brandMapper;
 
     @Override
     @LogRecord(type = ZC_CUSTOMER_TYPE, subType = ZC_CUSTOMER_CREATE_SUB_TYPE, bizNo = "{{#customer.id}}",
@@ -126,6 +143,87 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     @Override
     public List<ZcCustomerDO> getCustomerList(ZcCustomerListReqVO listReqVO) {
         return customerMapper.selectList(listReqVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ZcCustomerImportRespVO importCustomerList(List<ZcCustomerImportExcelVO> importCustomers, boolean isUpdateSupport) {
+        if (CollUtil.isEmpty(importCustomers)) {
+            throw exception(CUSTOMER_IMPORT_LIST_IS_EMPTY);
+        }
+
+        // 预加载所有物流名称 -> ID 映射，避免逐行 N+1 查询
+        Map<String, Long> logisticNameIdMap = logisticsMapper.selectList(new ZcLogisticsListReqVO())
+                .stream().collect(Collectors.toMap(ZcLogisticsDO::getName, ZcLogisticsDO::getId, (a, b) -> a));
+        // 预加载所有品牌名称 -> ID 映射
+        Map<String, Long> brandNameIdMap = brandMapper.selectList(new ZcBrandListReqVO())
+                .stream().collect(Collectors.toMap(ZcBrandDO::getName, ZcBrandDO::getId, (a, b) -> a));
+
+        ZcCustomerImportRespVO respVO = ZcCustomerImportRespVO.builder()
+                .createShortNames(new ArrayList<>())
+                .updateShortNames(new ArrayList<>())
+                .failureShortNames(new LinkedHashMap<>())
+                .build();
+
+        for (int i = 0; i < importCustomers.size(); i++) {
+            ZcCustomerImportExcelVO importCustomer = importCustomers.get(i);
+            String shortName = importCustomer.getShortName();
+            // 简称为空时用行号标记，方便用户定位
+            String rowKey = StrUtil.isNotBlank(shortName) ? shortName : "第 " + (i + 1) + " 行";
+
+            if (StrUtil.isBlank(shortName)) {
+                respVO.getFailureShortNames().put(rowKey, "简称不能为空");
+                continue;
+            }
+
+            // 解析物流 ID（填写了名称才校验，空则不关联）
+            Long logisticId = null;
+            if (StrUtil.isNotBlank(importCustomer.getLogisticName())) {
+                logisticId = logisticNameIdMap.get(importCustomer.getLogisticName());
+                if (logisticId == null) {
+                    respVO.getFailureShortNames().put(rowKey, "物流公司【" + importCustomer.getLogisticName() + "】不存在");
+                    continue;
+                }
+            }
+
+            // 解析品牌 ID（填写了名称才校验，空则不关联）
+            Long brandId = null;
+            if (StrUtil.isNotBlank(importCustomer.getBrandName())) {
+                brandId = brandNameIdMap.get(importCustomer.getBrandName());
+                if (brandId == null) {
+                    respVO.getFailureShortNames().put(rowKey, "品牌【" + importCustomer.getBrandName() + "】不存在");
+                    continue;
+                }
+            }
+
+            ZcCustomerDO existCustomer = customerMapper.selectByShortName(shortName);
+            try {
+                if (existCustomer == null) {
+                    // 新增：余额强制初始化为 0
+                    ZcCustomerDO customer = BeanUtils.toBean(importCustomer, ZcCustomerDO.class);
+                    customer.setLogisticId(logisticId);
+                    customer.setBrandId(brandId);
+                    customer.setBalance(BigDecimal.ZERO);
+                    customerMapper.insert(customer);
+                    respVO.getCreateShortNames().add(shortName);
+                } else if (isUpdateSupport) {
+                    // 更新：不覆盖余额
+                    ZcCustomerDO updateObj = BeanUtils.toBean(importCustomer, ZcCustomerDO.class);
+                    updateObj.setId(existCustomer.getId());
+                    updateObj.setLogisticId(logisticId);
+                    updateObj.setBrandId(brandId);
+                    customerMapper.updateById(updateObj);
+                    respVO.getUpdateShortNames().add(shortName);
+                } else {
+                    respVO.getFailureShortNames().put(rowKey, "客户简称已存在");
+                }
+            } catch (DataIntegrityViolationException e) {
+                // 数据超出字段长度限制（如手机号含多个号码）或其他数据完整性问题，单行失败不影响整体导入
+                respVO.getFailureShortNames().put(rowKey, "数据格式有误，请检查各字段长度是否超限");
+            }
+        }
+
+        return respVO;
     }
 
     @Override

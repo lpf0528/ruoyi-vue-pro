@@ -167,5 +167,7 @@ public interface ErrorCodeConstants {
      * 需先逐条撤销裁剪归还库存，才能从订单中移除该行
      */
     ErrorCode SALES_ORDER_MATERIAL_CANNOT_DELETE_WHEN_CUT = new ErrorCode(100077, "存在已裁剪的用料明细，请先撤销裁剪后再保存订单");
+    /** 导入客户时，传入的列表为空 */
+    ErrorCode CUSTOMER_IMPORT_LIST_IS_EMPTY = new ErrorCode(100078, "导入客户列表不能为空");
 }
 
