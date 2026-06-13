@@ -45,8 +45,10 @@ import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
+import cn.iocoder.yudao.module.zc.dal.dataobject.productspec.ZcProductSpecDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.productspec.ZcProductSpecMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
@@ -107,6 +109,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     private ZcProductMapper productMapper;
     @Resource
     private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZcProductSpecMapper productSpecMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -667,7 +671,18 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .map(ZCSalesOrderMaterialDO::getProductId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, String> productNameMap = convertMap(productMapper.selectList(ZcProductDO::getId, productIds), ZcProductDO::getId, ZcProductDO::getName);
+        List<ZcProductDO> productList = productMapper.selectList(ZcProductDO::getId, productIds);
+        Map<Long, String> productNameMap = convertMap(productList, ZcProductDO::getId, ZcProductDO::getName);
+        // 通过产品的 specId 批量查出规格值，构建 productId → specValue 的映射
+        Set<Long> specIds = productList.stream()
+                .map(ZcProductDO::getSpecId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> specValueMap = convertMap(productSpecMapper.selectList(ZcProductSpecDO::getId, specIds), ZcProductSpecDO::getId, ZcProductSpecDO::getValue);
+        // productId → specValue（需经 product.specId 中转）
+        Map<Long, String> productSpecValueMap = productList.stream()
+                .filter(p -> p.getSpecId() != null)
+                .collect(Collectors.toMap(ZcProductDO::getId, p -> specValueMap.getOrDefault(p.getSpecId(), "")));
         Set<Long> batchIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getBatchId)
                 .filter(Objects::nonNull)
@@ -686,6 +701,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             vo.setElementName(elementNameMap.get(m.getElementId()));
                             vo.setElementIsPrint(elementIsPrintMap.get(m.getElementId()));
                             vo.setProductName(productNameMap.get(m.getProductId()));
+                            vo.setSpecValue(productSpecValueMap.get(m.getProductId()));
                             vo.setBatchNo(batchNoMap.get(m.getBatchId()));
                             vo.setBarcode(batchBarcodeMap.get(m.getBatchId()));
                             return vo;
