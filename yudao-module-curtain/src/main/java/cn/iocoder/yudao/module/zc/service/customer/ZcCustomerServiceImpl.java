@@ -152,9 +152,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
             throw exception(CUSTOMER_IMPORT_LIST_IS_EMPTY);
         }
 
-        // 预加载所有物流名称 -> ID 映射，避免逐行 N+1 查询
-        Map<String, Long> logisticNameIdMap = logisticsMapper.selectList(new ZcLogisticsListReqVO())
-                .stream().collect(Collectors.toMap(ZcLogisticsDO::getName, ZcLogisticsDO::getId, (a, b) -> a));
+        // 预加载所有物流名称 -> ID 映射，避免逐行 N+1 查询；使用 HashMap 以便后续动态插入
+        Map<String, Long> logisticNameIdMap = new HashMap<>(logisticsMapper.selectList(new ZcLogisticsListReqVO())
+                .stream().collect(Collectors.toMap(ZcLogisticsDO::getName, ZcLogisticsDO::getId, (a, b) -> a)));
         // 预加载所有品牌名称 -> ID 映射
         Map<String, Long> brandNameIdMap = brandMapper.selectList(new ZcBrandListReqVO())
                 .stream().collect(Collectors.toMap(ZcBrandDO::getName, ZcBrandDO::getId, (a, b) -> a));
@@ -176,13 +176,20 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
                 continue;
             }
 
-            // 解析物流 ID（填写了名称才校验，空则不关联）
+            // 解析物流 ID（填写了名称才处理，空则不关联；不存在时自动创建，code 与 name 相同）
             Long logisticId = null;
             if (StrUtil.isNotBlank(importCustomer.getLogisticName())) {
-                logisticId = logisticNameIdMap.get(importCustomer.getLogisticName());
+                String logisticName = importCustomer.getLogisticName();
+                logisticId = logisticNameIdMap.get(logisticName);
                 if (logisticId == null) {
-                    respVO.getFailureShortNames().put(rowKey, "物流公司【" + importCustomer.getLogisticName() + "】不存在");
-                    continue;
+                    ZcLogisticsDO newLogistic = ZcLogisticsDO.builder()
+                            .code(logisticName)
+                            .name(logisticName)
+                            .build();
+                    logisticsMapper.insert(newLogistic);
+                    logisticId = newLogistic.getId();
+                    // 放入 map，避免同一批次重复创建相同物流
+                    logisticNameIdMap.put(logisticName, logisticId);
                 }
             }
 
