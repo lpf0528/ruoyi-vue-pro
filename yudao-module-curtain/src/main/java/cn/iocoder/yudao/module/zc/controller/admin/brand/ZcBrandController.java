@@ -95,7 +95,8 @@ public class ZcBrandController {
         List<ZcBrandDO> list = brandService.getBrandList(new ZcBrandListReqVO());
         return success(convertList(list, item -> new ZcBrandSimpleRespVO()
                 .setId(item.getId())
-                .setName(item.getName())));
+                .setName(item.getName())
+                .setIsDefault(item.getIsDefault())));
     }
 
     @GetMapping("/export-excel")
@@ -111,4 +112,4 @@ public class ZcBrandController {
                         BeanUtils.toBean(list, ZcBrandRespVO.class));
     }
 
-}
+}

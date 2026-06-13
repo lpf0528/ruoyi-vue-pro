@@ -34,4 +34,8 @@ public class ZcBrandSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
+    @Schema(description = "是否默认")
+    @DiffLogField(name = "是否默认")
+    private Boolean isDefault;
+
 }

@@ -39,6 +39,10 @@ public class ZcBrandServiceImpl implements ZcBrandService {
         // 插入
         ZcBrandDO brand = BeanUtils.toBean(createReqVO, ZcBrandDO.class);
         brandMapper.insert(brand);
+        // 若设为默认，清除其他品牌的默认标志（排除自身）
+        if (Boolean.TRUE.equals(createReqVO.getIsDefault())) {
+            brandMapper.clearDefault(brand.getId());
+        }
         // 记录操作日志上下文
         LogRecordContext.putVariable("brand", brand);
         return brand.getId();
@@ -51,6 +55,10 @@ public class ZcBrandServiceImpl implements ZcBrandService {
         // 校验存在
         ZcBrandDO oldBrand = validateBrandExists(updateReqVO.getId());
         validateBrandNameUnique(updateReqVO.getId(), updateReqVO.getName());
+        // 若设为默认，清除其他品牌的默认标志（排除自身）
+        if (Boolean.TRUE.equals(updateReqVO.getIsDefault())) {
+            brandMapper.clearDefault(updateReqVO.getId());
+        }
         // 更新
         ZcBrandDO updateObj = BeanUtils.toBean(updateReqVO, ZcBrandDO.class);
         brandMapper.updateById(updateObj);

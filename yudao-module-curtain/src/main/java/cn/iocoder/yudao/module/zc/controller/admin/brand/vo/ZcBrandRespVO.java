@@ -36,6 +36,10 @@ public class ZcBrandRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "是否默认")
+    @ExcelProperty("是否默认")
+    private Boolean isDefault;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

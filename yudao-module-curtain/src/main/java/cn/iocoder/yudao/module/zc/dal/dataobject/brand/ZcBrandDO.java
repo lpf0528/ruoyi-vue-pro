@@ -47,6 +47,9 @@ public class ZcBrandDO extends BaseDO {
      * 备注
      */
     private String note;
-
+    /**
+     * 是否默认
+     */
+    private Boolean isDefault;
 
 }

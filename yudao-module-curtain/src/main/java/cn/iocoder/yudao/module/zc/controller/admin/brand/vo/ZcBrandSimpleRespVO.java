@@ -15,4 +15,7 @@ public class ZcBrandSimpleRespVO {
     @Schema(description = "名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
+    @Schema(description = "是否默认")
+    private Boolean isDefault;
+
 }
