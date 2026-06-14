@@ -15,9 +15,8 @@ public class ZcCustomerSaveReqVO {
     @Schema(description = "主键", requiredMode = Schema.RequiredMode.REQUIRED, example = "8647")
     private Long id;
 
-    @Schema(description = "简称", requiredMode = Schema.RequiredMode.REQUIRED, example = "张三")
+    @Schema(description = "简称", example = "张三")
     @DiffLogField(name = "简称")
-    @NotEmpty(message = "简称不能为空")
     private String shortName;
 
     @Schema(description = "全称", requiredMode = Schema.RequiredMode.REQUIRED, example = "王五")
