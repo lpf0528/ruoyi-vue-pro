@@ -54,7 +54,7 @@ public class ZcUserProcessNodeController {
     @GetMapping("/my-nodes")
     @Operation(summary = "获取我自己可操作的工序节点列表",
             description = "员工在新增工序记录前调用，用于填充节点下拉选项")
-    @PreAuthorize("@ss.hasPermission('zc:order-process-record:create')")
+    @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
     public CommonResult<List<ZcProcessNodeRespVO>> getMyProcessNodeList() {
         return success(userProcessNodeService.getMyProcessNodeList());
     }
