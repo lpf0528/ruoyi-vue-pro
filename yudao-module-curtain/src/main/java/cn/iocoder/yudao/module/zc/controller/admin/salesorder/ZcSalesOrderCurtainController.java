@@ -26,7 +26,7 @@ public class ZcSalesOrderCurtainController {
 
     @PutMapping("/pack")
     @Operation(summary = "打包窗帘行（将窗帘行状态更新为已打包，并联动更新订单状态）")
-    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:operate')")
     public CommonResult<Boolean> packCurtain(@RequestBody @Valid ZcSalesOrderCurtainOperateReqVO reqVO) {
         salesOrderCurtainService.packCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId());
         return success(true);
@@ -34,7 +34,7 @@ public class ZcSalesOrderCurtainController {
 
     @PutMapping("/ship")
     @Operation(summary = "发货窗帘行（将窗帘行状态更新为已发货，并联动更新订单状态）")
-    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:operate')")
     public CommonResult<Boolean> shipCurtain(@RequestBody @Valid ZcSalesOrderCurtainOperateReqVO reqVO) {
         salesOrderCurtainService.shipCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId());
         return success(true);
@@ -42,7 +42,7 @@ public class ZcSalesOrderCurtainController {
 
     @PutMapping("/cancel-pack")
     @Operation(summary = "取消打包窗帘行（回退窗帘行状态并联动更新订单状态；若订单已在发货状态则不改变订单状态）")
-    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:operate')")
     public CommonResult<Boolean> cancelPackCurtain(@RequestBody @Valid ZcSalesOrderCurtainCancelReqVO reqVO) {
         salesOrderCurtainService.cancelPackCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId(), reqVO.getReason());
         return success(true);
@@ -50,7 +50,7 @@ public class ZcSalesOrderCurtainController {
 
     @PutMapping("/cancel-ship")
     @Operation(summary = "取消发货窗帘行（回退窗帘行状态并联动更新订单状态）")
-    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:update')")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order-curtain:operate')")
     public CommonResult<Boolean> cancelShipCurtain(@RequestBody @Valid ZcSalesOrderCurtainCancelReqVO reqVO) {
         salesOrderCurtainService.cancelShipCurtain(reqVO.getId(), reqVO.getMasterId(), reqVO.getAssistantId(), reqVO.getReason());
         return success(true);
