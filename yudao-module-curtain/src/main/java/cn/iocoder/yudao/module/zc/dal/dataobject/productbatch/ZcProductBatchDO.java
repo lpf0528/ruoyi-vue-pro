@@ -70,6 +70,16 @@ public class ZcProductBatchDO extends BaseDO {
     private String note;
 
     /**
+     * 规格
+     */
+    private String spec;
+
+    /**
+     * 状态: 1:整匹、0:零裁、-1:余料
+     */
+    private Integer status;
+
+    /**
      * 条码，格式 BAT-XXXXXXXX（共 12 位），由 {@code ZcBarcodeGeneratorRedisDAO} 生成，全局唯一
      */
     private String barcode;

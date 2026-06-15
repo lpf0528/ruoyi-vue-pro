@@ -32,6 +32,12 @@ public class ZcProductBatchPageReqVO extends PageParam {
     @Schema(description = "供应商", example = "12241")
     private Long supplierId;
 
+    @Schema(description = "规格")
+    private String spec;
+
+    @Schema(description = "状态: 1:整匹、0:零裁、-1:余料", example = "1")
+    private Integer status;
+
     @Schema(description = "创建时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] createTime;

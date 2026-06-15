@@ -55,4 +55,12 @@ public class ZcProductBatchSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
+    @Schema(description = "规格")
+    @DiffLogField(name = "规格")
+    private String spec;
+
+    @Schema(description = "状态: 1:整匹、0:零裁、-1:余料", example = "1")
+    @DiffLogField(name = "状态")
+    private Integer status;
+
 }
