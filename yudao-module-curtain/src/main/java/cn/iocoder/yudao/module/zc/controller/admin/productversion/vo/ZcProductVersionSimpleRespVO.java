@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Schema(description = "管理后台 - 产品版本精简 Response VO")
 @Data
@@ -34,5 +35,8 @@ public class ZcProductVersionSimpleRespVO {
 
     @Schema(description = "供应商ID")
     private Long supplierId;
+
+    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
+    private List<String> specs;
 
 }

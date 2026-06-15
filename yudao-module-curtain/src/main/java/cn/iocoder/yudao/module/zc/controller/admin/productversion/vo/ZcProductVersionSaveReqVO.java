@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
 import javax.validation.constraints.*;
+import java.util.List;
 import java.math.BigDecimal;
 
 @Schema(description = "管理后台 - 产品版本新增/修改 Request VO")
@@ -55,5 +56,9 @@ public class ZcProductVersionSaveReqVO {
     @Schema(description = "备注")
     @DiffLogField(name = "备注")
     private String note;
+
+    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
+    @DiffLogField(name = "规格列表")
+    private List<String> specs;
 
 }

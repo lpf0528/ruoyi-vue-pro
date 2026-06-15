@@ -2,7 +2,9 @@ package cn.iocoder.yudao.module.zc.dal.dataobject.productversion;
 
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.List;
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 import cn.iocoder.yudao.module.zc.enums.ZcProductClassifyEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSellingPriceTypeEnum;
@@ -12,7 +14,7 @@ import cn.iocoder.yudao.module.zc.enums.ZcSellingPriceTypeEnum;
  *
  * @author 01Coder
  */
-@TableName("zc_product_version")
+@TableName(value = "zc_product_version", autoResultMap = true)
 @KeySequence("zc_product_version_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -69,6 +71,10 @@ public class ZcProductVersionDO extends BaseDO {
      * 备注
      */
     private String note;
-
+    /**
+     * 规格列表，存储规格值的字符串数组，如 ["12","45","wq"]
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> specs;
 
 }

@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.zc.controller.admin.productversion.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
+import java.util.List;
 import java.math.BigDecimal;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
@@ -57,6 +58,9 @@ public class ZcProductVersionRespVO {
     @Schema(description = "备注")
     @ExcelProperty("备注")
     private String note;
+
+    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
+    private List<String> specs;
 
     @Schema(description = "类别名称")
     @ExcelProperty("类别名称")
