@@ -131,4 +131,9 @@ public class ZcProductServiceImpl implements ZcProductService {
         return productMapper.selectList(listReqVO);
     }
 
+    @Override
+    public List<ZcProductSimpleRespVO> getProductSimpleList(ZcProductListReqVO listReqVO) {
+        return productMapper.selectSimpleList(listReqVO);
+    }
+
 }

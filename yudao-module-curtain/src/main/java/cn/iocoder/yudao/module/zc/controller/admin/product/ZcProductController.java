@@ -91,15 +91,8 @@ public class ZcProductController {
     @GetMapping("/simple-list")
     @Operation(summary = "获得产品精简列表", description = "主要用于前端的下拉选项")
     public CommonResult<List<ZcProductSimpleRespVO>> getProductSimpleList(ZcProductListReqVO reqVO) {
-        List<ZcProductDO> list = productService.getProductList(reqVO);
-        return success(convertList(list, item -> new ZcProductSimpleRespVO()
-                .setId(item.getId())
-                .setName(item.getName())
-                .setVersionId(item.getVersionId())
-                .setInboundPrice(item.getInboundPrice())
-                .setOnePrice(item.getOnePrice())
-                .setSupplierId(item.getSupplierId())
-        ));
+        List<ZcProductSimpleRespVO> list = productService.getProductSimpleList(reqVO);
+        return success(list);
     }
 
     @GetMapping("/export-excel")

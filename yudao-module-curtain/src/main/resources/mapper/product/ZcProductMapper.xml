@@ -2,6 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper">
 
+    <resultMap id="ZcProductSimpleRespVOMap" type="cn.iocoder.yudao.module.zc.controller.admin.product.vo.ZcProductSimpleRespVO">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="versionId" column="version_id"/>
+        <result property="inboundPrice" column="inbound_price"/>
+        <result property="onePrice" column="one_price"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="specs" column="specs" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+
     <select id="selectPageWithVO"
             resultType="cn.iocoder.yudao.module.zc.controller.admin.product.vo.ZcProductRespVO">
         SELECT
@@ -28,6 +38,22 @@
         </if>
         <if test="reqVO.createTime != null and reqVO.createTime.length == 2">
             AND t1.create_time BETWEEN #{reqVO.createTime[0]} AND #{reqVO.createTime[1]}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+    <select id="selectSimpleList" resultMap="ZcProductSimpleRespVOMap">
+        SELECT
+            t1.id, t1.`name`, t1.version_id, t1.inbound_price,
+            t1.one_price, t1.supplier_id, t2.specs
+        FROM zc_product t1
+        LEFT JOIN zc_product_version t2 ON t1.version_id = t2.id AND t2.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.name != null and reqVO.name != ''">
+            AND t1.`name` LIKE CONCAT('%', #{reqVO.name}, '%')
+        </if>
+        <if test="reqVO.versionId != null">
+            AND t1.version_id = #{reqVO.versionId}
         </if>
         ORDER BY t1.id DESC
     </select>
