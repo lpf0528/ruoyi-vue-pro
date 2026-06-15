@@ -43,11 +43,6 @@ public class ZcProductDO extends BaseDO {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal inboundPrice;
     /**
-     * 规格
-     */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
-    private Long specId;
-    /**
      * 一级销售价
      */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)

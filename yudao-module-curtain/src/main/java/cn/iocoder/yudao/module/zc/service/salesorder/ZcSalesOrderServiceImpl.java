@@ -673,16 +673,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .collect(Collectors.toSet());
         List<ZcProductDO> productList = productMapper.selectList(ZcProductDO::getId, productIds);
         Map<Long, String> productNameMap = convertMap(productList, ZcProductDO::getId, ZcProductDO::getName);
-        // 通过产品的 specId 批量查出规格值，构建 productId → specValue 的映射
-        Set<Long> specIds = productList.stream()
-                .map(ZcProductDO::getSpecId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<Long, String> specValueMap = convertMap(productSpecMapper.selectList(ZcProductSpecDO::getId, specIds), ZcProductSpecDO::getId, ZcProductSpecDO::getValue);
-        // productId → specValue（需经 product.specId 中转）
-        Map<Long, String> productSpecValueMap = productList.stream()
-                .filter(p -> p.getSpecId() != null)
-                .collect(Collectors.toMap(ZcProductDO::getId, p -> specValueMap.getOrDefault(p.getSpecId(), "")));
         Set<Long> batchIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getBatchId)
                 .filter(Objects::nonNull)
@@ -701,7 +691,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             vo.setElementName(elementNameMap.get(m.getElementId()));
                             vo.setElementIsPrint(elementIsPrintMap.get(m.getElementId()));
                             vo.setProductName(productNameMap.get(m.getProductId()));
-                            vo.setSpecValue(productSpecValueMap.get(m.getProductId()));
                             vo.setBatchNo(batchNoMap.get(m.getBatchId()));
                             vo.setBarcode(batchBarcodeMap.get(m.getBatchId()));
                             return vo;

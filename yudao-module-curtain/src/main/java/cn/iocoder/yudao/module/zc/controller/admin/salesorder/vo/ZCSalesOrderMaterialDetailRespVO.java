@@ -35,8 +35,5 @@ public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO
     @Schema(description = "组件是否打印")
     private Boolean elementIsPrint;
 
-    /** 产品规格值，来自 zc_product_spec.value（经由 zc_product.spec_id 关联） */
-    @Schema(description = "产品规格值")
-    private String specValue;
-
 }
+

@@ -869,3 +869,12 @@ INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `st
 VALUES
 (3737, 1, '销售单', 'SALES_ORDER',       'zc_ref_type', 0, 'primary', '', '来源于销售订单', 'admin', NOW(), 'admin', NOW(), b'0'),
 (3738, 2, '收款单', 'COLLECTION_RECORD', 'zc_ref_type', 0, 'success', '', '来源于收款单',   'admin', NOW(), 'admin', NOW(), b'0');
+
+-- ----------------------------
+-- zc_product_version 新增 specs 字段 / zc_product 删除 spec_id 字段
+-- ----------------------------
+ALTER TABLE `zc_product_version`
+    ADD COLUMN `specs` json DEFAULT NULL COMMENT '规格列表，如 ["12","45","wq"]';
+
+ALTER TABLE `zc_product`
+    DROP COLUMN `spec_id`;

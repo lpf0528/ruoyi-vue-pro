@@ -56,14 +56,6 @@ public class ZcInventoryRecordRespVO {
     @ExcelProperty("仓库ID")
     private Long warehouseId;
 
-    @Schema(description = "规格值")
-    @ExcelProperty("规格值")
-    private String specValue;
-
-    @Schema(description = "规格ID")
-    @ExcelProperty("规格ID")
-    private Long specId;
-
     @Schema(description = "版本名称")
     @ExcelProperty("版本名称")
     private String versionName;

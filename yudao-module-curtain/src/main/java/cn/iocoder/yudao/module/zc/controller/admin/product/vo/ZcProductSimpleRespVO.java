@@ -23,16 +23,11 @@ public class ZcProductSimpleRespVO {
     @Schema(description = "进货价", example = "14151")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "规格", example = "27939")
-    private Long specId;
-
     @Schema(description = "一级销售价", example = "25120")
     private BigDecimal onePrice;
 
     @Schema(description = "供应商", example = "25473")
     private Long supplierId;
 
-    @Schema(description = "规格值")
-    private String specValue;
-
 }
+

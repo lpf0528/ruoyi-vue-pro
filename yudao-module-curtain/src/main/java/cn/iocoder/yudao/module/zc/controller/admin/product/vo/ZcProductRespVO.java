@@ -29,10 +29,6 @@ public class ZcProductRespVO {
     @ExcelProperty("进货价")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "规格", example = "27939")
-    @ExcelProperty("规格")
-    private Long specId;
-
     @Schema(description = "一级销售价", example = "25120")
     @ExcelProperty("一级销售价")
     private BigDecimal onePrice;
@@ -52,10 +48,6 @@ public class ZcProductRespVO {
     @Schema(description = "单位")
     @ExcelProperty("单位")
     private String unitValue;
-
-    @Schema(description = "规格值")
-    @ExcelProperty("规格值")
-    private String specValue;
 
     @Schema(description = "供应商名称")
     @ExcelProperty("供应商名称")

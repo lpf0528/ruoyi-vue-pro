@@ -20,9 +20,6 @@ public class ZcProductPageReqVO extends PageParam {
     @Schema(description = "版本", example = "6")
     private Long versionId;
 
-    @Schema(description = "规格", example = "27939")
-    private Long specId;
-
     @Schema(description = "供应商", example = "25473")
     private Long supplierId;
 

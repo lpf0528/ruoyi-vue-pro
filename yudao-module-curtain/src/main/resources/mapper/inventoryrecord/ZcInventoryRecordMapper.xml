@@ -9,8 +9,6 @@
             t3.batch_no                        AS batch_no,
             t31.`name`                         AS warehouse_name,
             t3.warehouse_id,
-            t21.`value`                        AS spec_value,
-            t2.spec_id,
             t22.`name`                         AS version_name,
             t2.version_id,
             t4.nickname,
@@ -20,7 +18,6 @@
             t1.change_quantity, t1.operate, t1.order_id
         FROM zc_inventory_record t1
         JOIN zc_product t2 ON t1.product_id = t2.id AND t2.deleted = 0
-        LEFT JOIN zc_product_spec t21 ON t2.spec_id = t21.id AND t21.deleted = 0
         LEFT JOIN zc_product_version t22 ON t2.version_id = t22.id AND t22.deleted = 0
         JOIN zc_product_batch t3 ON t1.batch_id = t3.id AND t3.deleted = 0
         LEFT JOIN zc_warehouse t31 ON t3.warehouse_id = t31.id AND t31.deleted = 0

@@ -30,10 +30,6 @@ public class ZcProductSaveReqVO {
     @DecimalMin(value = "0", message = "进货价不能小于0")
     private BigDecimal inboundPrice;
 
-    @Schema(description = "规格", example = "27939")
-    @DiffLogField(name = "规格")
-    private Long specId;
-
     @Schema(description = "一级销售价", example = "25120")
     @DiffLogField(name = "一级销售价")
     @DecimalMin(value = "0", message = "一级销售价不能小于0")
