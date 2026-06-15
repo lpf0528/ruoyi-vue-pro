@@ -51,6 +51,14 @@ public class ZcProductBatchController {
         return success(true);
     }
 
+    @PutMapping("/update-status")
+    @Operation(summary = "更新产品批次状态")
+    @PreAuthorize("@ss.hasPermission('zc:product-batch:update')")
+    public CommonResult<Boolean> updateProductBatchStatus(@Valid @RequestBody ZcProductBatchUpdateStatusReqVO updateReqVO) {
+        productBatchService.updateProductBatchStatus(updateReqVO);
+        return success(true);
+    }
+
     @DeleteMapping("/delete")
     @Operation(summary = "删除产品批次")
     @Parameter(name = "id", description = "编号", required = true)

@@ -104,6 +104,17 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     }
 
     @Override
+    public void updateProductBatchStatus(ZcProductBatchUpdateStatusReqVO updateReqVO) {
+        // 校验存在
+        validateProductBatchExists(updateReqVO.getId());
+        // 更新
+        ZcProductBatchDO updateObj = new ZcProductBatchDO();
+        updateObj.setId(updateReqVO.getId());
+        updateObj.setStatus(updateReqVO.getStatus());
+        productBatchMapper.updateById(updateObj);
+    }
+
+    @Override
     @LogRecord(type = ZC_PRODUCT_BATCH_TYPE, subType = ZC_PRODUCT_BATCH_DELETE_SUB_TYPE, bizNo = "{{#id}}",
             success = ZC_PRODUCT_BATCH_DELETE_SUCCESS)
     public void deleteProductBatch(Long id) {

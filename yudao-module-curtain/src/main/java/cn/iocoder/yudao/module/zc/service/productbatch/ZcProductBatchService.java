@@ -37,6 +37,13 @@ public interface ZcProductBatchService {
     void updateProductBatch(@Valid ZcProductBatchSaveReqVO updateReqVO);
 
     /**
+     * 更新产品批次状态
+     *
+     * @param updateReqVO 更新信息
+     */
+    void updateProductBatchStatus(@Valid ZcProductBatchUpdateStatusReqVO updateReqVO);
+
+    /**
      * 删除产品批次
      *
      * @param id 编号
