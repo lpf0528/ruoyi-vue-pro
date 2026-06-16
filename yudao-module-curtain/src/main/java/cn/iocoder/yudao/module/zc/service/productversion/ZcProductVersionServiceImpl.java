@@ -160,6 +160,11 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
     }
 
     @Override
+    public PageResult<ZcProductVersionSpcSimpleRespVO> getProductVersionSpcPage(ZcProductVersionSpcPageReqVO pageReqVO) {
+        return productVersionSpcMapper.selectSpecPage(pageReqVO);
+    }
+
+    @Override
     public PageResult<ZcProductVersionRespVO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO) {
         PageResult<ZcProductVersionRespVO> pageResult = productVersionMapper.selectPage(pageReqVO);
         if (pageResult.getList().isEmpty()) {

@@ -7,6 +7,7 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersion
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcProductVersionSpcPageReqVO;
 
 /**
  * 产品版本 Service 接口
@@ -83,4 +84,12 @@ public interface ZcProductVersionService {
      */
     List<ZcProductVersionSpcDO> getProductVersionSpcListByVersionId(Long versionId);
 
-    }
+    /**
+     * 分页查询版本规格列表（含版本名称）
+     *
+     * @param pageReqVO 分页查询条件
+     * @return 版本规格分页列表
+     */
+    PageResult<ZcProductVersionSpcSimpleRespVO> getProductVersionSpcPage(ZcProductVersionSpcPageReqVO pageReqVO);
+
+}

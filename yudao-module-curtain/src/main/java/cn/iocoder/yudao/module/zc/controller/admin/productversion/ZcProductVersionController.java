@@ -98,6 +98,13 @@ public class ZcProductVersionController {
         return success(productVersionService.getProductVersionSimpleList());
     }
 
+    @GetMapping("/spec/list")
+    @Operation(summary = "获得版本规格分页列表", description = "包含版本名称，支持按版本编号和规格名称筛选")
+    public CommonResult<PageResult<ZcProductVersionSpcSimpleRespVO>> getProductVersionSpcPage(
+            @Valid ZcProductVersionSpcPageReqVO pageReqVO) {
+        return success(productVersionService.getProductVersionSpcPage(pageReqVO));
+    }
+
     @GetMapping("/export-excel")
     @Operation(summary = "导出产品版本 Excel")
     @PreAuthorize("@ss.hasPermission('zc:product-version:export')")

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionSpcMapper">
+
+    <select id="selectSpecPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcProductVersionSpcSimpleRespVO">
+        SELECT t1.id, t1.version_id, t1.spec, t1.inbound_price, t1.one_price, t1.note,
+               t2.name AS version_name
+        FROM zc_product_version_spc t1
+            LEFT JOIN zc_product_version t2 ON t1.version_id = t2.id
+        WHERE t1.deleted = 0
+        <if test="reqVO.versionId != null">
+            AND t1.version_id = #{reqVO.versionId}
+        </if>
+        <if test="reqVO.spec != null and reqVO.spec != ''">
+            AND t1.spec LIKE CONCAT('%', #{reqVO.spec}, '%')
+        </if>
+        ORDER BY t1.version_id, t1.id
+    </select>
+
+</mapper>
