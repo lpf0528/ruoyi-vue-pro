@@ -1,6 +1,9 @@
 package cn.iocoder.yudao.module.zc.service.product;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;
+import cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionSpcMapper;
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcProductVersionSpcRespVO;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +37,8 @@ public class ZcProductServiceImpl implements ZcProductService {
     private ZcProductMapper productMapper;
     @Resource
     private ZcProductBatchMapper productBatchMapper;
+    @Resource
+    private ZcProductVersionSpcMapper productVersionSpcMapper;
 
     @Override
     @LogRecord(type = ZC_PRODUCT_TYPE, subType = ZC_PRODUCT_CREATE_SUB_TYPE, bizNo = "{{#product.id}}",
@@ -133,7 +138,17 @@ public class ZcProductServiceImpl implements ZcProductService {
 
     @Override
     public List<ZcProductSimpleRespVO> getProductSimpleList(ZcProductListReqVO listReqVO) {
-        return productMapper.selectSimpleList(listReqVO);
+        List<ZcProductSimpleRespVO> list = productMapper.selectSimpleList(listReqVO);
+        if (CollUtil.isEmpty(list)) {
+            return list;
+        }
+        // 批量查询规格
+        List<Long> versionIds = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList(list, ZcProductSimpleRespVO::getVersionId);
+        List<ZcProductVersionSpcDO> allSpcs = productVersionSpcMapper.selectList(ZcProductVersionSpcDO::getVersionId, versionIds);
+        Map<Long, List<ZcProductVersionSpcDO>> spcMap = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMultiMap(allSpcs, ZcProductVersionSpcDO::getVersionId);
+        // 填充规格
+        list.forEach(vo -> vo.setSpecConfs(BeanUtils.toBean(spcMap.get(vo.getVersionId()), ZcProductVersionSpcRespVO.class)));
+        return list;
     }
 
 }

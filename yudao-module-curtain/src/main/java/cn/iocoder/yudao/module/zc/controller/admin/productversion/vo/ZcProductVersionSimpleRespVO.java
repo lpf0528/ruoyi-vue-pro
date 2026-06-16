@@ -36,7 +36,7 @@ public class ZcProductVersionSimpleRespVO {
     @Schema(description = "供应商ID")
     private Long supplierId;
 
-    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
-    private List<String> specs;
+    @Schema(description = "规格信息列表")
+    private List<ZcProductVersionSpcRespVO> specConfs;
 
 }

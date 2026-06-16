@@ -57,8 +57,7 @@ public class ZcProductVersionSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
-    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
-    @DiffLogField(name = "规格列表")
-    private List<String> specs;
+    @Schema(description = "规格信息列表")
+    private List<ZcProductVersionSpcSaveReqVO> specConfs;
 
 }

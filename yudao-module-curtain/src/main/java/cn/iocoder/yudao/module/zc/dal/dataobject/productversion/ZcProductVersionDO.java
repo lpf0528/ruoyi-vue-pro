@@ -4,7 +4,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.List;
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 import cn.iocoder.yudao.module.zc.enums.ZcProductClassifyEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSellingPriceTypeEnum;
@@ -71,10 +70,5 @@ public class ZcProductVersionDO extends BaseDO {
      * 备注
      */
     private String note;
-    /**
-     * 规格列表，存储规格值的字符串数组，如 ["12","45","wq"]
-     */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<String> specs;
 
 }

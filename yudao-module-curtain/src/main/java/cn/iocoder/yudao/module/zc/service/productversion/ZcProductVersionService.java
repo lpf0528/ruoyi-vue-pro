@@ -4,6 +4,7 @@ import java.util.*;
 import javax.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 
@@ -62,9 +63,24 @@ public interface ZcProductVersionService {
     /**
      * 获得产品版本列表
      *
-     * @param listReqVO 列表查询
+     * @param listReqVO 查询条件
      * @return 产品版本列表
      */
     List<ZcProductVersionDO> getProductVersionList(ZcProductVersionListReqVO listReqVO);
 
-}
+    /**
+     * 获得产品版本精简列表
+     *
+     * @return 精简列表
+     */
+    List<ZcProductVersionSimpleRespVO> getProductVersionSimpleList();
+
+    /**
+     * 获得产品版本规格列表
+     *
+     * @param versionId 版本编号
+     * @return 规格列表
+     */
+    List<ZcProductVersionSpcDO> getProductVersionSpcListByVersionId(Long versionId);
+
+    }

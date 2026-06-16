@@ -66,7 +66,7 @@ public class ZcProductVersionController {
     @DeleteMapping("/delete-list")
     @Parameter(name = "ids", description = "编号", required = true)
     @Operation(summary = "批量删除产品版本")
-                @PreAuthorize("@ss.hasPermission('zc:product-version:delete')")
+    @PreAuthorize("@ss.hasPermission('zc:product-version:delete')")
     public CommonResult<Boolean> deleteProductVersionList(@RequestParam("ids") List<Long> ids) {
         productVersionService.deleteProductVersionListByIds(ids);
         return success(true);
@@ -78,7 +78,11 @@ public class ZcProductVersionController {
     @PreAuthorize("@ss.hasPermission('zc:product-version:query')")
     public CommonResult<ZcProductVersionRespVO> getProductVersion(@RequestParam("id") Long id) {
         ZcProductVersionDO productVersion = productVersionService.getProductVersion(id);
-        return success(BeanUtils.toBean(productVersion, ZcProductVersionRespVO.class));
+        ZcProductVersionRespVO respVO = BeanUtils.toBean(productVersion, ZcProductVersionRespVO.class);
+        if (respVO != null) {
+            respVO.setSpecConfs(BeanUtils.toBean(productVersionService.getProductVersionSpcListByVersionId(id), ZcProductVersionSpcRespVO.class));
+        }
+        return success(respVO);
     }
 
     @GetMapping("/page")
@@ -91,17 +95,7 @@ public class ZcProductVersionController {
     @GetMapping("/simple-list")
     @Operation(summary = "获得产品版本精简列表", description = "主要用于前端的下拉选项")
     public CommonResult<List<ZcProductVersionSimpleRespVO>> getProductVersionSimpleList() {
-        List<ZcProductVersionDO> list = productVersionService.getProductVersionList(new ZcProductVersionListReqVO());
-        return success(convertList(list, item -> new ZcProductVersionSimpleRespVO()
-                .setId(item.getId())
-                .setName(item.getName())
-                .setUnitValue(item.getUnitValue())
-                .setCategoryId(item.getCategoryId())
-                .setSellingPriceType(item.getSellingPriceType())
-                .setInboundPrice(item.getInboundPrice())
-                .setOnePrice(item.getOnePrice())
-                .setSupplierId(item.getSupplierId())
-                .setSpecs(item.getSpecs())));
+        return success(productVersionService.getProductVersionSimpleList());
     }
 
     @GetMapping("/export-excel")

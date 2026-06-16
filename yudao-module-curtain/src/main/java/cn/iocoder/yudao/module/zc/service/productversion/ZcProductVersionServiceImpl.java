@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.productversion;
 
+import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;
+import cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionSpcMapper;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -32,6 +34,8 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
     @Resource
     private ZcProductVersionMapper productVersionMapper;
     @Resource
+    private ZcProductVersionSpcMapper productVersionSpcMapper;
+    @Resource
     private ZcProductMapper productMapper;
 
     @Override
@@ -43,6 +47,17 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
         // 插入
         ZcProductVersionDO productVersion = BeanUtils.toBean(createReqVO, ZcProductVersionDO.class);
         productVersionMapper.insert(productVersion);
+
+        // 插入规格
+        if (createReqVO.getSpecConfs() != null) {
+            List<ZcProductVersionSpcDO> spcs = BeanUtils.toBean(createReqVO.getSpecConfs(), ZcProductVersionSpcDO.class);
+            spcs.forEach(spc -> {
+                spc.setId(null); // 确保是新增
+                spc.setVersionId(productVersion.getId());
+            });
+            productVersionSpcMapper.insertBatch(spcs);
+        }
+
         // 记录操作日志上下文
         LogRecordContext.putVariable("productVersion", productVersion);
         return productVersion.getId();
@@ -59,6 +74,18 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
         // 更新
         ZcProductVersionDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductVersionDO.class);
         productVersionMapper.updateById(updateObj);
+
+        // 更新规格：物理删除后插入，避免逻辑删除导致唯一索引冲突 (version_id, spec)
+        productVersionSpcMapper.deleteByVersionIdPhysically(updateReqVO.getId());
+        if (updateReqVO.getSpecConfs() != null) {
+            List<ZcProductVersionSpcDO> spcs = BeanUtils.toBean(updateReqVO.getSpecConfs(), ZcProductVersionSpcDO.class);
+            spcs.forEach(spc -> {
+                spc.setId(null); // 确保是新增
+                spc.setVersionId(updateReqVO.getId());
+            });
+            productVersionSpcMapper.insertBatch(spcs);
+        }
+
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldProductVersion, ZcProductVersionSaveReqVO.class));
         LogRecordContext.putVariable("productVersionName", oldProductVersion.getName());
@@ -76,8 +103,10 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
         }
         // 记录操作日志上下文
         LogRecordContext.putVariable("productVersionName", productVersion.getName());
-        // 删除
+        // 删除版本
         productVersionMapper.deleteById(id);
+        // 物理删除规格，节省空间且避免唯一索引冲突
+        productVersionSpcMapper.deleteByVersionIdPhysically(id);
     }
 
     @Override
@@ -88,8 +117,10 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
                 throw exception(PRODUCT_VERSION_HAS_PRODUCTS);
             }
         });
-        // 删除
+        // 删除版本
         productVersionMapper.deleteByIds(ids);
+        // 物理删除规格
+        productVersionSpcMapper.deleteByVersionIdsPhysically(ids);
     }
 
 
@@ -124,14 +155,55 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
         return productVersionMapper.selectById(id);
     }
 
+    public List<ZcProductVersionSpcDO> getProductVersionSpcListByVersionId(Long versionId) {
+        return productVersionSpcMapper.selectListByVersionId(versionId);
+    }
+
     @Override
     public PageResult<ZcProductVersionRespVO> getProductVersionPage(ZcProductVersionPageReqVO pageReqVO) {
-        return productVersionMapper.selectPage(pageReqVO);
+        PageResult<ZcProductVersionRespVO> pageResult = productVersionMapper.selectPage(pageReqVO);
+        if (pageResult.getList().isEmpty()) {
+            return pageResult;
+        }
+        // 批量查询规格
+        List<Long> versionIds = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList(pageResult.getList(), ZcProductVersionRespVO::getId);
+        List<ZcProductVersionSpcDO> allSpcs = productVersionSpcMapper.selectList(ZcProductVersionSpcDO::getVersionId, versionIds);
+        Map<Long, List<ZcProductVersionSpcDO>> spcMap = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMultiMap(allSpcs, ZcProductVersionSpcDO::getVersionId);
+        // 填充规格
+        pageResult.getList().forEach(vo -> vo.setSpecConfs(BeanUtils.toBean(spcMap.get(vo.getId()), ZcProductVersionSpcRespVO.class)));
+        return pageResult;
     }
 
     @Override
     public List<ZcProductVersionDO> getProductVersionList(ZcProductVersionListReqVO listReqVO) {
         return productVersionMapper.selectList(listReqVO);
+    }
+
+    @Override
+    public List<ZcProductVersionSimpleRespVO> getProductVersionSimpleList() {
+        List<ZcProductVersionDO> list = productVersionMapper.selectList(new ZcProductVersionListReqVO());
+        if (list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 转换 VO
+        List<ZcProductVersionSimpleRespVO> voList = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList(list, item -> new ZcProductVersionSimpleRespVO()
+                .setId(item.getId())
+                .setName(item.getName())
+                .setUnitValue(item.getUnitValue())
+                .setCategoryId(item.getCategoryId())
+                .setSellingPriceType(item.getSellingPriceType())
+                .setInboundPrice(item.getInboundPrice())
+                .setOnePrice(item.getOnePrice())
+                .setSupplierId(item.getSupplierId()));
+
+        // 批量查询规格
+        List<Long> versionIds = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList(voList, ZcProductVersionSimpleRespVO::getId);
+        List<ZcProductVersionSpcDO> allSpcs = productVersionSpcMapper.selectList(ZcProductVersionSpcDO::getVersionId, versionIds);
+        Map<Long, List<ZcProductVersionSpcDO>> spcMap = cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMultiMap(allSpcs, ZcProductVersionSpcDO::getVersionId);
+
+        // 填充规格
+        voList.forEach(vo -> vo.setSpecConfs(BeanUtils.toBean(spcMap.get(vo.getId()), ZcProductVersionSpcRespVO.class)));
+        return voList;
     }
 
 }

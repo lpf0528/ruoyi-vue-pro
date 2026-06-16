@@ -30,8 +30,8 @@ public class ZcProductSimpleRespVO {
     @Schema(description = "供应商", example = "25473")
     private Long supplierId;
 
-    @Schema(description = "规格列表")
-    private List<String> specs;
+    @Schema(description = "规格信息列表")
+    private List<cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcProductVersionSpcRespVO> specConfs;
 
 }
 

@@ -59,8 +59,8 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("备注")
     private String note;
 
-    @Schema(description = "规格列表，如 [\"12\",\"45\",\"wq\"]")
-    private List<String> specs;
+    @Schema(description = "规格信息列表")
+    private List<ZcProductVersionSpcRespVO> specConfs;
 
     @Schema(description = "类别名称")
     @ExcelProperty("类别名称")
