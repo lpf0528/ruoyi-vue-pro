@@ -59,6 +59,12 @@ public interface LogRecordConstants {
     String ZC_PRODUCT_DELETE_SUB_TYPE = "删除产品";
     String ZC_PRODUCT_DELETE_SUCCESS = "删除了产品【{{#productName}}】";
 
+    // ======================= ZC_CUSTOMER_VERSION_SPEC_PRICE 客户版本销售授权价 =======================
+
+    String ZC_CUSTOMER_VERSION_SPEC_PRICE_TYPE = "ZC 客户版本授权价";
+    String ZC_CUSTOMER_VERSION_SPEC_PRICE_BATCH_SAVE_SUB_TYPE = "批量保存客户版本授权价";
+    String ZC_CUSTOMER_VERSION_SPEC_PRICE_BATCH_SAVE_SUCCESS = "批量保存了客户版本规格授权价，共 {{#saveReqVOList.size()}} 条";
+
     // ======================= ZC_PRODUCT_VERSION 产品版本 =======================
 
     String ZC_PRODUCT_VERSION_TYPE = "ZC 产品版本";
