@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.productversion;
 
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceSaveReqVO;
 
@@ -30,5 +31,15 @@ public interface ZcCustomerVersionSpecPriceService {
      * @return 含版本名称的授权价列表
      */
     List<ZcCustomerVersionSpecPriceRespVO> getCustomerVersionSpecPriceList(Long customerId, Long versionId);
+
+    /**
+     * 根据产品ID、客户ID、规格查询客户版本规格授权价
+     *
+     * @param productId  产品编号（zc_product.id）
+     * @param customerId 客户编号
+     * @param spec       规格名称
+     * @return 授权价记录，不存在时返回 null
+     */
+    ZcCustomerVersionSpecPriceGetRespVO getByProductIdAndCustomerIdAndSpec(Long productId, Long customerId, String spec);
 
 }

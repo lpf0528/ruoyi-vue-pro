@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.zc.controller.admin.productversion;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceSaveReqVO;
 import cn.iocoder.yudao.module.zc.service.productversion.ZcCustomerVersionSpecPriceService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -51,6 +53,19 @@ public class ZcCustomerVersionSpecPriceController {
             @RequestParam("customerId") @NotNull Long customerId,
             @RequestParam(value = "versionId", required = false) Long versionId) {
         return success(customerVersionSpecPriceService.getCustomerVersionSpecPriceList(customerId, versionId));
+    }
+
+    @GetMapping("/get")
+    @Operation(summary = "根据产品ID、客户ID和规格查询客户版本规格授权价")
+    @Parameter(name = "productId", description = "产品编号", required = true)
+    @Parameter(name = "customerId", description = "客户编号", required = true)
+    @Parameter(name = "spec", description = "规格名称", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:customer-version-spec-price:query')")
+    public CommonResult<ZcCustomerVersionSpecPriceGetRespVO> getByProductIdAndCustomerIdAndSpec(
+            @RequestParam("productId") @NotNull Long productId,
+            @RequestParam("customerId") @NotNull Long customerId,
+            @RequestParam("spec") @NotBlank String spec) {
+        return success(customerVersionSpecPriceService.getByProductIdAndCustomerIdAndSpec(productId, customerId, spec));
     }
 
 }

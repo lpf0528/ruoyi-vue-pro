@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.zc.dal.mysql.productversion;
 
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcCustomerVersionSpecPriceDO;
 import org.apache.ibatis.annotations.Delete;
@@ -36,5 +37,17 @@ public interface ZcCustomerVersionSpecPriceMapper extends BaseMapperX<ZcCustomer
      */
     @Delete("DELETE FROM zc_customer_version_spec_price WHERE customer_id = #{customerId}")
     void deleteByCustomerIdPhysically(@Param("customerId") Long customerId);
+
+    /**
+     * 根据产品ID、客户ID、规格查询客户版本规格授权价
+     *
+     * @param productId  产品编号（zc_product.id）
+     * @param customerId 客户编号
+     * @param spec       规格名称
+     * @return 授权价记录，不存在时返回 null
+     */
+    ZcCustomerVersionSpecPriceGetRespVO selectByProductIdAndCustomerIdAndSpec(@Param("productId") Long productId,
+                                                                             @Param("customerId") Long customerId,
+                                                                             @Param("spec") String spec);
 
 }

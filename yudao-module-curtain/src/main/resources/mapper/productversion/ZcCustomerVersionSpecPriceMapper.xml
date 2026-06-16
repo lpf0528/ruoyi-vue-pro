@@ -24,4 +24,19 @@
         ORDER BY p.version_id, p.spec
     </select>
 
+    <select id="selectByProductIdAndCustomerIdAndSpec"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO">
+        SELECT
+            p.customer_id,
+            p.version_id,
+            p.spec,
+            p.authorized_price
+        FROM zc_customer_version_spec_price p
+            JOIN zc_product v ON v.version_id = p.version_id AND v.deleted = 0 AND v.id = #{productId}
+        WHERE p.deleted = 0
+          AND p.customer_id = #{customerId}
+          AND p.spec = #{spec}
+        LIMIT 1
+    </select>
+
 </mapper>

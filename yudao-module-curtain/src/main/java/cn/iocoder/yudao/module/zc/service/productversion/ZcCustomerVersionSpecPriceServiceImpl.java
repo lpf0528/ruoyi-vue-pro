@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.productversion;
 
+import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceSaveReqVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcCustomerVersionSpecPriceDO;
@@ -52,6 +53,11 @@ public class ZcCustomerVersionSpecPriceServiceImpl implements ZcCustomerVersionS
     @Override
     public List<ZcCustomerVersionSpecPriceRespVO> getCustomerVersionSpecPriceList(Long customerId, Long versionId) {
         return customerVersionSpecPriceMapper.selectListWithVersionName(customerId, versionId);
+    }
+
+    @Override
+    public ZcCustomerVersionSpecPriceGetRespVO getByProductIdAndCustomerIdAndSpec(Long productId, Long customerId, String spec) {
+        return customerVersionSpecPriceMapper.selectByProductIdAndCustomerIdAndSpec(productId, customerId, spec);
     }
 
 }
