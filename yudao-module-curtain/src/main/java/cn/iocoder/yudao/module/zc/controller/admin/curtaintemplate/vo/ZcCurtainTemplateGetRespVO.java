@@ -3,7 +3,6 @@ package cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Schema(description = "管理后台 - 获得窗帘模板 Response VO")
@@ -39,8 +38,5 @@ public class ZcCurtainTemplateGetRespVO {
 
         @Schema(description = "产品名称")
         private String productName;
-
-        @Schema(description = "一级销售价")
-        private BigDecimal onePrice;
     }
 }

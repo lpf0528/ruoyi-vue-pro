@@ -67,10 +67,6 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("产品名称")
     private String productName;
 
-    @Schema(description = "产品价格")
-    @ExcelProperty("产品价格")
-    private BigDecimal productPrice;
-
     @Schema(description = "版本名称")
     @ExcelProperty("版本名称")
     private String versionName;

@@ -11,8 +11,7 @@
             t.structure_id,
             t.element_id,
             t.product_id,
-            p.name AS product_name,
-            p.one_price
+            p.name AS product_name
         FROM zc_curtain_template t
             LEFT JOIN zc_product p ON t.product_id = p.id AND p.deleted = 0
         WHERE t.curtain_id = #{curtainId}

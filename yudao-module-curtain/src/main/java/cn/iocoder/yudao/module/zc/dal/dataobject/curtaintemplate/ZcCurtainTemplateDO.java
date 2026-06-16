@@ -50,10 +50,4 @@ public class ZcCurtainTemplateDO extends BaseDO {
     @TableField(exist = false)
     private String productName;
 
-    /**
-     * 产品一级销售价（JOIN 查询冗余字段，非数据库列）
-     */
-    @TableField(exist = false)
-    private java.math.BigDecimal onePrice;
-
 }

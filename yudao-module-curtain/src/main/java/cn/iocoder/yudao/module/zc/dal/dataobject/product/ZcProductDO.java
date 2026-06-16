@@ -2,8 +2,6 @@ package cn.iocoder.yudao.module.zc.dal.dataobject.product;
 
 import lombok.*;
 import java.util.*;
-import java.math.BigDecimal;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.*;
@@ -37,16 +35,6 @@ public class ZcProductDO extends BaseDO {
      * 版本
      */
     private Long versionId;
-    /**
-     * 进货价
-     */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
-    private BigDecimal inboundPrice;
-    /**
-     * 一级销售价
-     */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
-    private BigDecimal onePrice;
     /**
      * 供应商
      */
