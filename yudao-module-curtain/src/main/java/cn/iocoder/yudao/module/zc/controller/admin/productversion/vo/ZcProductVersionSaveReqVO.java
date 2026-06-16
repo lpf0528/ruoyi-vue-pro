@@ -5,6 +5,7 @@ import com.mzt.logapi.starter.annotation.DiffLogField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.util.List;
 import java.math.BigDecimal;
@@ -42,7 +43,9 @@ public class ZcProductVersionSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
-    @Schema(description = "规格信息列表")
+    @Schema(description = "规格信息列表", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotEmpty(message = "规格信息不能为空，至少包含一个规格")
+    @Valid
     private List<ZcProductVersionSpcSaveReqVO> specConfs;
 
 }

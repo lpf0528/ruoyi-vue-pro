@@ -2,9 +2,6 @@ package cn.iocoder.yudao.module.zc.controller.admin.product.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import java.util.*;
-import java.math.BigDecimal;
-import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import cn.idev.excel.annotation.*;
 
@@ -24,14 +21,6 @@ public class ZcProductRespVO {
     @Schema(description = "版本", requiredMode = Schema.RequiredMode.REQUIRED, example = "6")
     @ExcelProperty("版本")
     private Long versionId;
-
-    @Schema(description = "进货价", example = "14151")
-    @ExcelProperty("进货价")
-    private BigDecimal inboundPrice;
-
-    @Schema(description = "一级销售价", example = "25120")
-    @ExcelProperty("一级销售价")
-    private BigDecimal onePrice;
 
     @Schema(description = "供应商", example = "25473")
     @ExcelProperty("供应商")
