@@ -1,0 +1,77 @@
+---
+description: 智仓（ZC）窗帘业务模块领域模型、订单流程与开发注意事项
+globs: "yudao-module-curtain/**"
+alwaysApply: false
+---
+
+# yudao-module-curtain 窗帘业务模块
+
+智仓（`zc`）包名：`cn.iocoder.yudao.module.zc`。Controller 路径前缀 `/zc/`。
+
+结构：`controller/admin`（28）→ `service`（28）→ `dal/dataobject|mysql`（30）→ `dal/redis`（ZcNoGeneratorRedisDAO）→ `resources/mapper`。
+
+## 业务领域
+
+| 领域 | 核心实体 |
+|---|---|
+| 产品 | ZcProductDO、ZcProductBatchDO、ZcProductSpecDO |
+| 客户 | ZcCustomerDO、ZcCustomerProductPriceDO |
+| 窗帘工艺 | ZcCurtainDO、ZcCurtainStructureDO、ZcCurtainInstallProcessDO |
+| 订单履约 | ZcSalesOrderDO、ZcSalesOrderCurtainDO、ZcSalesOrderStructureDO、ZCSalesOrderMaterialDO、ZcSalesOrderProductDO |
+| 收支账单 | ZcBillsDO、ZcBillOrderItemsDO |
+| 生产工序 | ZcProcessNodeDO、ZcOrderProcessRecordDO、ZcUserProcessNodeDO |
+| 基础配置 | ZcBrandDO、ZcSupplierDO、ZcWarehouseDO、ZcInventoryRecordDO |
+
+## 三类销售订单（共用 zc_sales_order）
+
+**成品订单** `types=CURTAIN`，`/zc/sales-order`，三层嵌套：Order → Curtain(L2) → Structure(L3) → Material(L4)。
+
+**面单（嵌套面料单）** `types=FABRIC`，`/zc/sales-order/fabric/create|update`，同三层结构；精简 VO 经 `toStandardCurtainVOs()` 转标准 VO 后复用 `saveCurtainSubRows()`。
+
+**产品类订单** `types=FABRIC`，`/zc/sales-order-product`，两层：Order → Product 行。
+
+## 关键业务流程
+
+**整单创建/更新**（ZcSalesOrderServiceImpl）：
+- `generateOrderNo()`：`ZC{租户ID}{yyyyMMdd}{5位序号}`，Redis INCR
+- `saveCurtainSubRows()` 三层批量插入；更新用 `prepareOrderUpdate()` + `clearProtectedFields()`
+- 同一 `@Transactional`，失败整体回滚
+
+**订单详情**：按 orderId 批量查子表，批量查名称，内存组装，避免 N+1。
+
+**裁剪** `cutMaterial`：校验库存 → 更新用料（HAVE_PEILIAO）→ `decreaseQuantity` 原子扣减 → 写 inventory_record（CAIJIAN）。
+
+**撤销裁剪** `cancelCutMaterial`：状态须 HAVE_PEILIAO → `increaseQuantity` → **LambdaUpdateWrapper 显式置 null cutQuantity**（updateById 忽略 null）→ 写 CANCEL_CAIJIAN 流水。
+
+**入库/盘点**：createProductBatch 写 RUKU；盘点写 PANDIAN 并更新批次数量。
+
+## 关键技术
+
+- JSON 字段：`mountings`、`attributes`、`imageUrls`；DO 用 `JacksonTypeHandler`
+- 复杂 JOIN：ZcSalesOrderMapper、ZcProductMapper 的 XML
+- 单号生成：ZcNoGeneratorRedisDAO（`nextOrderSeq`/`nextBillSeq`/`nextBatchSeq`），禁止 selectCount+1
+
+## 关键枚举
+
+- `ZcSalesOrderMaterialStatusEnum`：NOT_PEILIAO / HAVE_PEILIAO
+- `ZcInventoryRecordOperateEnum`：PANDIAN / RUKU / CAIJIAN / CANCEL_CAIJIAN
+
+权限标识：`zc:{资源}:{操作}`。错误码：100001~100061（ErrorCodeConstants）。
+
+## 开发注意事项
+
+1. 订单创建/更新优先整单 API；重叠逻辑提取私有方法 + 精简 VO 适配层
+2. 关联名称查询：批量 selectBatchIds，禁止循环查库
+3. 删除订单前校验 confirmTime == null；级联删子表
+4. 工序操作前校验 ZcUserProcessNodeDO 授权
+5. 收款分摊合计 = 实收 + 优惠（BILL_ALLOCATED_AMOUNT_NOT_MATCH）
+6. 所有库存变动必须写 zc_inventory_record
+7. status/payStatus 等字典字段必须有枚举 + curtain.sql 字典，Service 用枚举.name()
+
+## 操作日志 @LogRecord（ZC 写操作必须）
+
+1. 在 `LogRecordConstants` 定义 `_SUB_TYPE` 和 `_SUCCESS` 常量
+2. Service 实现方法加 `@LogRecord`（type、subType、bizNo、success）
+3. 非入参变量用 `LogRecordContext.putVariable`；diff 用 `DiffParseFunction.OLD_OBJECT`
+4. 常量命名：`ZC_{资源}_TYPE`、`ZC_{资源}_{操作}_SUB_TYPE/SUCCESS`
+5. 加在 Service 而非 Controller；可与 @Transactional 共存

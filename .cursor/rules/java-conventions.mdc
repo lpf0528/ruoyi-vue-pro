@@ -1,0 +1,149 @@
+---
+description: Java 开发规范、注释要求、Controller/Service 模式、多租户、权限与测试
+globs: "**/*.java"
+alwaysApply: false
+---
+
+# Java 开发规范
+
+## 命名规范
+
+| 类型 | 规范 | 示例 |
+|---|---|---|
+| DO | `XxxDO` | `UserDO` |
+| VO | `XxxReqVO` / `XxxRespVO` | `UserCreateReqVO` |
+| 分页 | `XxxPageReqVO` | `UserPageReqVO` |
+| Convert | `XxxConvert` | `UserConvert` |
+| Service | `XxxService` / `XxxServiceImpl` | `AdminUserService` |
+| Mapper | `XxxMapper` | `UserMapper` |
+| Controller | `XxxController` | `UserController` |
+| 枚举 | `XxxEnum` | `UserStatusEnum` |
+
+## 接口路径与错误码
+
+- 管理后台：`/admin-api/{模块}/{资源}`
+- 用户 APP：`/app-api/{模块}/{资源}`
+- 错误码在 `ErrorCodeConstants` 定义，格式 `{模块编号}-{错误编号}`
+
+```java
+ErrorCode USER_NOT_EXISTS = new ErrorCode(1_001_000_000, "用户不存在");
+```
+
+## 代码注释（必须）
+
+- **类级**：Javadoc 说明职责、使用场景、权限标识
+- **Service 接口方法**：完整 Javadoc（参数、返回值、异常）
+- **DO/VO/枚举字段**：单行注释说明含义与取值约束
+- **复杂逻辑**：解释「为什么」，非「是什么」
+- **TODO/FIXME**：`// TODO [作者] 说明`
+- 禁止无意义注释、大段注释代码、拼音注释
+
+```java
+/** 用户状态，参见 {@link CommonStatusEnum} */
+private Integer status;
+
+// 校验订单状态：只有【待支付】才允许继续处理
+if (!OrderStatusEnum.UNPAID.getStatus().equals(order.getStatus())) {
+    throw exception(ORDER_STATUS_NOT_UNPAID);
+}
+```
+
+## 新增 CRUD 模块流程
+
+1. `sql/` DDL → 2. DO（继承 BaseDO）→ 3. Mapper（BaseMapperX）→ 4. VO → 5. Convert（MapStruct）→ 6. Service → 7. Controller → 8. 单元测试
+
+## Controller 标准写法
+
+```java
+@Tag(name = "管理后台 - 示例")
+@RestController
+@RequestMapping("/demo/example")
+@Validated
+public class ExampleController {
+
+    @PostMapping("/create")
+    @Operation(summary = "创建示例")
+    @PreAuthorize("@ss.hasPermission('demo:example:create')")
+    public CommonResult<Long> createExample(@RequestBody @Valid ExampleCreateReqVO reqVO) {
+        return success(exampleService.createExample(reqVO));
+    }
+}
+```
+
+## Service 标准写法
+
+```java
+@Override
+@Transactional(rollbackFor = Exception.class)
+public Long createExample(ExampleCreateReqVO reqVO) {
+    validateExampleNameUnique(null, reqVO.getName());
+    ExampleDO example = ExampleConvert.INSTANCE.convert(reqVO);
+    exampleMapper.insert(example);
+    return example.getId();
+}
+
+private void validateExampleNameUnique(Long id, String name) {
+    ExampleDO example = exampleMapper.selectByName(name);
+    if (example == null || example.getId().equals(id)) return;
+    throw exception(EXAMPLE_NAME_EXISTS);
+}
+```
+
+## 多租户
+
+- Mapper 查询自动拼接 `tenant_id`，无需手动过滤
+- 跨租户操作用 `TenantUtils.executeIgnore()` 包裹
+- 白名单表在 `TenantProperties#ignoreTables` 配置
+
+## 权限与操作日志
+
+- 接口权限：`@PreAuthorize("@ss.hasPermission('模块:资源:操作')")`
+- 数据权限：`@DataPermission`
+- 系统模块操作日志：`@OperateLog`；ZC 模块用 `@LogRecord`（见 zc-curtain-module 规则）
+
+```java
+@DeleteMapping("/delete")
+@PreAuthorize("@ss.hasPermission('system:user:delete')")
+@OperateLog(type = DELETE)
+public CommonResult<Boolean> deleteUser(@RequestParam("id") Long id) {
+    userService.deleteUser(id);
+    return success(true);
+}
+```
+
+## 单元测试
+
+核心 Service 方法必须覆盖，基类 `BaseDbUnitTest` 或 `BaseDbAndRedisUnitTest`：
+
+```java
+@Import(ExampleServiceImpl.class)
+public class ExampleServiceImplTest extends BaseDbUnitTest {
+
+    @Test
+    public void testCreateExample_success() {
+        ExampleCreateReqVO reqVO = randomPojo(ExampleCreateReqVO.class);
+        Long id = exampleService.createExample(reqVO);
+        assertPojoEquals(reqVO, exampleMapper.selectById(id));
+    }
+
+    @Test
+    public void testCreateExample_nameDuplicate() {
+        ExampleDO exist = randomPojo(ExampleDO.class);
+        exampleMapper.insert(exist);
+        ExampleCreateReqVO reqVO = randomPojo(ExampleCreateReqVO.class,
+                o -> o.setName(exist.getName()));
+        assertServiceException(() -> exampleService.createExample(reqVO), EXAMPLE_NAME_EXISTS);
+    }
+}
+```
+
+## 字典/状态枚举处理
+
+当处理状态或字典字段时：
+
+1. 用户未提供枚举值时，**先询问所有取值及中文名称**
+2. 确认后创建枚举类（`enums/XxxEnum.java`）、追加字典 SQL、更新 DO Javadoc
+3. grep 全项目替换硬编码字符串为 `枚举.name()`，补充 import
+4. label 映射用 `枚举.valueOf(code).getLabel()` + try-catch 兜底
+5. 枚举模板：`@Getter @AllArgsConstructor enum XxxEnum { VALUE("中文"); private final String label; }`
+6. 字典 SQL：`system_dict_type` id ≥ 2301，`system_dict_data` id ≥ 3700；颜色：默认=info、进行中=primary、警告=warning、完成=success
