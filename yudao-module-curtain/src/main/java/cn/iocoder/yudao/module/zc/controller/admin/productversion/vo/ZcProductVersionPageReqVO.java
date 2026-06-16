@@ -23,9 +23,6 @@ public class ZcProductVersionPageReqVO extends PageParam {
     @Schema(description = "类别ID", example = "18979")
     private Long categoryId;
 
-    @Schema(description = "出货价类型", example = "fixed_price / sku_price")
-    private String sellingPriceType;
-
     @Schema(description = "分类", example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
     private String classify;
 

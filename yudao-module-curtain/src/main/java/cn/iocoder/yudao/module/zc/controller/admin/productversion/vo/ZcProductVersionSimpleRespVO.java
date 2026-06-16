@@ -24,15 +24,6 @@ public class ZcProductVersionSimpleRespVO {
     @Schema(description = "类别ID")
     private Long categoryId;
 
-    @Schema(description = "出货价类型")
-    private String sellingPriceType;
-
-    @Schema(description = "进货价")
-    private BigDecimal inboundPrice;
-
-    @Schema(description = "一级类销售价")
-    private BigDecimal onePrice;
-
     @Schema(description = "供应商ID")
     private Long supplierId;
 

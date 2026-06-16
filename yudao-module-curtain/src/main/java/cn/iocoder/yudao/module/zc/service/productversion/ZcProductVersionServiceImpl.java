@@ -191,9 +191,6 @@ public class ZcProductVersionServiceImpl implements ZcProductVersionService {
                 .setName(item.getName())
                 .setUnitValue(item.getUnitValue())
                 .setCategoryId(item.getCategoryId())
-                .setSellingPriceType(item.getSellingPriceType())
-                .setInboundPrice(item.getInboundPrice())
-                .setOnePrice(item.getOnePrice())
                 .setSupplierId(item.getSupplierId()));
 
         // 批量查询规格

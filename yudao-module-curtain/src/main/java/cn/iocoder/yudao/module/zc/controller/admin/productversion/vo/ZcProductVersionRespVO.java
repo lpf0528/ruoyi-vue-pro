@@ -33,19 +33,6 @@ public class ZcProductVersionRespVO {
     @ExcelProperty("类别ID")
     private Long categoryId;
 
-    @Schema(description = "出货价类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "fixed_price / sku_price")
-    @ExcelProperty(value = "出货价类型", converter = DictConvert.class)
-    @DictFormat("zc_selling_price_type") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中
-    private String sellingPriceType;
-
-    @Schema(description = "进货价", example = "10033")
-    @ExcelProperty("进货价")
-    private BigDecimal inboundPrice;
-
-    @Schema(description = "一级类销售价", example = "18914")
-    @ExcelProperty("一级类销售价")
-    private BigDecimal onePrice;
-
     @Schema(description = "分类", requiredMode = Schema.RequiredMode.REQUIRED, example = "0壁纸 1运费 2样册 3其他 4窗帘 5窗纱 6成品")
     @ExcelProperty(value = "分类", converter = DictConvert.class)
     @DictFormat("zc_product_classify") // TODO 代码优化：建议设置到对应的 DictTypeConstants 枚举类中

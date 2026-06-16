@@ -6,7 +6,6 @@ import java.util.List;
 import com.baomidou.mybatisplus.annotation.*;
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 import cn.iocoder.yudao.module.zc.enums.ZcProductClassifyEnum;
-import cn.iocoder.yudao.module.zc.enums.ZcSellingPriceTypeEnum;
 
 /**
  * 产品版本 DO
@@ -41,21 +40,6 @@ public class ZcProductVersionDO extends BaseDO {
      */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long categoryId;
-    /**
-     * 出货价类型
-     * 枚举 {@link ZcSellingPriceTypeEnum}，字典类型 {@code zc_selling_price_type}
-     */
-    private String sellingPriceType;
-    /**
-     * 进货价
-     */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
-    private BigDecimal inboundPrice;
-    /**
-     * 一级类销售价
-     */
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
-    private BigDecimal onePrice;
     /**
      * 物料分类
      * 枚举 {@link ZcProductClassifyEnum}，字典类型 {@code zc_product_classify}
