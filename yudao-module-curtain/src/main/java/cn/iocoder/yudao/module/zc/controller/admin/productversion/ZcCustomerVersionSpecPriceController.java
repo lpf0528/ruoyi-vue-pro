@@ -21,8 +21,6 @@ import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 /**
  * 管理后台 - 客户版本销售授权价
  *
- * <p>提供以客户+版本为维度的规格授权价批量保存与查询能力。</p>
- *
  * @author 01Coder
  */
 @Tag(name = "管理后台 - 客户版本销售授权价")
@@ -36,11 +34,11 @@ public class ZcCustomerVersionSpecPriceController {
 
     @PostMapping("/batch-save")
     @Operation(summary = "批量保存客户版本规格授权价",
-            description = "覆盖写语义：按 customerId+versionId 分组，删除旧记录后全量插入新记录")
+            description = "先物理删除该客户所有旧记录，再全量插入提交的数据；id 字段无需传入")
     @PreAuthorize("@ss.hasPermission('zc:customer-version-spec-price:create')")
     public CommonResult<Boolean> batchSaveCustomerVersionSpecPrice(
-            @Valid @RequestBody List<ZcCustomerVersionSpecPriceSaveReqVO> saveReqVOList) {
-        customerVersionSpecPriceService.batchSaveCustomerVersionSpecPrice(saveReqVOList);
+            @Valid @RequestBody ZcCustomerVersionSpecPriceSaveReqVO saveReqVO) {
+        customerVersionSpecPriceService.batchSaveCustomerVersionSpecPrice(saveReqVO);
         return success(true);
     }
 

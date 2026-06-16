@@ -16,11 +16,11 @@ public interface ZcCustomerVersionSpecPriceService {
     /**
      * 批量保存客户版本规格授权价
      *
-     * <p>按 customerId + versionId 分组做覆盖写：先删旧记录，再全量插入新记录。</p>
+     * <p>先物理删除该客户所有旧记录，再全量插入新记录；id 字段忽略。</p>
      *
-     * @param saveReqVOList 平铺的授权价列表，每条含 customerId、versionId、spec、authorizedPrice
+     * @param saveReqVO 批量保存请求
      */
-    void batchSaveCustomerVersionSpecPrice(@Valid List<ZcCustomerVersionSpecPriceSaveReqVO> saveReqVOList);
+    void batchSaveCustomerVersionSpecPrice(@Valid ZcCustomerVersionSpecPriceSaveReqVO saveReqVO);
 
     /**
      * 查询客户版本授权价列表（含版本名称），versionId 为空时查询该客户所有版本

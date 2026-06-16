@@ -28,14 +28,13 @@ public interface ZcCustomerVersionSpecPriceMapper extends BaseMapperX<ZcCustomer
                                                                      @Param("versionId") Long versionId);
 
     /**
-     * 物理删除指定客户、版本下的所有授权价记录
+     * 物理删除指定客户的所有版本规格授权价
      *
-     * <p>覆盖写场景使用物理删除，避免唯一索引 (customer_id, version_id, spec) 冲突。</p>
+     * <p>批量保存前调用，清空旧数据后再全量插入，避免唯一索引冲突且确保移除项被删除。</p>
      *
      * @param customerId 客户编号
-     * @param versionId  版本编号
      */
-    @Delete("DELETE FROM zc_customer_version_spec_price WHERE customer_id = #{customerId} AND version_id = #{versionId}")
-    void deleteByCustomerIdAndVersionIdPhysically(@Param("customerId") Long customerId, @Param("versionId") Long versionId);
+    @Delete("DELETE FROM zc_customer_version_spec_price WHERE customer_id = #{customerId}")
+    void deleteByCustomerIdPhysically(@Param("customerId") Long customerId);
 
 }
