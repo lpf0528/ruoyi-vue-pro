@@ -68,7 +68,6 @@ public class ZcCurtainTemplateServiceImpl implements ZcCurtainTemplateService {
                                 ei.setElementId(t.getElementId());
                                 ei.setProductId(t.getProductId());
                                 ei.setProductName(t.getProductName());
-                                ei.setOnePrice(t.getOnePrice());
                                 return ei;
                             })
                             .collect(Collectors.toList()));

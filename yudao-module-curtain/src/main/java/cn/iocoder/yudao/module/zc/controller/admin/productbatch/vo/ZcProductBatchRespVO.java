@@ -83,6 +83,10 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("单位")
     private String unitValue;
 
+    @Schema(description = "一级类销售价（来自产品版本规格）")
+    @ExcelProperty("一级类销售价")
+    private BigDecimal onePrice;
+
     @Schema(description = "条码，格式 BAT-XXXXXXXX（共 12 位）")
     @ExcelProperty("条码")
     private String barcode;

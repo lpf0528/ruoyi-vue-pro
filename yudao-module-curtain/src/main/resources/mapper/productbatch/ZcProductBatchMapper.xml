@@ -5,6 +5,7 @@
     <select id="selectPageWithVO"
             resultType="cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.ZcProductBatchRespVO">
         SELECT
+            t41.one_price,
             t2.`name`      AS product_name,
             t4.`name`      AS version_name,
             t4.unit_value  AS unit_value,
@@ -15,10 +16,11 @@
             t1.warehouse_id, t1.supplier_id, t1.note, t1.spec, t1.status,
             t1.create_time, t1.update_time, t1.creator, t1.updater
         FROM zc_product_batch t1
-            LEFT JOIN zc_product         t2 ON t1.product_id   = t2.id AND t2.deleted = 0
-            LEFT JOIN zc_product_version t4 ON t2.version_id    = t4.id AND t4.deleted = 0
-            LEFT JOIN zc_supplier        t5 ON t1.supplier_id   = t5.id AND t5.deleted = 0
-            LEFT JOIN zc_warehouse       t6 ON t1.warehouse_id  = t6.id AND t6.deleted = 0
+            LEFT JOIN zc_product             t2  ON t1.product_id  = t2.id  AND t2.deleted = 0
+            LEFT JOIN zc_product_version     t4  ON t2.version_id  = t4.id  AND t4.deleted = 0
+            LEFT JOIN zc_product_version_spc t41 ON t2.version_id  = t41.version_id AND t1.spec = t41.spec
+            LEFT JOIN zc_supplier            t5  ON t1.supplier_id = t5.id  AND t5.deleted = 0
+            LEFT JOIN zc_warehouse           t6  ON t1.warehouse_id= t6.id  AND t6.deleted = 0
         WHERE t1.deleted = 0
         <if test="reqVO.batchNo != null and reqVO.batchNo != ''">
             AND t1.batch_no LIKE CONCAT('%', #{reqVO.batchNo}, '%')
@@ -50,6 +52,7 @@
     <select id="selectBatchWithVOById"
             resultType="cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.ZcProductBatchRespVO">
         SELECT
+            t41.one_price,
             t2.`name`      AS product_name,
             t4.`name`      AS version_name,
             t4.unit_value  AS unit_value,
@@ -60,10 +63,11 @@
             t1.warehouse_id, t1.supplier_id, t1.note, t1.spec, t1.status,
             t1.create_time, t1.update_time, t1.creator, t1.updater
         FROM zc_product_batch t1
-            LEFT JOIN zc_product         t2 ON t1.product_id   = t2.id AND t2.deleted = 0
-            LEFT JOIN zc_product_version t4 ON t2.version_id    = t4.id AND t4.deleted = 0
-            LEFT JOIN zc_supplier        t5 ON t1.supplier_id   = t5.id AND t5.deleted = 0
-            LEFT JOIN zc_warehouse       t6 ON t1.warehouse_id  = t6.id AND t6.deleted = 0
+            LEFT JOIN zc_product             t2  ON t1.product_id  = t2.id  AND t2.deleted = 0
+            LEFT JOIN zc_product_version     t4  ON t2.version_id  = t4.id  AND t4.deleted = 0
+            LEFT JOIN zc_product_version_spc t41 ON t2.version_id  = t41.version_id AND t1.spec = t41.spec
+            LEFT JOIN zc_supplier            t5  ON t1.supplier_id = t5.id  AND t5.deleted = 0
+            LEFT JOIN zc_warehouse           t6  ON t1.warehouse_id= t6.id  AND t6.deleted = 0
         WHERE t1.deleted = 0
           AND t1.id = #{id}
     </select>
