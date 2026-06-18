@@ -38,26 +38,31 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
     /**
      * 房间
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String room;
     /**
      * 褶倍快照
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal pleatRatioValue;
     /**
      * 折扣率
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal discountRate;
     /**
-     * 应收金额
+     * 应收金额；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 0
      */
     private BigDecimal amount;
     /**
      * 图片1
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String image1;
     /**
      * 图片2
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String image2;
     /**
      * 配件多选（JSON 数组字符串），整单更新时前端可传空列表将其置空，
@@ -68,10 +73,12 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
     /**
      * 备注
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
     /**
      * 褶距
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal pleatsDistance;
 
     /**

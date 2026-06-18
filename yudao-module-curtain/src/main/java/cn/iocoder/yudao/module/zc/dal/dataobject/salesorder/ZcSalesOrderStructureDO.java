@@ -43,57 +43,69 @@ public class ZcSalesOrderStructureDO extends BaseDO {
     /**
      * 高
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal height;
     /**
      * 宽
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal width;
     /**
      * 左转角
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String leftCorner;
     /**
      * 右转角
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String rightCorner;
     /**
      * 粘贴方向
      * 枚举 {@link ZcPasteDirectionEnum}，字典类型 {@code zc_paste_direction}
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String pasteDirection;
     /**
      * 安装工艺
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long installProcessId;
     /**
      * 打开方式
      * 枚举 {@link ZcOpenMethodEnum}，字典类型 {@code zc_open_method}
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String openMethod;
     /**
      * 加工类型
      * 枚举 {@link ZcProcessTypeEnum}，字典类型 {@code zc_process_type}
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String processType;
     /**
-     * 是否定型
+     * 是否定型；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 false
      */
     private Boolean isShaping;
     /**
      * 总褶数
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Integer pleatsNum;
     /**
      * 褶距
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal pleatsDistance;
     /**
      * 裙摆高度
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal skirtHeight;
     /**
      * 备注
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
 
 

@@ -36,42 +36,51 @@ public class ZCSalesOrderMaterialDO extends BaseDO {
     /**
      * 组件类型
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long elementId;
     /**
-     * 货号
+     * 货号；数据库 NOT NULL，不允许置空
      */
     private Long productId;
     /**
      * 批次
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long batchId;
     /**
      * 规格
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String spec;
     /**
      * 单价
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal price;
     /**
      * 用料
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal quantity;
     /**
      * 单位
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String unitValue;
     /**
      * 折扣率
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal discountRate;
     /**
      * 小计
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal amount;
     /**
      * 备注
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
     /**
      * 配料状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcSalesOrderMaterialStatusEnum}

@@ -42,10 +42,12 @@ public class ZcSalesOrderDO extends BaseDO {
     /**
      * 手机
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String mobile;
     /**
      * 品牌
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long brandId;
     /**
      * 下单日期
@@ -54,17 +56,19 @@ public class ZcSalesOrderDO extends BaseDO {
     /**
      * 物流
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long logisticId;
     /**
      * 收货人
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String receiver;
     /**
-     * 送货地址
+     * 送货地址；数据库 NOT NULL，null 在 Service 层归一为空串
      */
     private String deliveryAddress;
     /**
-     * 运费
+     * 运费；整单更新时前端不传则保留原值，故不使用 ALWAYS 策略
      */
     private BigDecimal freight;
     /**
@@ -73,15 +77,15 @@ public class ZcSalesOrderDO extends BaseDO {
      */
     private String types;
     /**
-     * 优惠金额
+     * 优惠金额；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 0
      */
     private BigDecimal discountAmount;
     /**
-     * 总金额
+     * 总金额；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 0
      */
     private BigDecimal totalAmount;
     /**
-     * 订单金额
+     * 订单金额；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 0
      */
     private BigDecimal amount;
     /**
@@ -91,6 +95,7 @@ public class ZcSalesOrderDO extends BaseDO {
     /**
      * 交付日期
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private LocalDate deliveryDate;
     /**
      * 支付状态
@@ -121,6 +126,7 @@ public class ZcSalesOrderDO extends BaseDO {
     /**
      * 备注
      */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
 
 

@@ -32,22 +32,26 @@ public class ZcSalesOrderProductDO extends BaseDO {
     /** 所属销售订单 ID，关联 zc_sales_order.id */
     private Long orderId;
 
-    /** 产品 ID，关联 zc_product.id */
+    /** 产品 ID，关联 zc_product.id；数据库 NOT NULL，不允许置空 */
     private Long productId;
 
     /** 产品批次 ID，关联 zc_product_batch.id */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long batchId;
 
-    /** 数量 */
+    /** 数量；数据库 NOT NULL DEFAULT 0，null 在 Service 层归一为 0 */
     private BigDecimal quantity;
 
     /** 单价 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal price;
 
     /** 行小计金额（quantity × price × 折扣等，由前端传入） */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal amount;
 
     /** 备注 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
 
     /**

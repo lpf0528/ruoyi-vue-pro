@@ -158,6 +158,39 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         salesOrder.setSets(sets);
         if (salesOrder.getFreight() == null) salesOrder.setFreight(BigDecimal.ZERO);
         if (salesOrder.getTotalAmount() == null) salesOrder.setTotalAmount(BigDecimal.ZERO);
+        if (salesOrder.getAmount() == null) salesOrder.setAmount(BigDecimal.ZERO);
+        if (salesOrder.getDiscountAmount() == null) salesOrder.setDiscountAmount(BigDecimal.ZERO);
+        if (salesOrder.getDeliveryAddress() == null) salesOrder.setDeliveryAddress("");
+    }
+
+    /** 整单更新时，将主表 NOT NULL 字段的 null 归一为数据库默认值 */
+    private void normalizeOrderUpdateFields(ZcSalesOrderDO salesOrder) {
+        if (salesOrder.getAmount() == null) {
+            salesOrder.setAmount(BigDecimal.ZERO);
+        }
+        if (salesOrder.getTotalAmount() == null) {
+            salesOrder.setTotalAmount(BigDecimal.ZERO);
+        }
+        if (salesOrder.getDiscountAmount() == null) {
+            salesOrder.setDiscountAmount(BigDecimal.ZERO);
+        }
+        if (salesOrder.getDeliveryAddress() == null) {
+            salesOrder.setDeliveryAddress("");
+        }
+    }
+
+    /** 窗帘行 NOT NULL 字段兜底：amount 默认 0 */
+    private void normalizeCurtainDO(ZcSalesOrderCurtainDO curtain) {
+        if (curtain.getAmount() == null) {
+            curtain.setAmount(BigDecimal.ZERO);
+        }
+    }
+
+    /** 结构行 NOT NULL 字段兜底：isShaping 默认 false */
+    private void normalizeStructureDO(ZcSalesOrderStructureDO structure) {
+        if (structure.getIsShaping() == null) {
+            structure.setIsShaping(false);
+        }
     }
 
     /** 三层嵌套批量保存：窗帘行 → 结构行 → 用料明细 */
@@ -169,6 +202,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             curtainDO.setOrderId(orderId);
             curtainDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name());
             curtainDO.setIndex(curtainIndex++);
+            normalizeCurtainDO(curtainDO);
             if (CollUtil.isNotEmpty(curtainVO.getMountings())) {
                 curtainDO.setMountings(JSONUtil.toJsonStr(curtainVO.getMountings()));
             }
@@ -180,6 +214,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 ZcSalesOrderStructureDO structureDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
                 structureDO.setOrderId(orderId);
                 structureDO.setOrderCurtainId(orderCurtainId);
+                normalizeStructureDO(structureDO);
                 salesOrderStructureMapper.insert(structureDO);
                 Long orderStructureId = structureDO.getId();
 
@@ -200,8 +235,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
      * <p>保护规则：
      * <ul>
      *   <li>窗帘行：status / packTime / shipTime 不覆盖（由确认/打包/发货流程驱动）</li>
-     *   <li>用料明细：status / cutQuantity 不覆盖；已裁剪行（HAVE_PEILIAO）的 batchId 不覆盖</li>
+     *   <li>用料明细：status / cutQuantity 不覆盖；已裁剪行（HAVE_PEILIAO）的 batchId 保留原值</li>
      *   <li>前置拦截：若待删除的用料明细中存在 HAVE_PEILIAO 行，直接抛异常，防止库存状态不一致</li>
+     *   <li>业务字段置 null 可落库：可空列已标注 {@code FieldStrategy.ALWAYS}；NOT NULL 列在 Service 层归一默认值</li>
      * </ul>
      * </p>
      */
@@ -258,6 +294,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 updateDO.setStatus(null);
                 updateDO.setPackTime(null);
                 updateDO.setShipTime(null);
+                normalizeCurtainDO(updateDO);
                 salesOrderCurtainMapper.updateById(updateDO);
                 orderCurtainId = curtainVO.getId();
             } else {
@@ -268,6 +305,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 newDO.setMountings(mountingsJson);
                 newDO.setStatus(ZcSalesOrderStatusEnum.UNCONFIRMED.name());
                 newDO.setIndex(curtainIndex);
+                normalizeCurtainDO(newDO);
                 salesOrderCurtainMapper.insert(newDO);
                 orderCurtainId = newDO.getId();
             }
@@ -281,6 +319,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                     // UPDATE 已有结构行
                     ZcSalesOrderStructureDO updateDO = BeanUtils.toBean(structureVO, ZcSalesOrderStructureDO.class);
                     updateDO.setOrderCurtainId(orderCurtainId); // 允许行跨窗帘挪动
+                    normalizeStructureDO(updateDO);
                     salesOrderStructureMapper.updateById(updateDO);
                     orderStructureId = structureVO.getId();
                 } else {
@@ -289,6 +328,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                     newDO.setId(null);
                     newDO.setOrderId(orderId);
                     newDO.setOrderCurtainId(orderCurtainId);
+                    normalizeStructureDO(newDO);
                     salesOrderStructureMapper.insert(newDO);
                     orderStructureId = newDO.getId();
                 }
@@ -303,9 +343,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                         // status / cutQuantity 由裁剪流程维护，置 null 确保 updateById 不覆盖
                         updateDO.setStatus(null);
                         updateDO.setCutQuantity(null);
-                        // 已裁剪行的 batchId 与库存扣减绑定，不允许修改
+                        // 已裁剪行的 batchId 与库存扣减绑定，不允许修改（保留原值，避免 ALWAYS 策略将其清空）
                         if (ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(existing.getStatus())) {
-                            updateDO.setBatchId(null);
+                            updateDO.setBatchId(existing.getBatchId());
                         }
                         salesOrderMaterialMapper.updateById(updateDO);
                     } else {
@@ -372,6 +412,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         ZcSalesOrderDO existing = prepareOrderUpdate(updateReqVO.getId());
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         clearProtectedFields(updateDO);
+        normalizeOrderUpdateFields(updateDO);
         updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
@@ -387,6 +428,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         ZcSalesOrderDO existing = prepareOrderUpdate(updateReqVO.getId());
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         clearProtectedFields(updateDO);
+        normalizeOrderUpdateFields(updateDO);
         updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderFabricUpdateReqVO.class));
