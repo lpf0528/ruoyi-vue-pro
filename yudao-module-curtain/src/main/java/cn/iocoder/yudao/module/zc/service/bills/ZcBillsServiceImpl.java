@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.bills.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillAttachmentsDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillMethodsDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillOrderItemsDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillsDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
@@ -22,6 +23,7 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillAttachmentsMapper;
+import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillMethodsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillOrderItemsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.bills.ZcBillsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
@@ -36,6 +38,7 @@ import com.mzt.logapi.starter.annotation.LogRecord;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
+import cn.iocoder.yudao.module.zc.enums.ZcBillMethodConstants;
 import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcRefTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
@@ -51,6 +54,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
 
     @Resource
     private ZcBillsMapper billsMapper;
+    @Resource
+    private ZcBillMethodsMapper billMethodsMapper;
     @Resource
     private ZcBillAttachmentsMapper billAttachmentsMapper;
     @Resource
@@ -137,10 +142,11 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             billOrderItemsMapper.insert(itemDO);
         }
 
-        // 6. 更新客户余额并记录流水：balance += actualAmount + discountAmount
-        // actualAmount 为本次实收，discountAmount 为本次优惠，两者合计为本次结算总价值
+        // 6. 更新客户余额并记录流水
+        // 普通收款：balance += 实收 + 优惠（还款）；余额扣款：balance -= 实收 + 优惠（消耗预存款）
         if (createReqVO.getCustomerId() != null) {
-            adjustAndRecordLog(createReqVO.getCustomerId(), totalSettled,
+            BigDecimal balanceDelta = calcCollectionBalanceDelta(totalSettled, createReqVO.getBillMethodId());
+            adjustAndRecordLog(createReqVO.getCustomerId(), balanceDelta,
                     ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), billId, billNo, null);
         }
 
@@ -193,8 +199,9 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // 4. 回滚旧的客户余额并记录冲回流水
         if (existingBill.getCustomerId() != null) {
             BigDecimal oldDiscount = existingBill.getDiscountAmount() == null ? BigDecimal.ZERO : existingBill.getDiscountAmount();
-            BigDecimal oldSettledNegate = existingBill.getActualAmount().add(oldDiscount).negate();
-            adjustAndRecordLog(existingBill.getCustomerId(), oldSettledNegate,
+            BigDecimal oldSettled = existingBill.getActualAmount().add(oldDiscount);
+            BigDecimal oldBalanceDeltaNegate = calcCollectionBalanceDelta(oldSettled, existingBill.getBillMethodId()).negate();
+            adjustAndRecordLog(existingBill.getCustomerId(), oldBalanceDeltaNegate,
                     ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), existingBill.getId(), existingBill.getBillNo(), "收款单修改-冲回旧记录");
         }
 
@@ -248,7 +255,8 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // 9. 更新新的客户余额并记录流水
         Long newCustomerId = updateReqVO.getCustomerId() != null ? updateReqVO.getCustomerId() : existingBill.getCustomerId();
         if (newCustomerId != null) {
-            adjustAndRecordLog(newCustomerId, newTotalSettled,
+            BigDecimal newBalanceDelta = calcCollectionBalanceDelta(newTotalSettled, updateReqVO.getBillMethodId());
+            adjustAndRecordLog(newCustomerId, newBalanceDelta,
                     ZcCustomerBalanceBizTypeEnum.COLLECTION.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), updateReqVO.getId(), existingBill.getBillNo(), "收款单修改-应用新记录");
         }
         // 记录操作日志上下文
@@ -288,11 +296,12 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             salesOrderMapper.updateById(updateOrder);
         }
 
-        // 3. 回滚客户余额并记录冲回流水（撤销当时增加的 actualAmount + discountAmount）
+        // 3. 回滚客户余额并记录冲回流水
         if (bill.getCustomerId() != null && bill.getActualAmount() != null) {
             BigDecimal discount = bill.getDiscountAmount() == null ? BigDecimal.ZERO : bill.getDiscountAmount();
-            BigDecimal delta = bill.getActualAmount().add(discount).negate();
-            adjustAndRecordLog(bill.getCustomerId(), delta,
+            BigDecimal totalSettled = bill.getActualAmount().add(discount);
+            BigDecimal balanceDeltaNegate = calcCollectionBalanceDelta(totalSettled, bill.getBillMethodId()).negate();
+            adjustAndRecordLog(bill.getCustomerId(), balanceDeltaNegate,
                     ZcCustomerBalanceBizTypeEnum.COLLECTION_VOID.name(), ZcRefTypeEnum.COLLECTION_RECORD.name(), bill.getId(), bill.getBillNo(), "收款单删除-冲回");
         }
 
@@ -330,6 +339,35 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @Override
     public List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId) {
         return billOrderItemsMapper.selectListWithOrderNoByBillId(billId);
+    }
+
+    /**
+     * 计算收款单对客户余额的影响金额
+     *
+     * <p>普通收款方式：余额增加（还款）；系统内置「余额扣款」：余额减少（消耗预存款）。</p>
+     *
+     * @param totalSettled 实收 + 优惠合计
+     * @param billMethodId 收支方式 ID
+     * @return 余额变动额（正数增加、负数减少）
+     */
+    private BigDecimal calcCollectionBalanceDelta(BigDecimal totalSettled, Long billMethodId) {
+        if (isBalanceCollectionMethod(billMethodId)) {
+            return totalSettled.negate();
+        }
+        return totalSettled;
+    }
+
+    /**
+     * 判断是否为系统内置「余额扣款」方式（group=0 且名称为「余额扣款」）
+     */
+    private boolean isBalanceCollectionMethod(Long billMethodId) {
+        if (billMethodId == null) {
+            return false;
+        }
+        ZcBillMethodsDO billMethod = billMethodsMapper.selectById(billMethodId);
+        return billMethod != null
+                && ZcBillMethodConstants.SYSTEM_GROUP.equals(billMethod.getGroup())
+                && ZcBillMethodConstants.BALANCE_COLLECTION_NAME.equals(billMethod.getName());
     }
 
     /**
