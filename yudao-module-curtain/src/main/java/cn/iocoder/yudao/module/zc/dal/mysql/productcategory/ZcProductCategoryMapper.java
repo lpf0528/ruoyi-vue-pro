@@ -19,7 +19,7 @@ public interface ZcProductCategoryMapper extends BaseMapperX<ZcProductCategoryDO
 
     default PageResult<ZcProductCategoryDO> selectPage(ZcProductCategoryPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcProductCategoryDO>()
-                .eqIfPresent(ZcProductCategoryDO::getValue, reqVO.getValue())
+                .likeIfPresent(ZcProductCategoryDO::getValue, reqVO.getValue())
                 .eqIfPresent(ZcProductCategoryDO::getNote, reqVO.getNote())
                 .betweenIfPresent(ZcProductCategoryDO::getCreateTime, reqVO.getCreateTime())
                 .orderByDesc(ZcProductCategoryDO::getId));
