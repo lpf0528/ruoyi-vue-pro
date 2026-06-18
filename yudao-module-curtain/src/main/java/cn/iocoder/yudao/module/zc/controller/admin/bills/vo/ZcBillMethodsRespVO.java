@@ -28,6 +28,10 @@ public class ZcBillMethodsRespVO {
     @ExcelProperty("备注")
     private String note;
 
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @ExcelProperty("分组")
+    private Integer group;
+
     @Schema(description = "创建者")
     @ExcelProperty("创建者")
     private String creator;

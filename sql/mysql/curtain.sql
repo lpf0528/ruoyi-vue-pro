@@ -37,7 +37,7 @@ DROP TABLE IF EXISTS `zc_product_spec`;
 DROP TABLE IF EXISTS `zc_product_category`;
 DROP TABLE IF EXISTS `zc_customer_balance_log`;
 DROP TABLE IF EXISTS `zc_customer`;
-DROP TABLE IF EXISTS `zc_payment`;
+DROP TABLE IF EXISTS `zc_bill_methods`;
 DROP TABLE IF EXISTS `zc_warehouse`;
 DROP TABLE IF EXISTS `zc_supplier`;
 DROP TABLE IF EXISTS `zc_brand`;
@@ -166,13 +166,14 @@ CREATE TABLE `zc_warehouse` (
   KEY `idx_tenant_id` (`tenant_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='仓库';
 
-DROP TABLE IF EXISTS `zc_payment`;
-CREATE TABLE `zc_payment` (
+DROP TABLE IF EXISTS `zc_bill_methods`;
+CREATE TABLE `zc_bill_methods` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '名称：支付宝、微信、银行卡',
   `card_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '卡号',
   `image1` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '图片',
   `note` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  `group` int NOT NULL DEFAULT 1 COMMENT '分组：0=系统配置，1=手工配置',
   `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
@@ -878,3 +879,9 @@ ALTER TABLE `zc_product_version`
 
 ALTER TABLE `zc_product`
     DROP COLUMN `spec_id`;
+
+-- ----------------------------
+-- zc_bill_methods 新增 group 字段（已有库升级）
+-- ----------------------------
+ALTER TABLE `zc_bill_methods`
+    ADD COLUMN `group` int NOT NULL DEFAULT 1 COMMENT '分组：0=系统配置，1=手工配置' AFTER `note`;

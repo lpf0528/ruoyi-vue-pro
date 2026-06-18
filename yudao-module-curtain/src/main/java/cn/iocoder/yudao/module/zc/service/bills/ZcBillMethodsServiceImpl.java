@@ -36,8 +36,9 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
     @LogRecord(type = ZC_BILL_METHODS_TYPE, subType = ZC_BILL_METHODS_CREATE_SUB_TYPE, bizNo = "{{#billMethod.id}}",
             success = ZC_BILL_METHODS_CREATE_SUCCESS)
     public Long createBillMethods(ZcBillMethodsSaveReqVO createReqVO) {
-        // 插入
+        // 插入，分组固定为手工配置（1），不依赖前端传值
         ZcBillMethodsDO billMethod = BeanUtils.toBean(createReqVO, ZcBillMethodsDO.class);
+        billMethod.setGroup(1);
         billMethodsMapper.insert(billMethod);
         // 记录操作日志上下文
         LogRecordContext.putVariable("billMethod", billMethod);
@@ -50,7 +51,9 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
     public void updateBillMethods(ZcBillMethodsSaveReqVO updateReqVO) {
         // 校验存在
         ZcBillMethodsDO oldBillMethod = validateBillMethodsExists(updateReqVO.getId());
-        // 更新
+        // 系统内置收款方式（group=0）禁止编辑
+        validateBillMethodsNotSystem(oldBillMethod);
+        // 更新（group 不由前端传入，保持库中原值）
         ZcBillMethodsDO updateObj = BeanUtils.toBean(updateReqVO, ZcBillMethodsDO.class);
         billMethodsMapper.updateById(updateObj);
         // 记录操作日志上下文
@@ -64,6 +67,17 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
             throw exception(BILL_METHODS_NOT_EXISTS);
         }
         return billMethod;
+    }
+
+    /**
+     * 校验收款方式不是系统内置（group=0），否则抛出异常
+     *
+     * @param billMethod 待校验的收款方式
+     */
+    private void validateBillMethodsNotSystem(ZcBillMethodsDO billMethod) {
+        if (Integer.valueOf(0).equals(billMethod.getGroup())) {
+            throw exception(BILL_METHODS_SYSTEM_CANNOT_MODIFY);
+        }
     }
 
     @Override

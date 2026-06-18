@@ -36,6 +36,8 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_STATUS_NOT_CONFIRMED = new ErrorCode(100026, "订单状态不是已确认，无法取消确认");
     ErrorCode BILLS_NOT_EXISTS = new ErrorCode(100027, "收支账单不存在");
     ErrorCode BILL_METHODS_NOT_EXISTS = new ErrorCode(100028, "收款方式不存在");
+    /** 系统内置收款方式（group=0）不允许编辑 */
+    ErrorCode BILL_METHODS_SYSTEM_CANNOT_MODIFY = new ErrorCode(100079, "系统内置收款方式不允许编辑");
     ErrorCode PROCESS_NODE_NOT_EXISTS = new ErrorCode(100029, "工序节点配置不存在");
     ErrorCode ORDER_PROCESS_RECORD_NOT_EXISTS = new ErrorCode(100030, "工序记录不存在");
     /** 员工未绑定该工序节点，无权操作 */
