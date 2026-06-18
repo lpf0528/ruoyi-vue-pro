@@ -33,4 +33,9 @@ public class ZcCustomerBalanceLogServiceImpl implements ZcCustomerBalanceLogServ
         return customerBalanceLogMapper.selectPage(pageReqVO);
     }
 
+    @Override
+    public ZcCustomerBalanceLogDO getLatestOrderConfirmLog(Long customerId, Long refId) {
+        return customerBalanceLogMapper.selectLatestOrderConfirmLog(customerId, refId);
+    }
+
 }

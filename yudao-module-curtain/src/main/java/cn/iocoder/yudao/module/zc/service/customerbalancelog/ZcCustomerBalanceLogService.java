@@ -31,4 +31,13 @@ public interface ZcCustomerBalanceLogService {
      */
     PageResult<ZcCustomerBalanceLogRespVO> getCustomerBalanceLogPage(ZcCustomerBalanceLogPageReqVO pageReqVO);
 
+    /**
+     * 获得指定客户、订单下最新一条「订单确认扣减」余额流水
+     *
+     * @param customerId 客户主键
+     * @param refId      关联销售订单主键（zc_sales_order.id）
+     * @return 最新流水，不存在则返回 null
+     */
+    ZcCustomerBalanceLogDO getLatestOrderConfirmLog(Long customerId, Long refId);
+
 }

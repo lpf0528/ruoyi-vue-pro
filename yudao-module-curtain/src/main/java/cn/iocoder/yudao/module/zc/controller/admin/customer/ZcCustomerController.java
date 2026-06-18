@@ -28,8 +28,11 @@ import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
 import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
+import cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo.ZcCustomerBalanceLogRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
+import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "管理后台 - 客户资料")
@@ -40,6 +43,8 @@ public class ZcCustomerController {
 
     @Resource
     private ZcCustomerService customerService;
+    @Resource
+    private ZcCustomerBalanceLogService customerBalanceLogService;
 
     @PostMapping("/create")
     @Operation(summary = "创建客户资料")
@@ -72,6 +77,20 @@ public class ZcCustomerController {
     public CommonResult<ZcCustomerRespVO> getCustomer(@RequestParam("id") Long id) {
         ZcCustomerDO customer = customerService.getCustomer(id);
         return success(BeanUtils.toBean(customer, ZcCustomerRespVO.class));
+    }
+
+    @GetMapping("/balance-log/latest-order-confirm")
+    @Operation(summary = "获得客户订单确认扣减的最新余额流水")
+    @Parameters({
+            @Parameter(name = "customerId", description = "客户编号", required = true, example = "7166"),
+            @Parameter(name = "refId", description = "关联销售订单主键（zc_sales_order.id）", required = true, example = "1024")
+    })
+    @PreAuthorize("@ss.hasPermission('zc:customer:query')")
+    public CommonResult<ZcCustomerBalanceLogRespVO> getLatestOrderConfirmBalanceLog(
+            @RequestParam("customerId") @NotNull Long customerId,
+            @RequestParam("refId") @NotNull Long refId) {
+        ZcCustomerBalanceLogDO log = customerBalanceLogService.getLatestOrderConfirmLog(customerId, refId);
+        return success(BeanUtils.toBean(log, ZcCustomerBalanceLogRespVO.class));
     }
 
     @GetMapping("/page")
@@ -151,4 +170,4 @@ public class ZcCustomerController {
         return success(customerService.importCustomerList(list, updateSupport));
     }
 
-}
+}
