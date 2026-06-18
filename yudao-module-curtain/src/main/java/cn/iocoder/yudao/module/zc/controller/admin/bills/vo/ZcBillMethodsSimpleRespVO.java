@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 /**
  * 管理后台 - 收款方式精简 Response VO
  *
- * <p>仅用于前端下拉选项，只返回 id 和 name，避免暴露多余字段</p>
+ * <p>主要用于前端下拉选项及列表展示</p>
  */
 @Schema(description = "管理后台 - 收款方式精简 Response VO")
 @Data
@@ -19,5 +19,8 @@ public class ZcBillMethodsSimpleRespVO {
 
     @Schema(description = "名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
+
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    private Integer group;
 
 }
