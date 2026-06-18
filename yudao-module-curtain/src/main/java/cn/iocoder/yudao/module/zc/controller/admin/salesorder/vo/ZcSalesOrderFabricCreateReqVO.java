@@ -50,17 +50,33 @@ public class ZcSalesOrderFabricCreateReqVO {
     @Schema(description = "送货地址")
     private String deliveryAddress;
 
+    /** 运费，不传默认为 0 */
+    @Schema(description = "运费")
+    private BigDecimal freight;
+
+    /** 优惠金额 */
+    @Schema(description = "优惠金额")
+    private BigDecimal discountAmount;
+
+    /** 总金额（含运费等），不传默认为 0 */
+    @Schema(description = "总金额")
+    private BigDecimal totalAmount;
+
     /** 交付日期 */
     @Schema(description = "交付日期")
     private LocalDate deliveryDate;
 
-    /** 订单金额 */
+    /** 订单金额（优惠后实收） */
     @Schema(description = "订单金额")
     private BigDecimal amount;
 
     /** 四舍五入差额（记录金额四舍五入产生的浮亏/浮盈），不传默认为 0 */
     @Schema(description = "四舍五入")
     private BigDecimal rounding;
+
+    /** 备注 */
+    @Schema(description = "备注")
+    private String note;
 
     /** 窗帘行列表 */
     @Schema(description = "窗帘行列表")
