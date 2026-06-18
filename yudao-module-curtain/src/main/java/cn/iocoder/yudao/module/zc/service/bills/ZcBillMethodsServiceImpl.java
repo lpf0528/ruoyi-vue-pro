@@ -36,6 +36,8 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
     @LogRecord(type = ZC_BILL_METHODS_TYPE, subType = ZC_BILL_METHODS_CREATE_SUB_TYPE, bizNo = "{{#billMethod.id}}",
             success = ZC_BILL_METHODS_CREATE_SUCCESS)
     public Long createBillMethods(ZcBillMethodsSaveReqVO createReqVO) {
+        // 校验名称唯一性
+        validateBillMethodsNameUnique(null, createReqVO.getName());
         // 插入，分组固定为手工配置（1），不依赖前端传值
         ZcBillMethodsDO billMethod = BeanUtils.toBean(createReqVO, ZcBillMethodsDO.class);
         billMethod.setGroup(1);
@@ -53,6 +55,8 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
         ZcBillMethodsDO oldBillMethod = validateBillMethodsExists(updateReqVO.getId());
         // 系统内置收款方式（group=0）禁止编辑
         validateBillMethodsNotSystem(oldBillMethod);
+        // 校验名称唯一性（排除自身）
+        validateBillMethodsNameUnique(updateReqVO.getId(), updateReqVO.getName());
         // 更新（group 不由前端传入，保持库中原值）
         ZcBillMethodsDO updateObj = BeanUtils.toBean(updateReqVO, ZcBillMethodsDO.class);
         billMethodsMapper.updateById(updateObj);
@@ -78,6 +82,20 @@ public class ZcBillMethodsServiceImpl implements ZcBillMethodsService {
         if (Integer.valueOf(0).equals(billMethod.getGroup())) {
             throw exception(BILL_METHODS_SYSTEM_CANNOT_MODIFY);
         }
+    }
+
+    /**
+     * 校验收款方式名称唯一
+     *
+     * @param id   当前记录 ID，新增时传 null
+     * @param name 待校验名称
+     */
+    private void validateBillMethodsNameUnique(Long id, String name) {
+        ZcBillMethodsDO existing = billMethodsMapper.selectByName(name);
+        if (existing == null || existing.getId().equals(id)) {
+            return;
+        }
+        throw exception(BILL_METHODS_NAME_EXISTS);
     }
 
     @Override

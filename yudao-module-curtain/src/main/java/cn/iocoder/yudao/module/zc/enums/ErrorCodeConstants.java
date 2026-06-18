@@ -38,6 +38,8 @@ public interface ErrorCodeConstants {
     ErrorCode BILL_METHODS_NOT_EXISTS = new ErrorCode(100028, "收款方式不存在");
     /** 系统内置收款方式（group=0）不允许编辑 */
     ErrorCode BILL_METHODS_SYSTEM_CANNOT_MODIFY = new ErrorCode(100079, "系统内置收款方式不允许编辑");
+    /** 收款方式名称已存在 */
+    ErrorCode BILL_METHODS_NAME_EXISTS = new ErrorCode(100080, "收款方式名称已存在");
     ErrorCode PROCESS_NODE_NOT_EXISTS = new ErrorCode(100029, "工序节点配置不存在");
     ErrorCode ORDER_PROCESS_RECORD_NOT_EXISTS = new ErrorCode(100030, "工序记录不存在");
     /** 员工未绑定该工序节点，无权操作 */

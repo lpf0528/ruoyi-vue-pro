@@ -1,11 +1,11 @@
 package cn.iocoder.yudao.module.zc.controller.admin.bills.vo;
 
+import cn.idev.excel.annotation.*;
+import cn.hutool.core.annotation.Alias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import java.util.*;
-import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
-import cn.idev.excel.annotation.*;
 
 @Schema(description = "管理后台 - 收款方式 Response VO")
 @Data
@@ -28,9 +28,12 @@ public class ZcBillMethodsRespVO {
     @ExcelProperty("备注")
     private String note;
 
-    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    /** 分组：0=系统配置，1=手工配置；JSON 字段名为 group（Swagger 保留名规避） */
+    @Alias("group")
+    @JsonProperty("group")
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1", name = "group")
     @ExcelProperty("分组")
-    private Integer group;
+    private Integer configGroup;
 
     @Schema(description = "创建者")
     @ExcelProperty("创建者")

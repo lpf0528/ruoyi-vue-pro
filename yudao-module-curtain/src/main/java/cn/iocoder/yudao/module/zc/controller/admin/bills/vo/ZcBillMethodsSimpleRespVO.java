@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.zc.controller.admin.bills.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,7 +21,9 @@ public class ZcBillMethodsSimpleRespVO {
     @Schema(description = "名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
-    private Integer group;
+    /** 分组：0=系统配置，1=手工配置；JSON 字段名为 group（Swagger 保留名规避） */
+    @JsonProperty("group")
+    @Schema(description = "分组：0=系统配置，1=手工配置", requiredMode = Schema.RequiredMode.REQUIRED, example = "1", name = "group")
+    private Integer configGroup;
 
 }

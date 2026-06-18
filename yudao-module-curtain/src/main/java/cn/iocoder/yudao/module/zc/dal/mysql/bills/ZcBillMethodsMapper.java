@@ -29,4 +29,10 @@ public interface ZcBillMethodsMapper extends BaseMapperX<ZcBillMethodsDO> {
                 .orderByDesc(ZcBillMethodsDO::getId));
     }
 
+    default ZcBillMethodsDO selectByName(String name) {
+        return selectOne(new LambdaQueryWrapperX<ZcBillMethodsDO>()
+                .eq(ZcBillMethodsDO::getName, name)
+                .last("LIMIT 1"));
+    }
+
 }

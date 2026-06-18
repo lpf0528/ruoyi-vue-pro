@@ -78,7 +78,7 @@ public class ZcBillMethodsController {
         return success(convertList(list, item -> new ZcBillMethodsSimpleRespVO()
                 .setId(item.getId())
                 .setName(item.getName())
-                .setGroup(item.getGroup())));
+                .setConfigGroup(item.getGroup())));
     }
 
     @GetMapping("/export-excel")
