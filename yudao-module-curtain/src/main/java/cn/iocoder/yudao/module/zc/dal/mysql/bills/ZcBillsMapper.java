@@ -32,13 +32,15 @@ public interface ZcBillsMapper extends BaseMapperX<ZcBillsDO> {
     /**
      * 查询指定日期前缀（yyyyMMdd）下收款单号的最大序号
      *
-     * <p>单号格式 SK{yyyyMMdd}-{6位序号}，序号从 SUBSTRING(bill_no, 12) 解析。</p>
+     * <p>单号格式 SK{yyyyMMdd}-{6位序号}，序号从 SUBSTRING(bill_no, 12) 解析。
+     * 含已软删记录：uk_tenant_bill_no 对租户内全表生效，软删单号仍不可复用。
+     * 查询范围由多租户拦截器自动限定当前 tenant_id。</p>
      *
      * @param date 日期字符串，格式 yyyyMMdd
      * @return 最大序号，无记录时返回 null
      */
     @Select("SELECT MAX(CAST(SUBSTRING(bill_no, 12) AS UNSIGNED)) FROM zc_bills " +
-            "WHERE deleted = 0 AND bill_no LIKE CONCAT('SK', #{date}, '-%')")
+            "WHERE bill_no LIKE CONCAT('SK', #{date}, '-%')")
     Long selectMaxBillSeqByDate(@Param("date") String date);
 
 }

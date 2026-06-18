@@ -79,7 +79,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
 //            throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH);
 //        }
 
-        // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}，Redis INCR 保证并发唯一；Key 缺失时从库内最大序号初始化
+        // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}；Redis INCR 前先与库内最大序号（含软删）对齐
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         long tenantId = TenantContextHolder.getRequiredTenantId();
         long seq = noGeneratorRedisDAO.nextBillSeq(tenantId, date,

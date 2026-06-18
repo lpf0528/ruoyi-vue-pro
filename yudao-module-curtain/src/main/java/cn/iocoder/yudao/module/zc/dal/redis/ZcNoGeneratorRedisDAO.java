@@ -1,9 +1,11 @@
 package cn.iocoder.yudao.module.zc.dal.redis;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +24,27 @@ public class ZcNoGeneratorRedisDAO {
 
     /** Redis Key 过期时间：48 小时，确保跨日后旧 Key 能自动清理 */
     private static final long EXPIRE_HOURS = 48;
+
+    /**
+     * 原子：将 Redis 序号与库内最大序号对齐后 INCR
+     *
+     * <p>ARGV[1] 为库内最大序号；若 Redis 当前值小于库内最大值则先提升到 dbMax，再 INCR。</p>
+     */
+    private static final DefaultRedisScript<Long> INCR_WITH_DB_SYNC_SCRIPT;
+
+    static {
+        INCR_WITH_DB_SYNC_SCRIPT = new DefaultRedisScript<>();
+        INCR_WITH_DB_SYNC_SCRIPT.setResultType(Long.class);
+        INCR_WITH_DB_SYNC_SCRIPT.setScriptText(
+                "local dbMax = tonumber(ARGV[1])\n" +
+                "if dbMax and dbMax > 0 then\n" +
+                "  local cur = tonumber(redis.call('GET', KEYS[1]) or '0')\n" +
+                "  if cur < dbMax then\n" +
+                "    redis.call('SET', KEYS[1], dbMax)\n" +
+                "  end\n" +
+                "end\n" +
+                "return redis.call('INCR', KEYS[1])");
+    }
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -49,12 +72,12 @@ public class ZcNoGeneratorRedisDAO {
     }
 
     /**
-     * 获取当日收款单序号，Redis Key 不存在时从数据库最大序号初始化，避免 Redis 重置后与库内已有单号冲突
+     * 获取当日收款单序号，每次与库内最大序号对齐后再 INCR，避免 Redis 重置/落后导致单号重复
      *
-     * @param dbMaxSeqSupplier 查询库内当日最大序号的回调（仅 Key 不存在时调用），可为 null
+     * @param dbMaxSeqSupplier 查询库内当日最大序号的回调，可为 null
      */
     public long nextBillSeq(long tenantId, String date, Supplier<Long> dbMaxSeqSupplier) {
-        return incrementWithDbInit(String.format(ZC_BILL_SEQ, tenantId, date), dbMaxSeqSupplier);
+        return incrementWithDbSync(String.format(ZC_BILL_SEQ, tenantId, date), dbMaxSeqSupplier);
     }
 
     /**
@@ -70,29 +93,27 @@ public class ZcNoGeneratorRedisDAO {
     }
 
     /**
-     * Redis Key 不存在时，用库内最大序号初始化，再执行 INCR
-     *
-     * <p>setIfAbsent 保证并发下仅一个线程写入初始值，其余线程直接 INCR 递增。</p>
+     * 与库内最大序号对齐后执行 INCR（Lua 脚本保证原子性）
      */
-    private long incrementWithDbInit(String key, Supplier<Long> dbMaxSeqSupplier) {
-        if (dbMaxSeqSupplier != null && !Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+    private long incrementWithDbSync(String key, Supplier<Long> dbMaxSeqSupplier) {
+        long dbMaxVal = 0L;
+        if (dbMaxSeqSupplier != null) {
             Long dbMax = dbMaxSeqSupplier.get();
             if (dbMax != null && dbMax > 0) {
-                stringRedisTemplate.opsForValue().setIfAbsent(key, String.valueOf(dbMax));
+                dbMaxVal = dbMax;
             }
         }
-        return increment(key);
+        Long seq = stringRedisTemplate.execute(INCR_WITH_DB_SYNC_SCRIPT,
+                Collections.singletonList(key), String.valueOf(dbMaxVal));
+        stringRedisTemplate.expire(key, EXPIRE_HOURS, TimeUnit.HOURS);
+        return seq != null ? seq : 1L;
     }
 
     /**
      * 对指定 Key 执行 Redis INCR，并每次刷新 48 小时 TTL
-     *
-     * <p>TTL 在每次调用时重置，保证当天持续有创建请求时 Key 不会意外过期。
-     * 超过 48 小时无新增请求后，Key 自动清理。</p>
      */
     private long increment(String key) {
         Long seq = stringRedisTemplate.opsForValue().increment(key);
-        // 每次调用刷新过期时间，防止当日首次调用后 Key 过早过期
         stringRedisTemplate.expire(key, EXPIRE_HOURS, TimeUnit.HOURS);
         return seq != null ? seq : 1L;
     }
