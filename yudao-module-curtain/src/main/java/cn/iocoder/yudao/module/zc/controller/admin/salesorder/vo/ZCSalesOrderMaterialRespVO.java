@@ -35,6 +35,10 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("批次")
     private Long batchId;
 
+    @Schema(description = "规格", example = "2.8米")
+    @ExcelProperty("规格")
+    private String spec;
+
     @Schema(description = "单价", example = "7061")
     @ExcelProperty("单价")
     private BigDecimal price;

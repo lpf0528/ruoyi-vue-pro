@@ -34,6 +34,10 @@ public class ZCSalesOrderMaterialCreateVO {
     @Schema(description = "批次", example = "25324")
     private Long batchId;
 
+    /** 规格 */
+    @Schema(description = "规格", example = "2.8米")
+    private String spec;
+
     /** 单价 */
     @Schema(description = "单价")
     private BigDecimal price;

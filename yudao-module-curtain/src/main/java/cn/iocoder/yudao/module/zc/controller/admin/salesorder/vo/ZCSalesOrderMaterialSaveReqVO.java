@@ -37,6 +37,10 @@ public class ZCSalesOrderMaterialSaveReqVO {
     @DiffLogField(name = "批次")
     private Long batchId;
 
+    @Schema(description = "规格", example = "2.8米")
+    @DiffLogField(name = "规格")
+    private String spec;
+
     @Schema(description = "单价", example = "7061")
     @DiffLogField(name = "单价")
     private BigDecimal price;

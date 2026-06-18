@@ -46,6 +46,10 @@ public class ZCSalesOrderMaterialDO extends BaseDO {
      */
     private Long batchId;
     /**
+     * 规格
+     */
+    private String spec;
+    /**
      * 单价
      */
     private BigDecimal price;
