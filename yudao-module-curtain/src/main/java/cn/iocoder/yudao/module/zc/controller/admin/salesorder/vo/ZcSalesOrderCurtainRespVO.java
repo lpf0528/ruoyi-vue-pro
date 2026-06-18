@@ -59,6 +59,10 @@ public class ZcSalesOrderCurtainRespVO {
     @ExcelProperty("褶距")
     private BigDecimal pleatsDistance;
 
+    @Schema(description = "窗帘的数量")
+    @ExcelProperty("数量")
+    private Long quantity;
+
     @Schema(description = "窗帘行状态，参见 zc_order_status 字典")
     @ExcelProperty("状态")
     private String status;

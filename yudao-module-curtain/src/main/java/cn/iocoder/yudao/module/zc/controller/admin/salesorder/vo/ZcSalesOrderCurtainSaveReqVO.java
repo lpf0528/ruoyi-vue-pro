@@ -61,4 +61,8 @@ public class ZcSalesOrderCurtainSaveReqVO {
     @DiffLogField(name = "褶距")
     private BigDecimal pleatsDistance;
 
+    @Schema(description = "窗帘的数量")
+    @DiffLogField(name = "数量")
+    private Long quantity;
+
 }

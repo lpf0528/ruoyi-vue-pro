@@ -72,6 +72,10 @@ public class ZcSalesOrderCurtainCreateVO {
     @Schema(description = "备注")
     private String note;
 
+    /** 窗帘的数量，不传时默认 1 */
+    @Schema(description = "窗帘的数量", example = "1")
+    private Long quantity;
+
     /** 结构列表，至少包含一个 */
     @Schema(description = "结构列表")
     @NotEmpty(message = "结构列表不能为空，至少包含一个结构行")

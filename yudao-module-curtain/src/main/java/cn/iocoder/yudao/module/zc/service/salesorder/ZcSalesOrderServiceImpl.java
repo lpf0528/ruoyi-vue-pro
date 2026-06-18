@@ -179,10 +179,13 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
     }
 
-    /** 窗帘行 NOT NULL 字段兜底：amount 默认 0 */
+    /** 窗帘行 NOT NULL 字段兜底：amount 默认 0，quantity 默认 1 */
     private void normalizeCurtainDO(ZcSalesOrderCurtainDO curtain) {
         if (curtain.getAmount() == null) {
             curtain.setAmount(BigDecimal.ZERO);
+        }
+        if (curtain.getQuantity() == null) {
+            curtain.setQuantity(1L);
         }
     }
 
@@ -392,6 +395,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             c.setId(fc.getId()); // 透传 id，供 merge 区分更新/新增
             c.setAmount(fc.getAmount());
             c.setNote(fc.getNote());
+            c.setQuantity(fc.getQuantity());
             if (CollUtil.isNotEmpty(fc.getStructures())) {
                 c.setStructures(fc.getStructures().stream().map(fs -> {
                     ZcSalesOrderStructureCreateVO s = new ZcSalesOrderStructureCreateVO();
