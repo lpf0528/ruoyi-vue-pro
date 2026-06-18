@@ -4,6 +4,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
 
 import static cn.iocoder.yudao.module.zc.dal.redis.ZcRedisKeyConstants.*;
@@ -44,7 +45,16 @@ public class ZcNoGeneratorRedisDAO {
      * @return 当日序号，从 1 开始单调递增
      */
     public long nextBillSeq(long tenantId, String date) {
-        return increment(String.format(ZC_BILL_SEQ, tenantId, date));
+        return nextBillSeq(tenantId, date, null);
+    }
+
+    /**
+     * 获取当日收款单序号，Redis Key 不存在时从数据库最大序号初始化，避免 Redis 重置后与库内已有单号冲突
+     *
+     * @param dbMaxSeqSupplier 查询库内当日最大序号的回调（仅 Key 不存在时调用），可为 null
+     */
+    public long nextBillSeq(long tenantId, String date, Supplier<Long> dbMaxSeqSupplier) {
+        return incrementWithDbInit(String.format(ZC_BILL_SEQ, tenantId, date), dbMaxSeqSupplier);
     }
 
     /**
@@ -57,6 +67,21 @@ public class ZcNoGeneratorRedisDAO {
      */
     public long nextBatchSeq(long tenantId, long productId, String date) {
         return increment(String.format(ZC_BATCH_SEQ, tenantId, productId, date));
+    }
+
+    /**
+     * Redis Key 不存在时，用库内最大序号初始化，再执行 INCR
+     *
+     * <p>setIfAbsent 保证并发下仅一个线程写入初始值，其余线程直接 INCR 递增。</p>
+     */
+    private long incrementWithDbInit(String key, Supplier<Long> dbMaxSeqSupplier) {
+        if (dbMaxSeqSupplier != null && !Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+            Long dbMax = dbMaxSeqSupplier.get();
+            if (dbMax != null && dbMax > 0) {
+                stringRedisTemplate.opsForValue().setIfAbsent(key, String.valueOf(dbMax));
+            }
+        }
+        return increment(key);
     }
 
     /**
