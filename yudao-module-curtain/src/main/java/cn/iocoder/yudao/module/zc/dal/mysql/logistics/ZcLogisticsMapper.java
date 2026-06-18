@@ -25,7 +25,7 @@ public interface ZcLogisticsMapper extends BaseMapperX<ZcLogisticsDO> {
 
     default PageResult<ZcLogisticsDO> selectPage(ZcLogisticsPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<ZcLogisticsDO>()
-                .eqIfPresent(ZcLogisticsDO::getCode, reqVO.getCode())
+                .likeIfPresent(ZcLogisticsDO::getCode, reqVO.getCode())
                 .likeIfPresent(ZcLogisticsDO::getName, reqVO.getName())
                 .likeIfPresent(ZcLogisticsDO::getContactName, reqVO.getContactName())
                 .orderByDesc(ZcLogisticsDO::getId));
