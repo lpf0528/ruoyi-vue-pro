@@ -77,6 +77,10 @@ public class ZcSalesOrderSaveReqVO {
     @NotNull(message = "总金额不能为空")
     private BigDecimal totalAmount;
 
+    @Schema(description = "四舍五入（记录金额四舍五入产生的浮亏/浮盈）")
+    @DiffLogField(name = "四舍五入")
+    private BigDecimal rounding;
+
     @Schema(description = "交付日期")
     @DiffLogField(name = "交付日期")
     private LocalDate deliveryDate;

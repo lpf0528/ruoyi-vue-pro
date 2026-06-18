@@ -89,6 +89,10 @@ public class ZcSalesOrderDO extends BaseDO {
      */
     private BigDecimal amount;
     /**
+     * 四舍五入差额（记录金额四舍五入产生的浮亏/浮盈）；数据库 DEFAULT 0.00，null 在 Service 层归一为 0
+     */
+    private BigDecimal rounding;
+    /**
      * 已收金额
      */
     private BigDecimal amountReceived;

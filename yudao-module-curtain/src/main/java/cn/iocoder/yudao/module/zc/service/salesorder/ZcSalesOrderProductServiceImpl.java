@@ -87,6 +87,9 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         if (salesOrder.getFreight() == null) {
             salesOrder.setFreight(java.math.BigDecimal.ZERO);
         }
+        if (salesOrder.getRounding() == null) {
+            salesOrder.setRounding(BigDecimal.ZERO);
+        }
         salesOrderMapper.insert(salesOrder);
         Long orderId = salesOrder.getId();
 
@@ -148,6 +151,9 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
         updateOrder.setSets(updateReqVO.getBatchs() == null ? 0 : updateReqVO.getBatchs().size());
         if (updateOrder.getFreight() == null) {
             updateOrder.setFreight(java.math.BigDecimal.ZERO);
+        }
+        if (updateOrder.getRounding() == null) {
+            updateOrder.setRounding(BigDecimal.ZERO);
         }
         salesOrderMapper.updateById(updateOrder);
 

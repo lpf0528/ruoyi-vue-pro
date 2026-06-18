@@ -58,6 +58,10 @@ public class ZcSalesOrderFabricCreateReqVO {
     @Schema(description = "订单金额")
     private BigDecimal amount;
 
+    /** 四舍五入差额（记录金额四舍五入产生的浮亏/浮盈），不传默认为 0 */
+    @Schema(description = "四舍五入")
+    private BigDecimal rounding;
+
     /** 窗帘行列表 */
     @Schema(description = "窗帘行列表")
     @Valid

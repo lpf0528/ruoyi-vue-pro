@@ -85,6 +85,11 @@ public class ZcSalesOrderCreateReqVO {
     @DiffLogField(name = "订单金额")
     private BigDecimal amount;
 
+    /** 四舍五入差额（记录金额四舍五入产生的浮亏/浮盈），不传默认为 0 */
+    @Schema(description = "四舍五入")
+    @DiffLogField(name = "四舍五入")
+    private BigDecimal rounding;
+
     /** 交付日期 */
     @Schema(description = "交付日期")
     @DiffLogField(name = "交付日期")

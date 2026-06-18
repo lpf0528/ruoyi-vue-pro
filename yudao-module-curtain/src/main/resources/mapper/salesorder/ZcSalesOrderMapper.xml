@@ -11,7 +11,7 @@
             t1.id, t1.order_no, t1.customer_id, t1.mobile, t1.brand_id,
             t1.order_date, t1.logistic_id, t1.receiver, t1.delivery_address,
             t1.freight, t1.types, t1.discount_amount, t1.total_amount,
-            t1.amount, t1.amount_received, t1.delivery_date, t1.pay_status,
+            t1.amount, t1.rounding, t1.amount_received, t1.delivery_date, t1.pay_status,
             t1.status, t1.confirm_time, t1.is_expedited, t1.sets, t1.note,
             t1.current_node_name, t1.create_time, t1.update_time, t1.creator, t1.updater
         FROM zc_sales_order t1
@@ -78,7 +78,7 @@
             t1.id, t1.order_no, t1.customer_id, t1.mobile, t1.brand_id,
             t1.order_date, t1.logistic_id, t1.receiver, t1.delivery_address,
             t1.freight, t1.types, t1.discount_amount, t1.total_amount,
-            t1.amount, t1.amount_received, t1.delivery_date, t1.pay_status,
+            t1.amount, t1.rounding, t1.amount_received, t1.delivery_date, t1.pay_status,
             t1.status, t1.confirm_time, t1.is_expedited, t1.sets, t1.note,
             t1.current_node_name, t1.create_time, t1.update_time, t1.creator, t1.updater
         FROM zc_sales_order t1

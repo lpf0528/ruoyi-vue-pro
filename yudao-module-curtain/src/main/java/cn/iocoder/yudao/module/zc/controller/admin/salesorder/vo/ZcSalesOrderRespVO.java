@@ -74,6 +74,10 @@ public class ZcSalesOrderRespVO {
     @ExcelProperty("订单金额")
     private BigDecimal amount;
 
+    @Schema(description = "四舍五入（记录金额四舍五入产生的浮亏/浮盈）")
+    @ExcelProperty("四舍五入")
+    private BigDecimal rounding;
+
     @Schema(description = "已收金额", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("已收金额")
     private BigDecimal amountReceived;

@@ -160,6 +160,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         if (salesOrder.getTotalAmount() == null) salesOrder.setTotalAmount(BigDecimal.ZERO);
         if (salesOrder.getAmount() == null) salesOrder.setAmount(BigDecimal.ZERO);
         if (salesOrder.getDiscountAmount() == null) salesOrder.setDiscountAmount(BigDecimal.ZERO);
+        if (salesOrder.getRounding() == null) salesOrder.setRounding(BigDecimal.ZERO);
         if (salesOrder.getDeliveryAddress() == null) salesOrder.setDeliveryAddress("");
     }
 
@@ -173,6 +174,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
         if (salesOrder.getDiscountAmount() == null) {
             salesOrder.setDiscountAmount(BigDecimal.ZERO);
+        }
+        if (salesOrder.getRounding() == null) {
+            salesOrder.setRounding(BigDecimal.ZERO);
         }
         if (salesOrder.getDeliveryAddress() == null) {
             salesOrder.setDeliveryAddress("");

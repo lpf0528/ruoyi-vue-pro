@@ -85,6 +85,10 @@ public class ZcSalesOrderProductDetailRespVO {
     @Schema(description = "订单金额")
     private BigDecimal amount;
 
+    /** 四舍五入（记录金额四舍五入产生的浮亏/浮盈） */
+    @Schema(description = "四舍五入")
+    private BigDecimal rounding;
+
     /** 已收金额 */
     @Schema(description = "已收金额")
     private BigDecimal amountReceived;
