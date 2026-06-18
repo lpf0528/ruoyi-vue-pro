@@ -35,10 +35,12 @@ public interface ZcCustomerVersionSpecPriceService {
     /**
      * 根据产品ID、客户ID、规格查询客户版本规格授权价
      *
+     * <p>无客户授权价时回退为版本规格一级销售价（one_price）。</p>
+     *
      * @param productId  产品编号（zc_product.id）
      * @param customerId 客户编号
      * @param spec       规格名称
-     * @return 授权价记录，不存在时返回 null
+     * @return 授权价记录；产品对应版本规格不存在时返回 null
      */
     ZcCustomerVersionSpecPriceGetRespVO getByProductIdAndCustomerIdAndSpec(Long productId, Long customerId, String spec);
 

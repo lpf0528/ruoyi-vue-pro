@@ -56,7 +56,8 @@ public class ZcCustomerVersionSpecPriceController {
     }
 
     @GetMapping("/get")
-    @Operation(summary = "根据产品ID、客户ID和规格查询客户版本规格授权价")
+    @Operation(summary = "根据产品ID、客户ID和规格查询客户版本规格授权价",
+            description = "无客户授权价时回退为版本规格一级销售价（one_price）")
     @Parameter(name = "productId", description = "产品编号", required = true)
     @Parameter(name = "customerId", description = "客户编号", required = true)
     @Parameter(name = "spec", description = "规格名称", required = true)
