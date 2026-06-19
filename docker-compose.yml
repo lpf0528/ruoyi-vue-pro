@@ -17,10 +17,25 @@ services:
     container_name: yudao-ui
     restart: always
     ports:
-      - "80:80"
+      - "80:80"          # PC 管理后台
+    networks:
+      - 1panel-network
+
+  yudao-ui-uniapp:
+    image: docker.io/eatsleeprun/yudao-ui-admin-uniapp:latest
+    container_name: yudao-ui-uniapp
+    restart: always
+    ports:
+      - "8080:80"        # 移动端 H5（80 已被 yudao-ui 占用）
+    environment:
+      # 同一 Docker 网络内，用服务名访问后端，不要用 127.0.0.1
+      BACKEND_HOST: yudao-server
+      BACKEND_PORT: 48080
+    depends_on:
+      - yudao-server
     networks:
       - 1panel-network
 
 networks:
   1panel-network:
-    external: true   # 使用已有的 1panel 网络，不新建
+    external: true
