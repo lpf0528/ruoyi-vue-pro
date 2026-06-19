@@ -63,7 +63,8 @@ public class ZcOrderProcessRecordController {
     }
 
     @GetMapping("/list")
-    @Operation(summary = "获取订单工序时间线（按时间降序）")
+    @Operation(summary = "获取订单工序时间线（按时间降序）",
+            description = "关联 zc_process_node，仅返回 group=1（手工配置）节点的记录；系统节点（如裁剪、打包、发货）自动写入的记录不在此返回")
     @Parameters({
             @Parameter(name = "orderId", description = "订单 ID，不传则返回全部"),
             @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部"),

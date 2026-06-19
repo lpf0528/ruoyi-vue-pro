@@ -52,6 +52,8 @@ public interface ZcOrderProcessRecordService {
     /**
      * 获取订单的工序时间线，按创建时间降序排列（含车间员工名称）
      *
+     * <p>仅返回关联 {@code zc_process_node.group=1}（手工配置）节点的记录。</p>
+     *
      * @param orderId     订单 ID，为 null 时不过滤
      * @param masterId    主操作人员 ID，为 null 时不过滤
      * @param curtainId   窗帘行 ID，为 null 时不过滤

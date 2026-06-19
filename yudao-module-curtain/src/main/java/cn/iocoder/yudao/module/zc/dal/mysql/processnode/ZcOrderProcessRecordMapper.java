@@ -20,6 +20,9 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
     /**
      * 查询订单的工序记录（含操作人名称），按创建时间降序排列
      *
+     * <p>关联 {@code zc_process_node}，仅返回 {@code group=1}（手工配置）节点的记录，
+     * 系统配置节点（如裁剪、打包、发货自动写入）不在此接口返回。</p>
+     *
      * @param orderId     订单 ID，为 null 时不过滤
      * @param masterId    主操作人员 ID，为 null 时不过滤
      * @param curtainId   窗帘行 ID，为 null 时不过滤
