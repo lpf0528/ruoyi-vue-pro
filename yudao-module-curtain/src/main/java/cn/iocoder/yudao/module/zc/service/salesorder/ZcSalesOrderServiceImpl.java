@@ -565,9 +565,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         }
 
         // 2. 禁止有收款记录时取消确认：取消确认会将订单金额退回余额，若已收款则余额会虚增
-//        if (order.getAmountReceived() != null && order.getAmountReceived().compareTo(BigDecimal.ZERO) > 0) {
-//            throw exception(SALES_ORDER_HAS_RECEIVED_AMOUNT);
-//        }
+        if (order.getAmountReceived() != null && order.getAmountReceived().compareTo(BigDecimal.ZERO) > 0) {
+            throw exception(SALES_ORDER_HAS_RECEIVED_AMOUNT);
+        }
 
         // 3. 禁止存在已裁剪用料时取消确认：库存已扣减，须先逐条撤销裁剪归还库存
         long cutCount = salesOrderMaterialMapper.countByOrderIdAndStatus(
