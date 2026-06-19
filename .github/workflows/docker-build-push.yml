@@ -117,7 +117,7 @@ jobs:
             echo "▶ 清理旧镜像"
             sudo docker image prune -f
 
-            echo "✅ 后端部署完成"
+            echo "✅ 后端部署完成。"
 
       - name: 输出部署结果
         run: |
