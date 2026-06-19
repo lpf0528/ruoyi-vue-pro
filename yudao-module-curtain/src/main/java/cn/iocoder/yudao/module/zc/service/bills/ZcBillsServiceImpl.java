@@ -74,15 +74,10 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @LogRecord(type = ZC_BILLS_TYPE, subType = ZC_BILLS_CREATE_SUB_TYPE, bizNo = "{{#bill.id}}",
             success = ZC_BILLS_CREATE_SUCCESS)
     public Long createBills(ZcBillsSaveReqVO createReqVO) {
-        // 1. 校验分摊金额合计必须等于实收+优惠，否则订单账目与客户余额会不一致
+        // 1. 所有收款：实收不能小于分摊合计；余额扣款：实收以分摊合计为准
         BigDecimal discount = createReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
+        validateAndNormalizeBillActualAmount(createReqVO);
         BigDecimal totalSettled = createReqVO.getActualAmount().add(discount);
-//        BigDecimal totalAllocated = createReqVO.getOrderItems().stream()
-//                .map(ZcBillOrderItemReqVO::getAllocatedAmount)
-//                .reduce(BigDecimal.ZERO, BigDecimal::add);
-//        if (totalAllocated.compareTo(totalSettled) != 0) {
-//            throw exception(BILL_ALLOCATED_AMOUNT_NOT_MATCH);
-//        }
 
         // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}；Redis INCR 前先与库内最大序号（含软删）对齐
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -163,8 +158,9 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // 1. 校验收款单存在，获取当前数据快照
         ZcBillsDO existingBill = validateBillsExists(updateReqVO.getId());
 
-        // 2. 校验新分摊金额合计一致性
+        // 2. 所有收款：实收不能小于分摊合计；余额扣款：实收以分摊合计为准
         BigDecimal newDiscount = updateReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : updateReqVO.getDiscountAmount();
+        validateAndNormalizeBillActualAmount(updateReqVO);
         BigDecimal newTotalSettled = updateReqVO.getActualAmount().add(newDiscount);
         BigDecimal newTotalAllocated = updateReqVO.getOrderItems().stream()
                 .map(ZcBillOrderItemReqVO::getAllocatedAmount)
@@ -339,6 +335,31 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @Override
     public List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId) {
         return billOrderItemsMapper.selectListWithOrderNoByBillId(billId);
+    }
+
+    /**
+     * 校验收款实收金额，并按收支方式规范化实收。
+     *
+     * <p>所有收款：实收不能小于订单分摊合计；余额扣款：实收以分摊合计为准。</p>
+     */
+    private void validateAndNormalizeBillActualAmount(ZcBillsSaveReqVO reqVO) {
+        BigDecimal totalAllocated = sumOrderItemsAllocatedAmount(reqVO.getOrderItems());
+        if (reqVO.getActualAmount().compareTo(totalAllocated) < 0) {
+            throw exception(BILL_ACTUAL_AMOUNT_LESS_THAN_ALLOCATED);
+        }
+        if (isBalanceCollectionMethod(reqVO.getBillMethodId())) {
+            reqVO.setActualAmount(totalAllocated);
+        }
+    }
+
+    private BigDecimal sumOrderItemsAllocatedAmount(List<ZcBillOrderItemReqVO> orderItems) {
+        if (CollUtil.isEmpty(orderItems)) {
+            return BigDecimal.ZERO;
+        }
+        return orderItems.stream()
+                .map(ZcBillOrderItemReqVO::getAllocatedAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     /**
