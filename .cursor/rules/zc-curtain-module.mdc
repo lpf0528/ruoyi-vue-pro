@@ -39,9 +39,11 @@ alwaysApply: false
 
 **订单详情**：按 orderId 批量查子表，批量查名称，内存组装，避免 N+1。
 
-**裁剪** `cutMaterial`：校验库存 → 更新用料（HAVE_PEILIAO）→ `decreaseQuantity` 原子扣减 → 写 inventory_record（CAIJIAN）。
+**裁剪** `cutMaterial`：校验库存 → 更新用料（HAVE_PEILIAO）→ 联动窗帘/订单状态（`ZcSalesOrderStatusCalculator`）→ `decreaseQuantity` → 写 inventory_record（CAIJIAN）；整匹批次自动改余料。
 
-**撤销裁剪** `cancelCutMaterial`：状态须 HAVE_PEILIAO → `increaseQuantity` → **LambdaUpdateWrapper 显式置 null cutQuantity**（updateById 忽略 null）→ 写 CANCEL_CAIJIAN 流水。
+**撤销裁剪** `cancelCutMaterial`：状态须 HAVE_PEILIAO → `increaseQuantity` → 联动窗帘/订单状态 → **LambdaUpdateWrapper 显式置 null cutQuantity** → 写 CANCEL_CAIJIAN 流水。
+
+**状态联动**：四层定义见 `docs/order-status.md`；聚合入口 `ZcSalesOrderStatusCalculator`（L4 用料 → L2 窗帘 → L1 订单；打包/发货由窗帘手动触发后聚合订单）。
 
 **入库/盘点**：createProductBatch 写 RUKU；盘点写 PANDIAN 并更新批次数量。
 
@@ -53,8 +55,11 @@ alwaysApply: false
 
 ## 关键枚举
 
-- `ZcSalesOrderMaterialStatusEnum`：NOT_PEILIAO / HAVE_PEILIAO
+- `ZcSalesOrderStatusEnum`：订单/窗帘行状态（UNCONFIRMED → CONFIRMED → BUFEN/HAVE_PEILIAO → BUFEN/DABAO → BUFEN/FAHUO → COMPLETE），字典 `zc_order_status`
+- `ZcSalesOrderMaterialStatusEnum`：用料明细 NOT_PEILIAO / HAVE_PEILIAO
 - `ZcInventoryRecordOperateEnum`：PANDIAN / RUKU / CAIJIAN / CANCEL_CAIJIAN
+
+状态四层联动详见 `yudao-module-curtain/docs/order-status.md`。
 
 权限标识：`zc:{资源}:{操作}`。错误码：100001~100061（ErrorCodeConstants）。
 

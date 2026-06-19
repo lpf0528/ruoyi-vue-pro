@@ -178,17 +178,15 @@ salesOrderMapper.deleteById(id);
 
 ### 1.4 状态流转不完整（中优先级）
 
-当前订单状态枚举已设计为：
+当前成品订单状态已按四层结构实现（详见 `docs/order-status.md`）：
+
 ```
-unconfirmed → confirmed → pending → processing → completed
-                                                ↘ cancelled
+UNCONFIRMED → CONFIRMED → BUFEN_PEILIAO / HAVE_PEILIAO → BUFEN_DABAO / DABAO → BUFEN_FAHUO / FAHUO → COMPLETE
 ```
 
-但代码中**只实现了** `unconfirmed ↔ confirmed` 的转换（`confirmSalesOrder` / `cancelConfirmSalesOrder`）。
+手动操作：确认、取消确认、完成；自动聚合：配料（裁剪）、打包、发货。
 
-`pending`、`processing`、`completed`、`cancelled` 状态的触发逻辑均缺失，这些状态实际上无法被程序触发（只能直接改数据库）。
-
-**这正是需要设计「工序追踪」功能的原因**，详见第二章。
+工序记录（`zc_order_process_record`）与订单 `status` 独立维护，通过 `current_node_name` 快照展示当前工序。
 
 ---
 

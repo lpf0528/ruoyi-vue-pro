@@ -1,8 +1,8 @@
 # 智仓（ZC）订单与账单核心接口逻辑梳理
 
-> 整理时间：2026-05-23  
 > 模块路径：`yudao-module-curtain/src/main/java/cn/iocoder/yudao/module/zc`  
-> 包名前缀：`cn.iocoder.yudao.module.zc`
+> 包名前缀：`cn.iocoder.yudao.module.zc`  
+> **订单四层状态专项文档**：[order-status.md](./order-status.md)
 
 ---
 
@@ -16,6 +16,8 @@
 6. [单号生成机制](#六单号生成机制)
 7. [客户余额联动](#七客户余额联动)
 8. [关键枚举值说明](#八关键枚举值说明)
+
+**附录**：[成品订单四层状态定义与联动规则](./order-status.md)
 
 ---
 
@@ -50,8 +52,8 @@ zc_sales_order（订单主表，L1）
 | amount | BigDecimal | 订单金额（优惠后实收） |
 | amount_received | BigDecimal | 已收金额（账单结算时累加） |
 | delivery_date | LocalDate | 交付日期 |
-| pay_status | String | 结算状态：`unpaid`/`partialpaid`/`paid` |
-| status | String | 订单状态：`unconfirmed`/`confirmed`/`pending`/`processing`/`completed`/`cancelled` |
+| pay_status | String | 结算状态：`UNPAID` / `PARTIALPAID` / `PAID`（`ZcOrderPayStatusEnum`） |
+| status | String | 订单状态，参见 `ZcSalesOrderStatusEnum` / 字典 `zc_order_status`；**详细定义见 [order-status.md](./order-status.md)** |
 | confirm_time | LocalDateTime | 确认时间（确认时写入，取消确认时清空） |
 | is_expedited | Boolean | 是否加急（默认 false） |
 | current_node_name | String | 当前所处工序名称（工序记录创建时同步更新） |
@@ -72,6 +74,9 @@ zc_sales_order（订单主表，L1）
 | image1 / image2 | String | 现场照片 |
 | mountings | String | **配件多选（JSON 字符串存储）**，如 `["加铅块","加磁条"]` |
 | note | String | 备注 |
+| status | String | 窗帘行状态，参见 `ZcSalesOrderStatusEnum`；**详细定义见 [order-status.md](./order-status.md)** |
+| pack_time | LocalDateTime | 打包时间 |
+| ship_time | LocalDateTime | 发货时间 |
 
 ### 1.4 结构行（`zc_sales_order_structure`）
 
@@ -109,6 +114,8 @@ zc_sales_order（订单主表，L1）
 | discount_rate | BigDecimal | 折扣率 |
 | amount | BigDecimal | 小计（price × quantity × discountRate） |
 | note | String | 备注 |
+| status | String | 配料状态：`NOT_PEILIAO` / `HAVE_PEILIAO`（`ZcSalesOrderMaterialStatusEnum`） |
+| cut_quantity | BigDecimal | 裁剪数量（裁剪后写入，撤销裁剪置 null） |
 
 ### 1.6 收支账单相关表
 
@@ -799,28 +806,28 @@ ORDER BY t1.create_time ASC
 
 ### 5.1 订单状态流转
 
+> **完整四层状态定义、聚合规则与 API 约束**见专项文档：[order-status.md](./order-status.md)
+
 ```
-unconfirmed（待确认）
-    │
-    │ confirm()  ← 扣减客户余额
+UNCONFIRMED（未确认）
+    │ confirmSalesOrder（手动，扣减客户余额；窗帘行→NOT_PEILIAO）
     ▼
-confirmed（已确认）
-    │
-    │ [前端手动推进到待生产，或由工厂接单推进]
+CONFIRMED（已确认）
+    │ cutMaterial（L4 用料→L2 窗帘→L1 订单联动）
+    ├─► BUFEN_PEILIAO（部分配料）
+    └─► HAVE_PEILIAO（已配料）
+    │ packCurtain（手动，L2→L1 聚合）
+    ├─► BUFEN_DABAO（部分打包）
+    └─► DABAO（已打包）
+    │ shipCurtain（手动，L2→L1 聚合）
+    ├─► BUFEN_FAHUO（部分发货）
+    └─► FAHUO（已发货）
+    │ completeSalesOrder（手动）
     ▼
-pending（待生产）
-    │
-    │ createProcessRecord()  ← 首条工序记录创建时自动推进
-    ▼
-processing（生产中）
-    │
-    │ [手动完成，当前系统暂未实现自动推进至 completed]
-    ▼
-completed（已完成）
+COMPLETE（完成）
 
-随时可取消 → cancelled（已取消）
-
-cancelConfirm()：confirmed → unconfirmed（退回客户余额，要求 amountReceived == 0）
+cancelConfirmSalesOrder：CONFIRMED / BUFEN_PEILIAO / HAVE_PEILIAO → UNCONFIRMED
+  （须无收款、无已裁剪用料，退回客户余额）
 ```
 
 ### 5.2 结算状态流转
@@ -908,16 +915,29 @@ customerMapper.update(null, Wrappers.<ZcCustomerDO>lambdaUpdate()
 
 ## 八、关键枚举值说明
 
-### 订单状态（`status`）
+### 订单状态（`status`，字典 `zc_order_status`）
+
+> 枚举类 `ZcSalesOrderStatusEnum`；四层联动规则见 [order-status.md](./order-status.md)
+
+| 值 | 中文 | 适用层级 | 说明 |
+|----|------|----------|------|
+| `UNCONFIRMED` | 未确认 | L1 订单、L2 窗帘 | 创建时默认 |
+| `CONFIRMED` | 已确认 | L1 订单 | 手动确认；或未进入配料阶段时聚合 |
+| `NOT_PEILIAO` | 未配料 | L2 窗帘 | 确认订单时写入 |
+| `BUFEN_PEILIAO` | 部分配料 | L1 订单、L2 窗帘 | 自动聚合 |
+| `HAVE_PEILIAO` | 已配料 | L1 订单、L2 窗帘 | 自动聚合 / 用料 `HAVE_PEILIAO` |
+| `BUFEN_DABAO` | 部分打包 | L1 订单 | 自动聚合 |
+| `DABAO` | 已打包 | L1 订单、L2 窗帘 | 手动打包 / 聚合 |
+| `BUFEN_FAHUO` | 部分发货 | L1 订单 | 自动聚合 |
+| `FAHUO` | 已发货 | L1 订单、L2 窗帘 | 手动发货 / 聚合 |
+| `COMPLETE` | 完成 | L1 订单 | 手动完成 |
+
+### 用料配料状态（`zc_sales_order_material.status`）
 
 | 值 | 中文 | 说明 |
 |----|------|------|
-| `unconfirmed` | 待确认 | 初始状态，创建时设置 |
-| `confirmed` | 已确认 | 确认后，客户余额已扣减 |
-| `pending` | 待生产 | 已确认，等待工厂开始生产 |
-| `processing` | 生产中 | 第一条工序记录创建时自动推进 |
-| `completed` | 已完成 | 生产完成 |
-| `cancelled` | 已取消 | 订单取消 |
+| `NOT_PEILIAO` | 未配料 | 默认；撤销裁剪回退 |
+| `HAVE_PEILIAO` | 已配料 | 裁剪出库后写入 |
 
 ### 结算状态（`payStatus`）
 
