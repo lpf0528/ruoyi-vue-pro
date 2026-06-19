@@ -22,6 +22,12 @@
             LEFT JOIN zc_supplier            t5  ON t1.supplier_id = t5.id  AND t5.deleted = 0
             LEFT JOIN zc_warehouse           t6  ON t1.warehouse_id= t6.id  AND t6.deleted = 0
         WHERE t1.deleted = 0
+        <if test="reqVO.ids != null and reqVO.ids.size() > 0">
+            AND t1.id IN
+            <foreach collection="reqVO.ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
         <if test="reqVO.batchNo != null and reqVO.batchNo != ''">
             AND t1.batch_no LIKE CONCAT('%', #{reqVO.batchNo}, '%')
         </if>
