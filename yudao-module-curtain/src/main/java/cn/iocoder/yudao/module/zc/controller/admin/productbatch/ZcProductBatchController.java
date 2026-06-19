@@ -39,7 +39,7 @@ public class ZcProductBatchController {
     @PostMapping("/create-batch")
     @Operation(summary = "批量创建产品批次")
     @PreAuthorize("@ss.hasPermission('zc:product-batch:create')")
-    public CommonResult<List<Long>> createProductBatchList(@Valid @RequestBody List<ZcProductBatchSaveReqVO> createReqVOs) {
+    public CommonResult<List<ZcProductBatchRespVO>> createProductBatchList(@Valid @RequestBody List<ZcProductBatchSaveReqVO> createReqVOs) {
         return success(productBatchService.createProductBatchList(createReqVOs));
     }
 

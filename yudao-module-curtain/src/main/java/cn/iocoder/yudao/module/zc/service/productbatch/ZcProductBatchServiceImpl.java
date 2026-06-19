@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 
@@ -81,12 +82,18 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public List<Long> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs) {
-        List<Long> ids = new ArrayList<>();
+    public List<ZcProductBatchRespVO> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs) {
+        if (createReqVOs == null || createReqVOs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> ids = new ArrayList<>(createReqVOs.size());
         for (ZcProductBatchSaveReqVO createReqVO : createReqVOs) {
             ids.add(createProductBatch(createReqVO));
         }
-        return ids;
+        ZcProductBatchPageReqVO pageReqVO = new ZcProductBatchPageReqVO();
+        pageReqVO.setIds(ids);
+        pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
+        return productBatchMapper.selectPage(pageReqVO).getList();
     }
 
     @Override

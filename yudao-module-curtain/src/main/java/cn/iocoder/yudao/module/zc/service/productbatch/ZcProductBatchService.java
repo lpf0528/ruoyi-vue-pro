@@ -25,9 +25,9 @@ public interface ZcProductBatchService {
      * 批量创建产品批次
      *
      * @param createReqVOs 创建信息列表
-     * @return 编号列表
+     * @return 创建后的产品批次列表（与分页列表结构一致）
      */
-    List<Long> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs);
+    List<ZcProductBatchRespVO> createProductBatchList(List<ZcProductBatchSaveReqVO> createReqVOs);
 
     /**
      * 更新产品批次
