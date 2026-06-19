@@ -132,6 +132,10 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     public void cutMaterial(ZcCutMaterialReqVO reqVO) {
         // 校验用料明细存在，取出 orderId 供库存记录关联
         ZCSalesOrderMaterialDO material = validateZCSalesOrderMaterialExists(reqVO.getId());
+        // 已裁剪的用料不允许重复裁剪，须先撤销
+        if (ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name().equals(material.getStatus())) {
+            throw exception(SALES_ORDER_MATERIAL_ALREADY_CUT);
+        }
         // 校验批次存在且库存充足
         ZcProductBatchDO batch = productBatchMapper.selectById(reqVO.getBatchId());
         if (batch == null) {
