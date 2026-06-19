@@ -43,6 +43,8 @@ import cn.iocoder.yudao.module.zc.enums.ZcCustomerBalanceBizTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcRefTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderPayStatusEnum;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+
 /**
  * 收支账单 Service 实现类
  *
@@ -123,12 +125,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             // 判断支付状态：全额到账则已支付，否则部分支付
             String payStatus = newReceived.compareTo(orderAmount) >= 0
                     ? ZcSalesOrderPayStatusEnum.PAID.name() : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
-            ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
-            updateOrder.setId(order.getId());
-            updateOrder.setAmountReceived(newReceived);
-            updateOrder.setPayStatus(payStatus);
-            salesOrderMapper.updateById(updateOrder);
-            // 保存分摊明细记录
+            updateOrderPaymentInfo(order.getId(), newReceived, payStatus);
             ZcBillOrderItemsDO itemDO = ZcBillOrderItemsDO.builder()
                     .billId(billId)
                     .orderId(item.getOrderId())
@@ -185,11 +182,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
                     : newReceived.compareTo(orderAmount) >= 0
                             ? ZcSalesOrderPayStatusEnum.PAID.name()
                             : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
-            ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
-            updateOrder.setId(order.getId());
-            updateOrder.setAmountReceived(newReceived);
-            updateOrder.setPayStatus(payStatus);
-            salesOrderMapper.updateById(updateOrder);
+            updateOrderPaymentInfo(order.getId(), newReceived, payStatus);
         }
 
         // 4. 回滚旧的客户余额并记录冲回流水
@@ -235,11 +228,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
             BigDecimal orderAmount = order.getAmount() == null ? BigDecimal.ZERO : order.getAmount();
             String payStatus = newReceived.compareTo(orderAmount) >= 0
                     ? ZcSalesOrderPayStatusEnum.PAID.name() : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
-            ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
-            updateOrder.setId(order.getId());
-            updateOrder.setAmountReceived(newReceived);
-            updateOrder.setPayStatus(payStatus);
-            salesOrderMapper.updateById(updateOrder);
+            updateOrderPaymentInfo(order.getId(), newReceived, payStatus);
             ZcBillOrderItemsDO itemDO = ZcBillOrderItemsDO.builder()
                     .billId(updateReqVO.getId())
                     .orderId(item.getOrderId())
@@ -285,11 +274,7 @@ public class ZcBillsServiceImpl implements ZcBillsService {
                     : newReceived.compareTo(orderAmount) >= 0
                             ? ZcSalesOrderPayStatusEnum.PAID.name()
                             : ZcSalesOrderPayStatusEnum.PARTIALPAID.name();
-            ZcSalesOrderDO updateOrder = new ZcSalesOrderDO();
-            updateOrder.setId(order.getId());
-            updateOrder.setAmountReceived(newReceived);
-            updateOrder.setPayStatus(payStatus);
-            salesOrderMapper.updateById(updateOrder);
+            updateOrderPaymentInfo(order.getId(), newReceived, payStatus);
         }
 
         // 3. 回滚客户余额并记录冲回流水
@@ -335,6 +320,19 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @Override
     public List<ZcBillOrderItemRespVO> getBillOrderItems(Long billId) {
         return billOrderItemsMapper.selectListWithOrderNoByBillId(billId);
+    }
+
+    /**
+     * 仅更新订单已收金额与支付状态。
+     *
+     * <p>不可使用 {@code updateById}：{@link ZcSalesOrderDO} 中 mobile、brandId 等字段为
+     * {@code FieldStrategy.ALWAYS}，部分更新会把未赋值字段写成 null。</p>
+     */
+    private void updateOrderPaymentInfo(Long orderId, BigDecimal amountReceived, String payStatus) {
+        salesOrderMapper.update(null, new LambdaUpdateWrapper<ZcSalesOrderDO>()
+                .eq(ZcSalesOrderDO::getId, orderId)
+                .set(ZcSalesOrderDO::getAmountReceived, amountReceived)
+                .set(ZcSalesOrderDO::getPayStatus, payStatus));
     }
 
     /**
