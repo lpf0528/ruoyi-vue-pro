@@ -62,6 +62,7 @@ public interface ZCSalesOrderMaterialService {
      * 裁剪用料明细
      *
      * <p>绑定批次、记录裁剪数量、将状态更新为已配料（HAVE_PEILIAO），并原子扣减批次剩余库存。
+     * 若批次当前状态为整匹（status=1），裁剪后自动调整为余料（status=-1）。
      * 若批次库存不足则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#PRODUCT_BATCH_INSUFFICIENT_QUANTITY}。</p>
      *
      * @param reqVO 裁剪请求（用料明细ID、批次ID、裁剪数量）
