@@ -33,7 +33,7 @@ public class ZcWorkshopUserDO extends BaseDO {
      */
     private String name;
     /**
-     * 状态
+     * 状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcWorkshopUserStatusEnum}；0=关闭，1=开启
      */
     private Integer status;
 

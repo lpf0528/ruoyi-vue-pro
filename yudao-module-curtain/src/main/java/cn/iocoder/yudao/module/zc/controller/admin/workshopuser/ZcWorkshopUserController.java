@@ -14,7 +14,7 @@ import javax.servlet.http.*;
 import java.util.*;
 import java.io.IOException;
 
-import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcWorkshopUserStatusEnum;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
@@ -94,7 +94,7 @@ public class ZcWorkshopUserController {
     @Operation(summary = "获得车间员工精简列表", description = "主要用于前端的下拉选项")
     public CommonResult<List<ZcWorkshopUserSimpleRespVO>> getWorkshopUserSimpleList() {
         List<ZcWorkshopUserDO> list = workshopUserService.getWorkshopUserList(
-                new ZcWorkshopUserListReqVO().setStatus(CommonStatusEnum.ENABLE.getStatus()));
+                new ZcWorkshopUserListReqVO().setStatus(ZcWorkshopUserStatusEnum.ENABLE.getStatus()));
         return success(convertList(list, item -> new ZcWorkshopUserSimpleRespVO()
                 .setId(item.getId())
                 .setName(item.getName())
@@ -114,4 +114,4 @@ public class ZcWorkshopUserController {
                         BeanUtils.toBean(list, ZcWorkshopUserRespVO.class));
     }
 
-}
+}

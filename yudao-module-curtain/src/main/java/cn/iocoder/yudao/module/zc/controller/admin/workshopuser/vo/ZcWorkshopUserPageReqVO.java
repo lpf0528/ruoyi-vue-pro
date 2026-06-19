@@ -16,7 +16,7 @@ public class ZcWorkshopUserPageReqVO extends PageParam {
     @Schema(description = "名称", example = "赵六")
     private String name;
 
-    @Schema(description = "状态", example = "1")
+    @Schema(description = "状态（0=关闭，1=开启）", example = "1")
     private Integer status;
 
 }

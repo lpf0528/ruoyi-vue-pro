@@ -16,7 +16,7 @@ public class ZcWorkshopUserSaveReqVO {
     @NotEmpty(message = "名称不能为空")
     private String name;
 
-    @Schema(description = "状态", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @Schema(description = "状态（0=关闭，1=开启）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @NotNull(message = "状态不能为空")
     private Integer status;
 

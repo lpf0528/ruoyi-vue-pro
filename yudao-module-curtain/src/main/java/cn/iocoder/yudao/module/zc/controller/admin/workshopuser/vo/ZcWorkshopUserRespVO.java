@@ -20,7 +20,7 @@ public class ZcWorkshopUserRespVO {
     @ExcelProperty("名称")
     private String name;
 
-    @Schema(description = "状态", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+    @Schema(description = "状态（0=关闭，1=开启）", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     @ExcelProperty("状态")
     private Integer status;
 

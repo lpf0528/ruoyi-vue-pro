@@ -16,8 +16,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class ZcWorkshopUserListReqVO {
 
-    /** 状态，参见 CommonStatusEnum；0=禁用，1=启用 */
-    @Schema(description = "状态", example = "1")
+    /** 状态，参见 {@link cn.iocoder.yudao.module.zc.enums.ZcWorkshopUserStatusEnum}；0=关闭，1=开启 */
+    @Schema(description = "状态（0=关闭，1=开启）", example = "1")
     private Integer status;
 
 }
