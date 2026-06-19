@@ -753,16 +753,22 @@ CREATE TABLE `zc_collection_order_alloc` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ----------------------------
--- 字典：订单状态（zc_order_status） id=2301, data=3700~3703
+-- 字典：订单状态（zc_order_status） id=2301, data=3700~3745
 -- ----------------------------
 INSERT INTO `system_dict_type` (`id`, `name`, `type`, `status`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`, `deleted_time`)
 VALUES (2301, '订单状态', 'zc_order_status', 0, '智仓销售订单状态', 'admin', NOW(), 'admin', NOW(), b'0', NULL);
 INSERT INTO `system_dict_data` (`id`, `sort`, `label`, `value`, `dict_type`, `status`, `color_type`, `css_class`, `remark`, `creator`, `create_time`, `updater`, `update_time`, `deleted`)
 VALUES
-(3700, 1, '未确认', 'UNCONFIRMED', 'zc_order_status', 0, 'info',    '', '订单刚创建，尚未审核确认', 'admin', NOW(), 'admin', NOW(), b'0'),
-(3701, 2, '已确认', 'CONFIRMED',   'zc_order_status', 0, 'primary', '', '订单已审核，进入生产流程', 'admin', NOW(), 'admin', NOW(), b'0'),
-(3702, 3, '已打包', 'DABAO',       'zc_order_status', 0, 'warning', '', '生产完成，已打包备货',     'admin', NOW(), 'admin', NOW(), b'0'),
-(3703, 4, '已发货', 'FAHUO',       'zc_order_status', 0, 'success', '', '货物已发出，等待签收',     'admin', NOW(), 'admin', NOW(), b'0');
+(3700, 1,  '未确认',   'UNCONFIRMED',  'zc_order_status', 0, 'info',    '', '订单刚创建，尚未审核确认',       'admin', NOW(), 'admin', NOW(), b'0'),
+(3701, 2,  '已确认',   'CONFIRMED',    'zc_order_status', 0, 'primary', '', '订单已审核，进入生产流程',       'admin', NOW(), 'admin', NOW(), b'0'),
+(3702, 3,  '未配料',   'NOT_PEILIAO',  'zc_order_status', 0, 'default', '', '窗帘行确认后初始状态',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3739, 4,  '部分配料', 'BUFEN_PEILIAO','zc_order_status', 0, 'warning', '', '部分用料明细已完成裁剪出库',     'admin', NOW(), 'admin', NOW(), b'0'),
+(3740, 5,  '已配料',   'HAVE_PEILIAO', 'zc_order_status', 0, 'primary', '', '全部用料明细已完成裁剪出库',     'admin', NOW(), 'admin', NOW(), b'0'),
+(3741, 6,  '部分打包', 'BUFEN_DABAO',  'zc_order_status', 0, 'warning', '', '部分窗帘行已完成打包',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3742, 7,  '已打包',   'DABAO',        'zc_order_status', 0, 'warning', '', '生产完成，已打包备货',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3743, 8,  '部分发货', 'BUFEN_FAHUO',  'zc_order_status', 0, 'warning', '', '部分窗帘行/产品行已发货',        'admin', NOW(), 'admin', NOW(), b'0'),
+(3744, 9,  '已发货',   'FAHUO',        'zc_order_status', 0, 'success', '', '货物已发出，等待签收',           'admin', NOW(), 'admin', NOW(), b'0'),
+(3745, 10, '完成',     'COMPLETE',     'zc_order_status', 0, 'success', '', '订单履约完成',                   'admin', NOW(), 'admin', NOW(), b'0');
 
 -- ----------------------------
 -- 字典：订单支付状态（zc_order_pay_status） id=2302, data=3704~3706

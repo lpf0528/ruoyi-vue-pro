@@ -60,6 +60,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
     private ZcWorkshopUserService workshopUserService;
+    @Resource
+    private ZcSalesOrderStatusCalculator orderStatusCalculator;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -171,6 +173,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         createPeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), reqVO.getId(),
                 reqVO.getMasterId(), reqVO.getAssistantId());
 
+        // 联动更新窗帘行配料状态 → 订单主表状态
+        orderStatusCalculator.syncAfterMaterialChange(material.getOrderId(), material.getOrderStructureId());
+
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());
     }
@@ -219,6 +224,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         // 撤销该用料明细对应的"配料"工序完成记录（若存在），写入操作人信息
         revokePeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), materialId,
                 reqVO.getMasterId(), reqVO.getAssistantId());
+
+        // 联动更新窗帘行配料状态 → 订单主表状态
+        orderStatusCalculator.syncAfterMaterialChange(material.getOrderId(), material.getOrderStructureId());
 
         // 记录操作日志上下文
         LogRecordContext.putVariable("batchNo", batch.getBatchNo());

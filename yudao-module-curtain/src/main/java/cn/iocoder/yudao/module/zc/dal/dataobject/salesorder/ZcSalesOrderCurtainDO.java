@@ -87,7 +87,8 @@ public class ZcSalesOrderCurtainDO extends BaseDO {
     private Long quantity;
 
     /**
-     * 窗帘行状态，冗余自订单主表，随确认/取消确认操作同步更新，参见 {@link ZcSalesOrderStatusEnum}
+     * 窗帘行状态，参见 {@link ZcSalesOrderStatusEnum}：
+     * UNCONFIRMED / NOT_PEILIAO / BUFEN_PEILIAO / HAVE_PEILIAO / DABAO / FAHUO
      */
     private String status;
 

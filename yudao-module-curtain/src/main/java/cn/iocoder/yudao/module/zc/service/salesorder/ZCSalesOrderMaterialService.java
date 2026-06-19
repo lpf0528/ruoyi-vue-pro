@@ -61,8 +61,9 @@ public interface ZCSalesOrderMaterialService {
     /**
      * 裁剪用料明细
      *
-     * <p>绑定批次、记录裁剪数量、将状态更新为已配料（HAVE_PEILIAO），并原子扣减批次剩余库存。
+     * <p>绑定批次、记录裁剪数量、将用料明细状态更新为已配料（HAVE_PEILIAO），并原子扣减批次剩余库存。
      * 若批次当前状态为整匹（status=1），裁剪后自动调整为余料（status=-1）。
+     * 同步联动更新所属窗帘行配料状态，并聚合更新订单主表状态。
      * 若批次库存不足则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#PRODUCT_BATCH_INSUFFICIENT_QUANTITY}。</p>
      *
      * @param reqVO 裁剪请求（用料明细ID、批次ID、裁剪数量）
@@ -72,8 +73,9 @@ public interface ZCSalesOrderMaterialService {
     /**
      * 撤销裁剪
      *
-     * <p>将用料明细状态从已配料（HAVE_PEILIAO）回退为未���料（NOT_PEILIAO），清空批次绑定和裁剪数量，
+     * <p>将用料明细状态从已配料（HAVE_PEILIAO）回退为未配料（NOT_PEILIAO），清空裁剪数量，
      * 同时原子回退批次库存，并写入 CANCEL_CAIJIAN 库存变动记录。
+     * 同步联动更新所属窗帘行配料状态，并聚合更新订单主表状态。
      * 若用料明细不处于已配料状态，则抛出 {@link cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants#SALES_ORDER_MATERIAL_NOT_PEILIAO}。</p>
      *
      * @param reqVO 撤销裁剪请求（用料明细ID、主操作人、副操作人）

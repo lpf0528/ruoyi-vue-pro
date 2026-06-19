@@ -27,6 +27,18 @@ public interface ZcSalesOrderStructureMapper extends BaseMapperX<ZcSalesOrderStr
     }
 
     /**
+     * 查询指定窗帘行下的所有结构行，按主键升序排列
+     *
+     * @param orderCurtainId 窗帘行 ID
+     * @return 结构行列表
+     */
+    default List<ZcSalesOrderStructureDO> selectListByOrderCurtainId(Long orderCurtainId) {
+        return selectList(new LambdaQueryWrapperX<ZcSalesOrderStructureDO>()
+                .eqIfPresent(ZcSalesOrderStructureDO::getOrderCurtainId, orderCurtainId)
+                .orderByAsc(ZcSalesOrderStructureDO::getId));
+    }
+
+    /**
      * 查询指定订单下的所有结构行，按主键升序排列（保持录入顺序）
      *
      * @param orderId 销售订单 ID

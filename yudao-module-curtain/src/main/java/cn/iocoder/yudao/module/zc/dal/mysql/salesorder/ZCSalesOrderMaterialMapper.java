@@ -56,6 +56,21 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
     }
 
     /**
+     * 查询指定结构行下的所有用料明细
+     *
+     * @param structureIds 结构行 ID 集合
+     * @return 用料明细列表
+     */
+    default List<ZCSalesOrderMaterialDO> selectListByStructureIds(Collection<Long> structureIds) {
+        if (structureIds == null || structureIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return selectList(new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
+                .in(ZCSalesOrderMaterialDO::getOrderStructureId, structureIds)
+                .orderByAsc(ZCSalesOrderMaterialDO::getId));
+    }
+
+    /**
      * 统计指定订单下处于特定状态的用料明细数量
      *
      * @param orderId 销售订单 ID
