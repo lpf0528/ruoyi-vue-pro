@@ -52,7 +52,7 @@ public interface ZcOrderProcessRecordService {
     /**
      * 获取订单的工序时间线，按创建时间降序排列（含车间员工名称）
      *
-     * <p>仅返回关联 {@code zc_process_node.group=1}（手工配置）节点的记录。</p>
+     * <p>按 {@code zc_process_node.group} 筛选节点记录，默认仅返回 group=1（手工配置）节点。</p>
      *
      * @param orderId     订单 ID，为 null 时不过滤
      * @param masterId    主操作人员 ID，为 null 时不过滤
@@ -60,10 +60,12 @@ public interface ZcOrderProcessRecordService {
      * @param structureId 结构行 ID，为 null 时不过滤
      * @param materialId  用料明细 ID，为 null 时不过滤
      * @param nodeId      工序节点 ID，为 null 时不过滤
+     * @param groups      工序节点分组多选（0=系统配置，1=手工配置）
      * @return 工序记录列表
      */
     List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId, Long masterId,
                                                           Long curtainId, Long structureId,
-                                                          Long materialId, Long nodeId);
+                                                          Long materialId, Long nodeId,
+                                                          List<Integer> groups);
 
 }

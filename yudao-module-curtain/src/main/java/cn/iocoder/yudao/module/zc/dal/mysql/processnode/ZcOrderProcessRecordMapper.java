@@ -20,8 +20,7 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
     /**
      * 查询订单的工序记录（含操作人名称），按创建时间降序排列
      *
-     * <p>关联 {@code zc_process_node}，仅返回 {@code group=1}（手工配置）节点的记录，
-     * 系统配置节点（如裁剪、打包、发货自动写入）不在此接口返回。</p>
+     * <p>关联 {@code zc_process_node}，按 {@code group} 多选筛选节点记录。</p>
      *
      * @param orderId     订单 ID，为 null 时不过滤
      * @param masterId    主操作人员 ID，为 null 时不过滤
@@ -29,6 +28,7 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
      * @param structureId 结构行 ID，为 null 时不过滤
      * @param materialId  用料明细 ID，为 null 时不过滤
      * @param nodeId      工序节点 ID，为 null 时不过滤
+     * @param groups      工序节点分组多选（0=系统配置，1=手工配置）
      * @return 工序记录列表
      */
     List<ZcOrderProcessRecordRespVO> selectListWithUserByOrderId(@Param("orderId") Long orderId,
@@ -36,7 +36,8 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
                                                                   @Param("curtainId") Long curtainId,
                                                                   @Param("structureId") Long structureId,
                                                                   @Param("materialId") Long materialId,
-                                                                  @Param("nodeId") Long nodeId);
+                                                                  @Param("nodeId") Long nodeId,
+                                                                  @Param("groups") List<Integer> groups);
 
     /**
      * 查询指定范围内某工序节点是否已存在有效记录（status=1，未撤销）

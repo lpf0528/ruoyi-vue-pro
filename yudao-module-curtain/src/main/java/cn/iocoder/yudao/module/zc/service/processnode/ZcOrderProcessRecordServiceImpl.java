@@ -129,8 +129,9 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     @Override
     public List<ZcOrderProcessRecordRespVO> getProcessRecordList(Long orderId, Long masterId,
                                                                   Long curtainId, Long structureId,
-                                                                  Long materialId, Long nodeId) {
-        return processRecordMapper.selectListWithUserByOrderId(orderId, masterId, curtainId, structureId, materialId, nodeId);
+                                                                  Long materialId, Long nodeId,
+                                                                  List<Integer> groups) {
+        return processRecordMapper.selectListWithUserByOrderId(orderId, masterId, curtainId, structureId, materialId, nodeId, groups);
     }
 
     private ZcSalesOrderDO validateSalesOrderExists(Long orderId) {
