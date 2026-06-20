@@ -453,9 +453,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
      */
     private ZcSalesOrderDO prepareOrderUpdate(Long orderId) {
         ZcSalesOrderDO existing = validateSalesOrderExists(orderId);
-        if (existing.getConfirmTime() != null) {
-            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
-        }
+//        if (existing.getConfirmTime() != null) {
+//            throw exception(SALES_ORDER_CONFIRMED_CANNOT_UPDATE);
+//        }
         return existing;
     }
 
@@ -647,6 +647,20 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         // 将加急标志设置为 true
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getIsExpedited, true)
+                .eq(ZcSalesOrderDO::getId, orderId));
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("orderNo", order.getOrderNo());
+    }
+
+    @Override
+    @LogRecord(type = ZC_SALES_ORDER_TYPE, subType = ZC_SALES_ORDER_CANCEL_EXPEDITED_SUB_TYPE, bizNo = "{{#orderId}}",
+            success = ZC_SALES_ORDER_CANCEL_EXPEDITED_SUCCESS)
+    public void cancelExpedited(Long orderId) {
+        // 校验订单存在
+        ZcSalesOrderDO order = validateSalesOrderExists(orderId);
+        // 将加急标志设置为 false
+        salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
+                .set(ZcSalesOrderDO::getIsExpedited, false)
                 .eq(ZcSalesOrderDO::getId, orderId));
         // 记录操作日志上下文
         LogRecordContext.putVariable("orderNo", order.getOrderNo());

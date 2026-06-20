@@ -15,6 +15,7 @@ public enum ZcOrderOperateTypeEnum {
     CONFIRM("确认订单"),
     CANCEL_CONFIRM("取消确认"),
     MARK_EXPEDITED("标记加急"),
+    CANCEL_EXPEDITED("取消加急"),
     PACK("打包"),
     CANCEL_PACK("撤销打包"),
     SHIP("发货"),

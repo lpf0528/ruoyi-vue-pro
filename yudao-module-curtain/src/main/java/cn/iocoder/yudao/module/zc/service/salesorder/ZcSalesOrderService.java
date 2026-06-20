@@ -125,6 +125,15 @@ public interface ZcSalesOrderService {
     void markExpedited(Long orderId);
 
     /**
+     * 取消销售订单加急
+     *
+     * <p>将订单的 is_expedited 设置为 false，不限当前订单状态。</p>
+     *
+     * @param orderId 销售订单 ID
+     */
+    void cancelExpedited(Long orderId);
+
+    /**
      * 生成销售订单 PDF 字节流
      *
      * <p>包含订单主信息、全量窗帘行→结构行→用料明细，使用 OpenPDF 输出 A4 横向 PDF。</p>

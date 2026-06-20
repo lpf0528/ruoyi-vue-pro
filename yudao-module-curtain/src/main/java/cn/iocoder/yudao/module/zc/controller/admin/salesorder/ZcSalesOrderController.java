@@ -149,6 +149,15 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
+    @PutMapping("/cancel-expedited")
+    @Operation(summary = "取消销售订单加急")
+    @Parameter(name = "orderId", description = "销售订单 ID", required = true)
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:update')")
+    public CommonResult<Boolean> cancelExpedited(@RequestParam("orderId") Long orderId) {
+        salesOrderService.cancelExpedited(orderId);
+        return success(true);
+    }
+
     @PutMapping("/confirm")
     @Operation(summary = "确认销售订单（状态 unconfirmed → confirmed，扣减客户余额）")
     @Parameter(name = "id", description = "销售订单 ID", required = true)
