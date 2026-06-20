@@ -31,6 +31,18 @@ public class ZcCustomerImportExcelVO {
     @ExcelProperty("联系人")
     private String contactName;
 
+    /** 省份 */
+    @ExcelProperty("省份")
+    private String province;
+
+    /** 市区 */
+    @ExcelProperty("市区")
+    private String city;
+
+    /** 县区 */
+    @ExcelProperty("县区")
+    private String district;
+
     /** 送货地址 */
     @ExcelProperty("送货地址")
     private String deliveryAddress;
