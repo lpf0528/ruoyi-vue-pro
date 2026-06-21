@@ -49,10 +49,15 @@ public class ZcSalesOrderProductCreateReqVO {
     @NotNull(message = "下单日期不能为空")
     private LocalDate orderDate;
 
-    /** 物流 ID */
-    @Schema(description = "物流 ID")
+    /** 物流 ID，可为空；与 logisticName 二选一或同时传（优先 ID） */
+    @Schema(description = "物流 ID，可为空")
     @DiffLogField(name = "物流", function = ZcLogisticsParseFunction.NAME)
     private Long logisticId;
+
+    /** 物流名称；logisticId 为空时按名称查找，不存在则自动创建 */
+    @Schema(description = "物流名称；logisticId 为空时按名称查找，不存在则自动创建", example = "顺丰速运")
+    @DiffLogField(name = "物流名称")
+    private String logisticName;
 
     /** 收货人姓名 */
     @Schema(description = "收货人")

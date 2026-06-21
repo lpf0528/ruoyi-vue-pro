@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
+import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -41,7 +43,7 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerbalancelog.ZcCustomerBalanceLogDO;
 import cn.iocoder.yudao.module.zc.service.customer.ZcCustomerService;
 import cn.iocoder.yudao.module.zc.service.customerbalancelog.ZcCustomerBalanceLogService;
-import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
+import cn.iocoder.yudao.module.zc.service.logistics.ZcLogisticsService;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtaininstallprocess.ZcCurtainInstallProcessMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
@@ -98,6 +100,8 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     private ZCSalesOrderMaterialMapper salesOrderMaterialMapper;
 
     @Resource
+    private ZcLogisticsService logisticsService;
+    @Resource
     private ZcCurtainMapper curtainMapper;
     @Resource
     private ZcCurtainStructureMapper curtainStructureMapper;
@@ -118,6 +122,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             success = ZC_SALES_ORDER_CREATE_SUCCESS)
     public Long createSalesOrder(ZcSalesOrderCreateReqVO createReqVO) {
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
+        logisticsService.resolveLogisticsForOrder(salesOrder);
         salesOrder.setOrderNo(generateOrderNo("CP"));
         applyOrderDefaults(salesOrder, ZcOrderTypeEnum.CURTAIN.name(), CollUtil.size(createReqVO.getCurtains()));
         salesOrderMapper.insert(salesOrder);
@@ -132,6 +137,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
             success = ZC_SALES_ORDER_FABRIC_CREATE_SUCCESS)
     public Long createFabricSalesOrder(ZcSalesOrderFabricCreateReqVO createReqVO) {
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
+        logisticsService.resolveLogisticsForOrder(salesOrder);
         salesOrder.setOrderNo(generateOrderNo("ML"));
         applyOrderDefaults(salesOrder, ZcOrderTypeEnum.FABRIC.name(), CollUtil.size(createReqVO.getCurtains()));
         salesOrderMapper.insert(salesOrder);
@@ -421,6 +427,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         clearProtectedFields(updateDO);
         normalizeOrderUpdateFields(updateDO);
+        logisticsService.resolveLogisticsForOrder(updateDO);
         updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderUpdateReqVO.class));
@@ -437,6 +444,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         ZcSalesOrderDO updateDO = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
         clearProtectedFields(updateDO);
         normalizeOrderUpdateFields(updateDO);
+        logisticsService.resolveLogisticsForOrder(updateDO);
         updateDO.setSets(CollUtil.size(updateReqVO.getCurtains()));
         salesOrderMapper.updateById(updateDO);
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(existing, ZcSalesOrderFabricUpdateReqVO.class));
@@ -730,7 +738,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .collect(Collectors.toSet());
         List<ZcCurtainStructureElementDO> elementList = curtainStructureElementMapper.selectList(ZcCurtainStructureElementDO::getId, elementIds);
         Map<Long, String> elementNameMap = convertMap(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getName);
-        Map<Long, Boolean> elementIsPrintMap = convertMap(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getIsPrint);
+        Map<Long, Boolean> elementIsPrintMap = toMapSkipNullValues(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getIsPrint);
         Set<Long> productIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getProductId)
                 .filter(Objects::nonNull)
@@ -742,9 +750,9 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         List<ZcProductBatchDO> batchList = productBatchMapper.selectList(ZcProductBatchDO::getId, batchIds);
-        Map<Long, String> batchNoMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo);
-        // 复用已查出的批次列表，避免重复查库
-        Map<Long, String> batchBarcodeMap = convertMap(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBarcode);
+        Map<Long, String> batchNoMap = toMapSkipNullValues(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBatchNo);
+        // 复用已查出的批次列表，避免重复查库（barcode 可为空，须跳过 null 避免 toMap NPE）
+        Map<Long, String> batchBarcodeMap = toMapSkipNullValues(batchList, ZcProductBatchDO::getId, ZcProductBatchDO::getBarcode);
 
         // 8. 按结构行 ID 分组用料明细
         Map<Long, List<ZCSalesOrderMaterialDetailRespVO>> materialsByStructureId = materialList.stream()
@@ -1091,6 +1099,25 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         } catch (IllegalArgumentException e) {
             return payStatus;
         }
+    }
+
+    /**
+     * 构建 Map，跳过 key 或 value 为 null 的项。
+     * {@link Collectors#toMap} 遇到 null value 会 NPE，批次 barcode 等字段可为空时需用此方法。
+     */
+    private static <T, K, V> Map<K, V> toMapSkipNullValues(Collection<T> list, Function<T, K> keyFunc, Function<T, V> valueFunc) {
+        if (CollUtil.isEmpty(list)) {
+            return new HashMap<>();
+        }
+        Map<K, V> map = new HashMap<>(list.size());
+        for (T item : list) {
+            K key = keyFunc.apply(item);
+            V value = valueFunc.apply(item);
+            if (key != null && value != null) {
+                map.put(key, value);
+            }
+        }
+        return map;
     }
 
 }

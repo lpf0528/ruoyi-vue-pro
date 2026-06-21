@@ -1,7 +1,9 @@
 package cn.iocoder.yudao.module.zc.service.logistics;
 
+import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsListReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsPageReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.ZcLogisticsSaveReqVO;
@@ -109,6 +111,32 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
     @Override
     public PageResult<ZcLogisticsDO> getLogisticsPage(ZcLogisticsPageReqVO pageReqVO) {
         return logisticsMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public void resolveLogisticsForOrder(ZcSalesOrderDO salesOrder) {
+        if (salesOrder.getLogisticId() != null) {
+            ZcLogisticsDO logistics = validateLogisticsExists(salesOrder.getLogisticId());
+            salesOrder.setLogisticName(logistics.getName());
+            return;
+        }
+        if (StrUtil.isBlank(salesOrder.getLogisticName())) {
+            salesOrder.setLogisticName(null);
+            return;
+        }
+        String name = salesOrder.getLogisticName().trim();
+        salesOrder.setLogisticName(name);
+        ZcLogisticsDO existing = logisticsMapper.selectByName(name);
+        if (existing != null) {
+            salesOrder.setLogisticId(existing.getId());
+            return;
+        }
+        ZcLogisticsDO newLogistic = ZcLogisticsDO.builder()
+                .code(name)
+                .name(name)
+                .build();
+        logisticsMapper.insert(newLogistic);
+        salesOrder.setLogisticId(newLogistic.getId());
     }
 
 }

@@ -588,6 +588,7 @@ CREATE TABLE `zc_sales_order` (
   `category` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '订单类别',
   `order_date` date NOT NULL COMMENT '下单日期',
   `logistic_id` bigint NULL DEFAULT NULL COMMENT '物流',
+  `logistic_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物流名字',
   `receiver` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '收货人',
   `delivery_address` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '送货地址',
   `freight` decimal(20, 2) NOT NULL DEFAULT 0.00 COMMENT '运费',
@@ -891,3 +892,9 @@ ALTER TABLE `zc_product`
 -- ----------------------------
 ALTER TABLE `zc_bill_methods`
     ADD COLUMN `group` int NOT NULL DEFAULT 1 COMMENT '分组：0=系统配置，1=手工配置' AFTER `note`;
+
+-- ----------------------------
+-- zc_sales_order 新增 logistic_name 字段（已有库升级）
+-- ----------------------------
+ALTER TABLE `zc_sales_order`
+    ADD COLUMN `logistic_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物流名字' AFTER `logistic_id`;

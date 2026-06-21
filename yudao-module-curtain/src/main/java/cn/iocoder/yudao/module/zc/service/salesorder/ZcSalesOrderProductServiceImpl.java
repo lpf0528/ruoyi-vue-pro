@@ -21,6 +21,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderProductMapper;
 import cn.iocoder.yudao.module.zc.dal.redis.ZcNoGeneratorRedisDAO;
+import cn.iocoder.yudao.module.zc.service.logistics.ZcLogisticsService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
@@ -59,6 +60,8 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
     @Resource
     private ZcSalesOrderProductMapper salesOrderProductMapper;
     @Resource
+    private ZcLogisticsService logisticsService;
+    @Resource
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
     @Resource
     private ZcProductBatchMapper productBatchMapper;
@@ -78,6 +81,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
 
         // 2. 保存订单主记录，设置自动生成/默认字段
         ZcSalesOrderDO salesOrder = BeanUtils.toBean(createReqVO, ZcSalesOrderDO.class);
+        logisticsService.resolveLogisticsForOrder(salesOrder);
         salesOrder.setOrderNo(orderNo);
         salesOrder.setTypes(ZcOrderTypeEnum.FABRIC.name()); // 产品类订单固定为面料单
         salesOrder.setPayStatus(ZcSalesOrderPayStatusEnum.UNPAID.name()); // 默认：未支付
@@ -142,6 +146,7 @@ public class ZcSalesOrderProductServiceImpl implements ZcSalesOrderProductServic
 
         // 3. 更新订单主记录，保留系统字段（订单号、状态、结算状态、是否加急不允许覆盖）
         ZcSalesOrderDO updateOrder = BeanUtils.toBean(updateReqVO, ZcSalesOrderDO.class);
+        logisticsService.resolveLogisticsForOrder(updateOrder);
         updateOrder.setOrderNo(existing.getOrderNo());
         updateOrder.setTypes(existing.getTypes()); // 订单类型不允许更新，保留原值
         updateOrder.setStatus(existing.getStatus());

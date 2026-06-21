@@ -4,6 +4,7 @@ import java.util.*;
 import javax.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.logistics.ZcLogisticsDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 
@@ -67,4 +68,11 @@ public interface ZcLogisticsService {
      */
     PageResult<ZcLogisticsDO> getLogisticsPage(ZcLogisticsPageReqVO pageReqVO);
 
-}
+    /**
+     * 解析销售订单物流：logisticId 可为空；仅传 logisticName 时按名称查找，不存在则自动创建并回填 ID。
+     *
+     * @param salesOrder 订单 DO（入参含 logisticId/logisticName，出参回填解析结果）
+     */
+    void resolveLogisticsForOrder(ZcSalesOrderDO salesOrder);
+
+}

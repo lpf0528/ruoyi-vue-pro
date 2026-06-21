@@ -59,6 +59,11 @@ public class ZcSalesOrderDO extends BaseDO {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long logisticId;
     /**
+     * 物流名字（订单快照；创建/更新时可仅传名称，Service 自动关联或新建 zc_logistics）
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String logisticName;
+    /**
      * 收货人
      */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
