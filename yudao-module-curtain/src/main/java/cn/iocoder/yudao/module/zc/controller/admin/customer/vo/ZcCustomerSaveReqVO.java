@@ -45,9 +45,13 @@ public class ZcCustomerSaveReqVO {
     @DiffLogField(name = "联系电话")
     private String mobile2;
 
-    @Schema(description = "物流", example = "429")
+    @Schema(description = "物流 ID，可为空；与 logisticName 二选一或同时传（优先 ID）", example = "429")
     @DiffLogField(name = "物流", function = ZcLogisticsParseFunction.NAME)
     private Long logisticId;
+
+    /** 物流名称；logisticId 为空时按名称查找，不存在则自动创建 */
+    @Schema(description = "物流名称；logisticId 为空时按名称查找，不存在则自动创建", example = "顺丰速运")
+    private String logisticName;
 
     @Schema(description = "关联品牌", example = "22168")
     @DiffLogField(name = "关联品牌", function = ZcBrandParseFunction.NAME)

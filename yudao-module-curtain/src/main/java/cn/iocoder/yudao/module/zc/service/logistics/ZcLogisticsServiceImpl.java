@@ -114,6 +114,28 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
     }
 
     @Override
+    public Long resolveLogisticId(Long logisticId, String logisticName) {
+        if (logisticId != null) {
+            validateLogisticsExists(logisticId);
+            return logisticId;
+        }
+        if (StrUtil.isBlank(logisticName)) {
+            return null;
+        }
+        String name = logisticName.trim();
+        ZcLogisticsDO existing = logisticsMapper.selectByName(name);
+        if (existing != null) {
+            return existing.getId();
+        }
+        ZcLogisticsDO newLogistic = ZcLogisticsDO.builder()
+                .code(name)
+                .name(name)
+                .build();
+        logisticsMapper.insert(newLogistic);
+        return newLogistic.getId();
+    }
+
+    @Override
     public void resolveLogisticsForOrder(ZcSalesOrderDO salesOrder) {
         if (salesOrder.getLogisticId() != null) {
             ZcLogisticsDO logistics = validateLogisticsExists(salesOrder.getLogisticId());
@@ -126,17 +148,7 @@ public class ZcLogisticsServiceImpl implements ZcLogisticsService {
         }
         String name = salesOrder.getLogisticName().trim();
         salesOrder.setLogisticName(name);
-        ZcLogisticsDO existing = logisticsMapper.selectByName(name);
-        if (existing != null) {
-            salesOrder.setLogisticId(existing.getId());
-            return;
-        }
-        ZcLogisticsDO newLogistic = ZcLogisticsDO.builder()
-                .code(name)
-                .name(name)
-                .build();
-        logisticsMapper.insert(newLogistic);
-        salesOrder.setLogisticId(newLogistic.getId());
+        salesOrder.setLogisticId(resolveLogisticId(null, name));
     }
 
 }

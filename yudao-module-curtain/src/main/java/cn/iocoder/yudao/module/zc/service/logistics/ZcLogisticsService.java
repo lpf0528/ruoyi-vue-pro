@@ -69,6 +69,15 @@ public interface ZcLogisticsService {
     PageResult<ZcLogisticsDO> getLogisticsPage(ZcLogisticsPageReqVO pageReqVO);
 
     /**
+     * 解析物流 ID：logisticId 优先；为空时按 logisticName 查找，不存在则自动创建。
+     *
+     * @param logisticId   物流 ID，可为空
+     * @param logisticName 物流名称，logisticId 为空时生效
+     * @return 解析后的物流 ID，两者均为空时返回 null
+     */
+    Long resolveLogisticId(Long logisticId, String logisticName);
+
+    /**
      * 解析销售订单物流：logisticId 可为空；仅传 logisticName 时按名称查找，不存在则自动创建并回填 ID。
      *
      * @param salesOrder 订单 DO（入参含 logisticId/logisticName，出参回填解析结果）

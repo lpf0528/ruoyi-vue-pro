@@ -28,6 +28,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.brand.ZcBrandMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.customer.ZcCustomerMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.logistics.ZcLogisticsMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
+import cn.iocoder.yudao.module.zc.service.logistics.ZcLogisticsService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.service.impl.DiffParseFunction;
@@ -59,6 +60,9 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
     private ZcLogisticsMapper logisticsMapper;
 
     @Resource
+    private ZcLogisticsService logisticsService;
+
+    @Resource
     private ZcBrandMapper brandMapper;
 
     @Override
@@ -68,6 +72,7 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
         validateCustomerShortNameUnique(null, createReqVO.getShortName());
         // 插入，余额强制初始化为 0，不允许前端传入
         ZcCustomerDO customer = BeanUtils.toBean(createReqVO, ZcCustomerDO.class);
+        customer.setLogisticId(logisticsService.resolveLogisticId(createReqVO.getLogisticId(), createReqVO.getLogisticName()));
         customer.setBalance(BigDecimal.ZERO);
         customerMapper.insert(customer);
         // 记录操作日志上下文
@@ -84,6 +89,7 @@ public class ZcCustomerServiceImpl implements ZcCustomerService {
         validateCustomerShortNameUnique(updateReqVO.getId(), updateReqVO.getShortName());
         // 更新
         ZcCustomerDO updateObj = BeanUtils.toBean(updateReqVO, ZcCustomerDO.class);
+        updateObj.setLogisticId(logisticsService.resolveLogisticId(updateReqVO.getLogisticId(), updateReqVO.getLogisticName()));
         customerMapper.updateById(updateObj);
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldCustomer, ZcCustomerSaveReqVO.class));
