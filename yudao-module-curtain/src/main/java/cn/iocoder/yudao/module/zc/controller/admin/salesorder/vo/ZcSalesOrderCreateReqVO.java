@@ -64,10 +64,9 @@ public class ZcSalesOrderCreateReqVO {
     @DiffLogField(name = "收货人")
     private String receiver;
 
-    /** 送货地址，必填 */
-    @Schema(description = "送货地址", requiredMode = Schema.RequiredMode.REQUIRED)
+    /** 送货地址，可为空 */
+    @Schema(description = "送货地址")
     @DiffLogField(name = "送货地址")
-    @NotEmpty(message = "送货地址不能为空")
     private String deliveryAddress;
 
     /** 运费，不传默认为 0 */
