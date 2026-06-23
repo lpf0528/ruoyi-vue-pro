@@ -12,7 +12,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 public interface ZcInventoryRecordService {
 
     /**
-     * 创建盘点记录，同时更新批次剩余数量并追加盘点备注
+     * 创建盘点记录，同时更新批次剩余数量、规格并追加盘点备注
      *
      * @param createReqVO 创建信息
      * @return 盘点记录 ID

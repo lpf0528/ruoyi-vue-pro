@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.ZcInventoryRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
+import cn.iocoder.yudao.module.zc.service.inventoryrecord.ZcInventoryRecordService;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
@@ -49,6 +51,8 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     private ZcNoGeneratorRedisDAO noGeneratorRedisDAO;
     @Resource
     private ZcBarcodeGeneratorRedisDAO barcodeGeneratorRedisDAO;
+    @Resource
+    private ZcInventoryRecordService inventoryRecordService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -166,6 +170,11 @@ public class ZcProductBatchServiceImpl implements ZcProductBatchService {
     @Override
     public PageResult<ZcProductBatchRespVO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO) {
         return productBatchMapper.selectPage(pageReqVO);
+    }
+
+    @Override
+    public Long inventoryProductBatch(ZcInventoryRecordSaveReqVO inventoryReqVO) {
+        return inventoryRecordService.createInventoryRecord(inventoryReqVO);
     }
 
 }

@@ -71,6 +71,10 @@ public class ZcProductBatchRespVO {
     @ExcelProperty("版本名称")
     private String versionName;
 
+    @Schema(description = "版本ID")
+    @ExcelProperty("版本ID")
+    private Long versionId;
+
     @Schema(description = "供应商名称")
     @ExcelProperty("供应商名称")
     private String supplierName;

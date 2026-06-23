@@ -54,10 +54,13 @@ public class ZcInventoryRecordServiceImpl implements ZcInventoryRecordService {
         inventoryRecord.setOperate(ZcInventoryRecordOperateEnum.PANDIAN.name());
         inventoryRecordMapper.insert(inventoryRecord);
 
-        // 3. 更新批次剩余数量；若本次盘点填写了备注，则用新备注覆盖上次盘点备注（保留原始非盘点备注）
+        // 3. 更新批次剩余数量与规格；若本次盘点填写了备注，则用新备注覆盖上次盘点备注（保留原始非盘点备注）
         ZcProductBatchDO updateBatch = new ZcProductBatchDO();
         updateBatch.setId(batch.getId());
         updateBatch.setQuantity(createReqVO.getNewQuantity());
+        if (createReqVO.getSpec() != null) {
+            updateBatch.setSpec(createReqVO.getSpec());
+        }
         if (createReqVO.getNote() != null && !createReqVO.getNote().isEmpty()) {
             String inventoryNote = "盘点：" + createReqVO.getNote();
             String newNote;

@@ -36,4 +36,8 @@ public class ZcInventoryRecordSaveReqVO {
     @DiffLogField(name = "备注")
     private String note;
 
+    @Schema(description = "规格")
+    @DiffLogField(name = "规格")
+    private String spec;
+
 }

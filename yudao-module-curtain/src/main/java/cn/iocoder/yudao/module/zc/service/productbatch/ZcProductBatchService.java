@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.service.productbatch;
 
 import java.util.*;
 import javax.validation.*;
+import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.ZcInventoryRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
@@ -72,5 +73,13 @@ public interface ZcProductBatchService {
      * @return 产品批次分页
      */
     PageResult<ZcProductBatchRespVO> getProductBatchPage(ZcProductBatchPageReqVO pageReqVO);
+
+    /**
+     * 盘点产品批次：写入盘点流水并更新批次剩余数量
+     *
+     * @param inventoryReqVO 盘点信息（产品、批次、盘点前后数量、规格、备注）
+     * @return 盘点记录 ID
+     */
+    Long inventoryProductBatch(@Valid ZcInventoryRecordSaveReqVO inventoryReqVO);
 
 }

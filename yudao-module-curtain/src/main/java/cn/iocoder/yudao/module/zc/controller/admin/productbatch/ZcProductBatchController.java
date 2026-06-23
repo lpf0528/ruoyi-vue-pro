@@ -24,6 +24,7 @@ import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
 import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
 import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.*;
 
+import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.ZcInventoryRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.module.zc.service.productbatch.ZcProductBatchService;
 
@@ -57,6 +58,13 @@ public class ZcProductBatchController {
     public CommonResult<Boolean> updateProductBatchStatus(@Valid @RequestBody ZcProductBatchUpdateStatusReqVO updateReqVO) {
         productBatchService.updateProductBatchStatus(updateReqVO);
         return success(true);
+    }
+
+    @PostMapping("/inventory")
+    @Operation(summary = "盘点产品批次")
+    @PreAuthorize("@ss.hasPermission('zc:product-batch:update')")
+    public CommonResult<Long> inventoryProductBatch(@Valid @RequestBody ZcInventoryRecordSaveReqVO inventoryReqVO) {
+        return success(productBatchService.inventoryProductBatch(inventoryReqVO));
     }
 
     @DeleteMapping("/delete")

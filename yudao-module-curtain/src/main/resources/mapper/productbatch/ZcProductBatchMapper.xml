@@ -7,6 +7,7 @@
         SELECT
             t41.one_price,
             t2.`name`      AS product_name,
+            t2.version_id  AS version_id,
             t4.`name`      AS version_name,
             t4.unit_value  AS unit_value,
             t5.short_name  AS supplier_name,
@@ -60,6 +61,7 @@
         SELECT
             t41.one_price,
             t2.`name`      AS product_name,
+            t2.version_id  AS version_id,
             t4.`name`      AS version_name,
             t4.unit_value  AS unit_value,
             t5.short_name  AS supplier_name,
