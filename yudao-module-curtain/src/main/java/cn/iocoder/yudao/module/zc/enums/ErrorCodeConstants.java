@@ -60,8 +60,8 @@ public interface ErrorCodeConstants {
      * 创建/更新收款单时，分摊到各订单的金额合计与实收+优惠不一致
      */
     ErrorCode BILL_ALLOCATED_AMOUNT_NOT_MATCH = new ErrorCode(100035, "分摊到各订单的金额合计与实收金额+优惠金额不一致，请检查后重试");
-    /** 实收金额不能小于订单分摊金额合计 */
-    ErrorCode BILL_ACTUAL_AMOUNT_LESS_THAN_ALLOCATED = new ErrorCode(100081, "实收金额不能小于订单分摊金额合计");
+    /** 实收金额+优惠金额不能小于订单分摊金额合计 */
+    ErrorCode BILL_ACTUAL_AMOUNT_LESS_THAN_ALLOCATED = new ErrorCode(100081, "实收金额与优惠金额合计不能小于订单分摊金额合计");
     /**
      * 删除客户时，该客户下存在销售订单，禁止删除
      */

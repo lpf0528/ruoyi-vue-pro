@@ -76,9 +76,9 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     @LogRecord(type = ZC_BILLS_TYPE, subType = ZC_BILLS_CREATE_SUB_TYPE, bizNo = "{{#bill.id}}",
             success = ZC_BILLS_CREATE_SUCCESS)
     public Long createBills(ZcBillsSaveReqVO createReqVO) {
-        // 1. 所有收款：实收不能小于分摊合计；余额扣款：实收以分摊合计为准
-        BigDecimal discount = createReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
+        // 1. 所有收款：实收+优惠不能小于分摊合计；余额扣款：实收以分摊合计为准
         validateAndNormalizeBillActualAmount(createReqVO);
+        BigDecimal discount = createReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : createReqVO.getDiscountAmount();
         BigDecimal totalSettled = createReqVO.getActualAmount().add(discount);
 
         // 2. 自动生成单号：SK{yyyyMMdd}-{6位序号}；Redis INCR 前先与库内最大序号（含软删）对齐
@@ -155,9 +155,9 @@ public class ZcBillsServiceImpl implements ZcBillsService {
         // 1. 校验收款单存在，获取当前数据快照
         ZcBillsDO existingBill = validateBillsExists(updateReqVO.getId());
 
-        // 2. 所有收款：实收不能小于分摊合计；余额扣款：实收以分摊合计为准
-        BigDecimal newDiscount = updateReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : updateReqVO.getDiscountAmount();
+        // 2. 所有收款：实收+优惠不能小于分摊合计；余额扣款：实收以分摊合计为准
         validateAndNormalizeBillActualAmount(updateReqVO);
+        BigDecimal newDiscount = updateReqVO.getDiscountAmount() == null ? BigDecimal.ZERO : updateReqVO.getDiscountAmount();
         BigDecimal newTotalSettled = updateReqVO.getActualAmount().add(newDiscount);
         BigDecimal newTotalAllocated = updateReqVO.getOrderItems().stream()
                 .map(ZcBillOrderItemReqVO::getAllocatedAmount)
@@ -338,11 +338,13 @@ public class ZcBillsServiceImpl implements ZcBillsService {
     /**
      * 校验收款实收金额，并按收支方式规范化实收。
      *
-     * <p>所有收款：实收不能小于订单分摊合计；余额扣款：实收以分摊合计为准。</p>
+     * <p>所有收款：实收+优惠不能小于订单分摊合计；余额扣款：实收以分摊合计为准。</p>
      */
     private void validateAndNormalizeBillActualAmount(ZcBillsSaveReqVO reqVO) {
         BigDecimal totalAllocated = sumOrderItemsAllocatedAmount(reqVO.getOrderItems());
-        if (reqVO.getActualAmount().compareTo(totalAllocated) < 0) {
+        BigDecimal discount = reqVO.getDiscountAmount() == null ? BigDecimal.ZERO : reqVO.getDiscountAmount();
+        BigDecimal totalSettled = reqVO.getActualAmount().add(discount);
+        if (totalSettled.compareTo(totalAllocated) < 0) {
             throw exception(BILL_ACTUAL_AMOUNT_LESS_THAN_ALLOCATED);
         }
         if (isBalanceCollectionMethod(reqVO.getBillMethodId())) {
