@@ -9,4 +9,23 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <select id="selectProductSpecStatistics"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderMaterialProductStatisticsRespVO">
+        SELECT
+            m.product_id                        AS product_id,
+            p.name                              AS product_name,
+            m.spec                              AS spec,
+            COALESCE(SUM(m.quantity), 0)        AS quantity,
+            MAX(m.unit_value)                   AS unit_value
+        FROM zc_sales_order_material m
+        INNER JOIN zc_sales_order o ON m.order_id = o.id AND o.deleted = 0
+        LEFT JOIN zc_product p ON m.product_id = p.id AND p.deleted = 0
+        WHERE m.deleted = 0
+          AND m.product_id IS NOT NULL
+          AND o.confirm_time IS NOT NULL
+          AND o.confirm_time BETWEEN #{reqVO.confirmTime[0]} AND #{reqVO.confirmTime[1]}
+        GROUP BY m.product_id, p.name, m.spec
+        ORDER BY m.product_id ASC, m.spec ASC
+    </select>
+
 </mapper>

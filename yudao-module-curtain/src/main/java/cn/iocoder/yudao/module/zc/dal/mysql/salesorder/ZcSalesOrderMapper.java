@@ -37,6 +37,15 @@ public interface ZcSalesOrderMapper extends BaseMapperX<ZcSalesOrderDO> {
     ZcSalesOrderRespVO selectVOById(@Param("id") Long id);
 
     /**
+     * 按确认时间范围统计各客户的已确认订单数与订单金额合计
+     *
+     * @param reqVO 确认时间范围
+     * @return 按客户分组的统计列表，按订单金额合计降序
+     */
+    List<ZcSalesOrderCustomerStatisticsRespVO> selectCustomerStatistics(
+            @Param("reqVO") ZcSalesOrderCustomerStatisticsReqVO reqVO);
+
+    /**
      * 按 ID 更新订单状态
      *
      * @param id     销售订单 ID

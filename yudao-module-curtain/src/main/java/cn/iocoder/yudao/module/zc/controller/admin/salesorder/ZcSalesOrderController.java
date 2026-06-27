@@ -185,6 +185,22 @@ public class ZcSalesOrderController {
         return success(true);
     }
 
+    @GetMapping("/statistics/customer")
+    @Operation(summary = "按客户统计已确认订单（指定确认时间范围内，汇总各客户订单数、订单金额、已收金额、未收金额）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<List<ZcSalesOrderCustomerStatisticsRespVO>> getCustomerStatistics(
+            @Valid ZcSalesOrderCustomerStatisticsReqVO reqVO) {
+        return success(salesOrderService.getCustomerStatistics(reqVO));
+    }
+
+    @GetMapping("/statistics/material-product")
+    @Operation(summary = "按产品规格统计已确认订单用料（product_id 不为空的用料明细，按 product_id + spec 汇总 quantity）")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<List<ZcSalesOrderMaterialProductStatisticsRespVO>> getMaterialProductStatistics(
+            @Valid ZcSalesOrderCustomerStatisticsReqVO reqVO) {
+        return success(salesOrderService.getMaterialProductStatistics(reqVO));
+    }
+
     @GetMapping("/export-excel")
     @Operation(summary = "导出销售订单 Excel")
     @PreAuthorize("@ss.hasPermission('zc:sales-order:export')")

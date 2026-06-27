@@ -8,6 +8,7 @@ import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 
 /**
@@ -82,5 +83,14 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
                 .eq(ZCSalesOrderMaterialDO::getOrderId, orderId)
                 .eq(ZCSalesOrderMaterialDO::getStatus, status));
     }
+
+    /**
+     * 统计已确认订单中，各产品不同规格的用料数量合计
+     *
+     * @param reqVO 确认时间范围
+     * @return 按 product_id + spec 分组的用料数量列表
+     */
+    List<ZcSalesOrderMaterialProductStatisticsRespVO> selectProductSpecStatistics(
+            @Param("reqVO") ZcSalesOrderCustomerStatisticsReqVO reqVO);
 
 }

@@ -165,4 +165,28 @@ public interface ZcSalesOrderService {
      */
     ZcSalesOrderDetailRespVO getSalesOrderDetailByOrderNo(String orderNo);
 
+    /**
+     * 按确认时间范围统计各客户的已确认订单数与订单金额合计
+     *
+     * <p>筛选 confirm_time 落在指定范围内且 confirm_time 不为空的订单（即已确认订单），
+     * 按 customer_id 分组，汇总订单数、amount 合计、amount_received 合计及未收金额（amount - amount_received）。</p>
+     *
+     * @param reqVO 确认时间范围
+     * @return 按客户分组的统计列表，按订单金额合计降序
+     */
+    List<ZcSalesOrderCustomerStatisticsRespVO> getCustomerStatistics(
+            @Valid ZcSalesOrderCustomerStatisticsReqVO reqVO);
+
+    /**
+     * 统计已确认订单中，用料明细（product_id 不为空）按产品+规格汇总的数量
+     *
+     * <p>筛选 confirm_time 落在指定范围内且 confirm_time 不为空的订单，
+     * 关联 zc_sales_order_material，按 product_id + spec 分组汇总 quantity。</p>
+     *
+     * @param reqVO 确认时间范围
+     * @return 按产品与规格分组的用料数量列表
+     */
+    List<ZcSalesOrderMaterialProductStatisticsRespVO> getMaterialProductStatistics(
+            @Valid ZcSalesOrderCustomerStatisticsReqVO reqVO);
+
 }

@@ -693,6 +693,18 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     }
 
     @Override
+    public List<ZcSalesOrderCustomerStatisticsRespVO> getCustomerStatistics(
+            ZcSalesOrderCustomerStatisticsReqVO reqVO) {
+        return salesOrderMapper.selectCustomerStatistics(reqVO);
+    }
+
+    @Override
+    public List<ZcSalesOrderMaterialProductStatisticsRespVO> getMaterialProductStatistics(
+            ZcSalesOrderCustomerStatisticsReqVO reqVO) {
+        return salesOrderMaterialMapper.selectProductSpecStatistics(reqVO);
+    }
+
+    @Override
     public ZcSalesOrderDetailRespVO getSalesOrderDetail(Long orderId) {
         // 1. 查询订单主表信息（含客户名、物流名、创建人名等关联字段）
         ZcSalesOrderRespVO orderVO = salesOrderMapper.selectVOById(orderId);
