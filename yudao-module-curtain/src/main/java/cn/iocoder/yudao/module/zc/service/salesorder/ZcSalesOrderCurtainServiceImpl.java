@@ -188,15 +188,13 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
 
         // 5. 查询系统配置的打包工序节点，将该窗帘行已完成的打包工序记录撤销（status 改为 2），并写入备注
         ZcProcessNodeDO packNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.PACK);
-        if (packNode != null) {
-            processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
-                    .set(ZcOrderProcessRecordDO::getStatus, 2)
-                    .set(ZcOrderProcessRecordDO::getNote, cancelNote)
-                    .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
-                    .eq(ZcOrderProcessRecordDO::getCurtainId, id)
-                    .eq(ZcOrderProcessRecordDO::getNodeId, packNode.getId())
-                    .eq(ZcOrderProcessRecordDO::getStatus, 1));
-        }
+        processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
+                .set(ZcOrderProcessRecordDO::getStatus, 2)
+                .set(ZcOrderProcessRecordDO::getNote, cancelNote)
+                .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
+                .eq(ZcOrderProcessRecordDO::getCurtainId, id)
+                .eq(ZcOrderProcessRecordDO::getNodeId, packNode.getId())
+                .eq(ZcOrderProcessRecordDO::getStatus, 1));
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
@@ -249,15 +247,13 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
 
         // 6. 查询系统配置的发货工序节点，将该窗帘行已完成的发货工序记录撤销（status 改为 2），并写入备注
         ZcProcessNodeDO shipNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.SHIP);
-        if (shipNode != null) {
-            processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
-                    .set(ZcOrderProcessRecordDO::getStatus, 2)
-                    .set(ZcOrderProcessRecordDO::getNote, cancelNote)
-                    .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
-                    .eq(ZcOrderProcessRecordDO::getCurtainId, id)
-                    .eq(ZcOrderProcessRecordDO::getNodeId, shipNode.getId())
-                    .eq(ZcOrderProcessRecordDO::getStatus, 1));
-        }
+        processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
+                .set(ZcOrderProcessRecordDO::getStatus, 2)
+                .set(ZcOrderProcessRecordDO::getNote, cancelNote)
+                .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
+                .eq(ZcOrderProcessRecordDO::getCurtainId, id)
+                .eq(ZcOrderProcessRecordDO::getNodeId, shipNode.getId())
+                .eq(ZcOrderProcessRecordDO::getStatus, 1));
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());

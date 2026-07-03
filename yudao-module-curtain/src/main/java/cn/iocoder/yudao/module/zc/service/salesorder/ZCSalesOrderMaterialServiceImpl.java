@@ -287,9 +287,6 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
                                             Long masterId, Long assistantId) {
         ZcSystemProcessNodeEnum nodeEnum = ZcSystemProcessNodeEnum.PEILIAO;
         ZcProcessNodeDO node = systemProcessNodeHelper.getSystemNode(nodeEnum);
-        if (node == null) {
-            return;
-        }
         ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
                 material.getOrderId(), null, material.getOrderStructureId(), material.getId());
         ZcOrderProcessRecordDO record = processRecordMapper.selectCompletedRecord(
