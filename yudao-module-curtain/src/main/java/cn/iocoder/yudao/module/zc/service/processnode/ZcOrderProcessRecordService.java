@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.zc.service.processnode;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProcessRecordDetailRespVO;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -67,5 +68,16 @@ public interface ZcOrderProcessRecordService {
                                                           Long curtainId, Long structureId,
                                                           Long materialId, Long nodeId,
                                                           List<Integer> groups);
+
+    /**
+     * 获得销售订单工序记录详情（完整窗帘结构 + 各层工序记录）
+     *
+     * <p>先加载销售订单完整详情（窗帘→结构→用料），再将工序记录挂载到对应层级；
+     * 无工序记录的窗帘/结构/用料仍会返回。各层 processRecords 按创建时间升序排列。</p>
+     *
+     * @param orderId 销售订单 ID
+     * @return 工序记录详情
+     */
+    ZcSalesOrderProcessRecordDetailRespVO getSalesOrderProcessRecordDetail(Long orderId);
 
 }

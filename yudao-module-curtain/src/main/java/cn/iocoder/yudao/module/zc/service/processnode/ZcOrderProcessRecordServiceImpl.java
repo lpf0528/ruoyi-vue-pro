@@ -1,13 +1,18 @@
 package cn.iocoder.yudao.module.zc.service.processnode;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderDetailRespVO;
+import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProcessRecordDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
+import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderService;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
@@ -21,9 +26,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMap;
+import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertSet;
 import static cn.iocoder.yudao.module.zc.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 
@@ -46,6 +58,8 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     private ZcWorkshopUserMapper workshopUserMapper;
     @Resource
     private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
+    @Resource
+    private ZcSalesOrderService salesOrderService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -139,7 +153,88 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
                                                                   Long curtainId, Long structureId,
                                                                   Long materialId, Long nodeId,
                                                                   List<Integer> groups) {
-        return processRecordMapper.selectListWithUserByOrderId(orderId, masterId, curtainId, structureId, materialId, nodeId, groups);
+        return listProcessRecords(orderId, masterId, curtainId, structureId, materialId, nodeId, groups);
+    }
+
+    @Override
+    public ZcSalesOrderProcessRecordDetailRespVO getSalesOrderProcessRecordDetail(Long orderId) {
+        ZcSalesOrderDetailRespVO orderDetail = salesOrderService.getSalesOrderDetail(orderId);
+        return ZcSalesOrderProcessRecordBuilder.build(orderDetail,
+                listProcessRecords(orderId, null, null, null, null, null, null));
+    }
+
+    /**
+     * 查询订单工序记录并组装 RespVO（仅查记录表 + 批量补全操作人与节点分组，名称由订单详情骨架提供）
+     *
+     * @param groups 工序节点分组；为 null 时不过滤，返回全部节点记录
+     */
+    private List<ZcOrderProcessRecordRespVO> listProcessRecords(Long orderId, Long masterId,
+                                                                 Long curtainId, Long structureId,
+                                                                 Long materialId, Long nodeId,
+                                                                 List<Integer> groups) {
+        if (orderId == null) {
+            return Collections.emptyList();
+        }
+
+        LambdaQueryWrapperX<ZcOrderProcessRecordDO> wrapper = new LambdaQueryWrapperX<ZcOrderProcessRecordDO>()
+                .eq(ZcOrderProcessRecordDO::getOrderId, orderId)
+                .eqIfPresent(ZcOrderProcessRecordDO::getMasterId, masterId)
+                .eqIfPresent(ZcOrderProcessRecordDO::getCurtainId, curtainId)
+                .eqIfPresent(ZcOrderProcessRecordDO::getStructureId, structureId)
+                .eqIfPresent(ZcOrderProcessRecordDO::getMaterialId, materialId)
+                .eqIfPresent(ZcOrderProcessRecordDO::getNodeId, nodeId);
+
+        if (groups != null) {
+            if (CollUtil.isEmpty(groups)) {
+                return Collections.emptyList();
+            }
+            List<ZcProcessNodeDO> nodes = processNodeMapper.selectList(
+                    new LambdaQueryWrapperX<ZcProcessNodeDO>().in(ZcProcessNodeDO::getGroup, groups));
+            if (CollUtil.isEmpty(nodes)) {
+                return Collections.emptyList();
+            }
+            wrapper.in(ZcOrderProcessRecordDO::getNodeId, convertSet(nodes, ZcProcessNodeDO::getId));
+        }
+        // orderByAsc 未在 LambdaQueryWrapperX 中重写，须单独调用，避免链式返回父类类型
+        wrapper.orderByAsc(ZcOrderProcessRecordDO::getCreateTime);
+
+        List<ZcOrderProcessRecordDO> recordList = processRecordMapper.selectList(wrapper);
+        if (CollUtil.isEmpty(recordList)) {
+            return Collections.emptyList();
+        }
+
+        final Map<Long, Integer> nodeGroupMap;
+        if (groups == null) {
+            Set<Long> nodeIds = convertSet(recordList, ZcOrderProcessRecordDO::getNodeId);
+            nodeGroupMap = CollUtil.isEmpty(nodeIds) ? Collections.emptyMap()
+                    : convertMap(processNodeMapper.selectList(ZcProcessNodeDO::getId, nodeIds),
+                    ZcProcessNodeDO::getId, ZcProcessNodeDO::getGroup);
+        } else {
+            List<ZcProcessNodeDO> nodes = processNodeMapper.selectList(
+                    new LambdaQueryWrapperX<ZcProcessNodeDO>().in(ZcProcessNodeDO::getGroup, groups));
+            nodeGroupMap = convertMap(nodes, ZcProcessNodeDO::getId, ZcProcessNodeDO::getGroup);
+        }
+
+        Set<Long> userIds = new HashSet<>();
+        for (ZcOrderProcessRecordDO record : recordList) {
+            if (record.getMasterId() != null) {
+                userIds.add(record.getMasterId());
+            }
+            if (record.getAssistantId() != null) {
+                userIds.add(record.getAssistantId());
+            }
+        }
+        Map<Long, String> userNameMap = CollUtil.isEmpty(userIds) ? Collections.emptyMap()
+                : convertMap(workshopUserMapper.selectList(ZcWorkshopUserDO::getId, userIds),
+                ZcWorkshopUserDO::getId, ZcWorkshopUserDO::getName);
+
+        return recordList.stream().map(record -> {
+            ZcOrderProcessRecordRespVO vo = BeanUtils.toBean(record, ZcOrderProcessRecordRespVO.class);
+            vo.setNodeGroup(nodeGroupMap.get(record.getNodeId()));
+            vo.setMasterName(userNameMap.get(record.getMasterId()));
+            vo.setAssistantName(userNameMap.get(record.getAssistantId()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     private ZcSalesOrderDO validateSalesOrderExists(Long orderId) {

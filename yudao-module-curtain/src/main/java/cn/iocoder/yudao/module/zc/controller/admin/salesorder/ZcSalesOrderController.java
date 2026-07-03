@@ -34,6 +34,7 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZCSalesOrderMaterialService;
 import cn.iocoder.yudao.module.zc.service.salesorder.ZcSalesOrderService;
+import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordService;
 
 @Tag(name = "管理后台 - 销售订单")
 @RestController
@@ -45,6 +46,8 @@ public class ZcSalesOrderController {
     private ZcSalesOrderService salesOrderService;
     @Resource
     private ZCSalesOrderMaterialService salesOrderMaterialService;
+    @Resource
+    private ZcOrderProcessRecordService processRecordService;
 
     @PostMapping("/create")
     @Operation(summary = "创建销售订单（整单，含窗帘行→结构行→用料明细）")
@@ -117,6 +120,17 @@ public class ZcSalesOrderController {
             return success(salesOrderService.getSalesOrderDetailByOrderNo(orderNo));
         }
         return success(salesOrderService.getSalesOrderDetail(id));
+    }
+
+    @GetMapping("/process-record")
+    @Operation(summary = "获得销售订单工序记录详情（完整窗帘结构 + 各层工序记录）",
+            description = "先加载订单完整窗帘结构（同 /detail），在各层级挂载全部工序节点的 processRecords（按时间升序）；"
+                    + "无工序的窗帘/结构/用料仍会展示")
+    @Parameter(name = "id", description = "销售订单 ID", required = true, example = "1024")
+    @PreAuthorize("@ss.hasPermission('zc:sales-order:query')")
+    public CommonResult<ZcSalesOrderProcessRecordDetailRespVO> getSalesOrderProcessRecordDetail(
+            @RequestParam("id") Long id) {
+        return success(processRecordService.getSalesOrderProcessRecordDetail(id));
     }
 
     @GetMapping("/page")
