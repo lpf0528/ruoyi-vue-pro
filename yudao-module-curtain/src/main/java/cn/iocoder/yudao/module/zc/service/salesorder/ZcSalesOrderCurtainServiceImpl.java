@@ -16,15 +16,16 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderCurtainDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
-import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderCurtainMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTargetTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
+import cn.iocoder.yudao.module.zc.enums.ZcSystemProcessNodeEnum;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
 import cn.iocoder.yudao.module.zc.service.orderoperationlog.ZcOrderOperationLogService;
 import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordScopeHelper;
+import cn.iocoder.yudao.module.zc.service.processnode.ZcSystemProcessNodeHelper;
 import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -47,8 +48,6 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     @Resource
     private ZcOrderOperationLogService orderOperationLogService;
     @Resource
-    private ZcProcessNodeMapper processNodeMapper;
-    @Resource
     private ZcOrderProcessRecordMapper processRecordMapper;
     @Resource
     private ZcWorkshopUserService workshopUserService;
@@ -56,6 +55,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     private ZcSalesOrderStatusCalculator orderStatusCalculator;
     @Resource
     private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
+    @Resource
+    private ZcSystemProcessNodeHelper systemProcessNodeHelper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -96,12 +97,9 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .build());
 
         // 5. 查询系统配置的打包工序节点，写入已完成的工序流水记录
-        //    节点不存在时 nodeId 置 null，nodeName 兜底为"打包"
-        ZcProcessNodeDO packNode = processNodeMapper.selectOne(
-                Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                        .eq(ZcProcessNodeDO::getName, "打包")
-                        .eq(ZcProcessNodeDO::getGroup, 0));
-        insertCurtainProcessRecord(orderId, id, packNode, "打包", masterId, assistantId);
+        //    节点不存在时 nodeId 置 null，nodeName 从字典兜底
+        ZcProcessNodeDO packNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.PACK);
+        insertCurtainProcessRecord(orderId, id, packNode, ZcSystemProcessNodeEnum.PACK, masterId, assistantId);
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
@@ -146,12 +144,9 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .build());
 
         // 5. 查询系统配置的发货工序节点，写入已完成的工序流水记录
-        //    节点不存在时 nodeId 置 null，nodeName 兜底为"发货"
-        ZcProcessNodeDO shipNode = processNodeMapper.selectOne(
-                Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                        .eq(ZcProcessNodeDO::getName, "发货")
-                        .eq(ZcProcessNodeDO::getGroup, 0));
-        insertCurtainProcessRecord(orderId, id, shipNode, "发货", masterId, assistantId);
+        //    节点不存在时 nodeId 置 null，nodeName 从字典兜底
+        ZcProcessNodeDO shipNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.SHIP);
+        insertCurtainProcessRecord(orderId, id, shipNode, ZcSystemProcessNodeEnum.SHIP, masterId, assistantId);
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
@@ -192,10 +187,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 + (reason != null && !reason.isEmpty() ? "，原因：" + reason : "");
 
         // 5. 查询系统配置的打包工序节点，将该窗帘行已完成的打包工序记录撤销（status 改为 2），并写入备注
-        ZcProcessNodeDO packNode = processNodeMapper.selectOne(
-                Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                        .eq(ZcProcessNodeDO::getName, "打包")
-                        .eq(ZcProcessNodeDO::getGroup, 0));
+        ZcProcessNodeDO packNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.PACK);
         if (packNode != null) {
             processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
                     .set(ZcOrderProcessRecordDO::getStatus, 2)
@@ -256,10 +248,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 + (reason != null && !reason.isEmpty() ? "，原因：" + reason : "");
 
         // 6. 查询系统配置的发货工序节点，将该窗帘行已完成的发货工序记录撤销（status 改为 2），并写入备注
-        ZcProcessNodeDO shipNode = processNodeMapper.selectOne(
-                Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                        .eq(ZcProcessNodeDO::getName, "发货")
-                        .eq(ZcProcessNodeDO::getGroup, 0));
+        ZcProcessNodeDO shipNode = systemProcessNodeHelper.getSystemNode(ZcSystemProcessNodeEnum.SHIP);
         if (shipNode != null) {
             processRecordMapper.update(null, Wrappers.<ZcOrderProcessRecordDO>lambdaUpdate()
                     .set(ZcOrderProcessRecordDO::getStatus, 2)
@@ -278,7 +267,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
      * 写入窗帘级工序完成记录（仅 orderId + curtainId，不含 structureId / materialId）
      */
     private void insertCurtainProcessRecord(Long orderId, Long curtainId, ZcProcessNodeDO node,
-                                            String defaultNodeName, Long masterId, Long assistantId) {
+                                            ZcSystemProcessNodeEnum nodeEnum, Long masterId, Long assistantId) {
         ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
                 orderId, curtainId, null, null);
         processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
@@ -286,8 +275,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 .curtainId(scope.getCurtainId())
                 .structureId(scope.getStructureId())
                 .materialId(scope.getMaterialId())
-                .nodeId(node != null ? node.getId() : null)
-                .nodeName(node != null ? node.getName() : defaultNodeName)
+                .nodeId(systemProcessNodeHelper.resolveNodeId(node))
+                .nodeName(systemProcessNodeHelper.resolveNodeName(node, nodeEnum))
                 .status(1)
                 .masterId(masterId)
                 .assistantId(assistantId)

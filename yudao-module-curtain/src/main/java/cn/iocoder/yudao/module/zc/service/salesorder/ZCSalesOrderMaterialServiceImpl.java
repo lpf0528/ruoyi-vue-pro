@@ -20,12 +20,13 @@ import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
-import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
+import cn.iocoder.yudao.module.zc.enums.ZcSystemProcessNodeEnum;
 import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordScopeHelper;
+import cn.iocoder.yudao.module.zc.service.processnode.ZcSystemProcessNodeHelper;
 import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcProductBatchStatusEnum;
@@ -54,8 +55,6 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     @Resource
     private ZcInventoryRecordMapper inventoryRecordMapper;
     @Resource
-    private ZcProcessNodeMapper processNodeMapper;
-    @Resource
     private ZcOrderProcessRecordMapper processRecordMapper;
     @Resource
     private ZcSalesOrderMapper salesOrderMapper;
@@ -65,6 +64,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZcSalesOrderStatusCalculator orderStatusCalculator;
     @Resource
     private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
+    @Resource
+    private ZcSystemProcessNodeHelper systemProcessNodeHelper;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -250,9 +251,9 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      */
     private void createPeiliaoProcessRecord(ZCSalesOrderMaterialDO material,
                                             Long masterId, Long assistantId) {
-        ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                .eq(ZcProcessNodeDO::getGroup, 0)
-                .eq(ZcProcessNodeDO::getName, "配料"));
+        ZcSystemProcessNodeEnum nodeEnum = ZcSystemProcessNodeEnum.PEILIAO;
+        ZcProcessNodeDO node = systemProcessNodeHelper.getSystemNode(nodeEnum);
+        String nodeName = systemProcessNodeHelper.resolveNodeName(node, nodeEnum);
         ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
                 material.getOrderId(), null, material.getOrderStructureId(), material.getId());
         processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
@@ -260,15 +261,15 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
                 .curtainId(scope.getCurtainId())
                 .structureId(scope.getStructureId())
                 .materialId(scope.getMaterialId())
-                .nodeId(node != null ? node.getId() : null)
-                .nodeName(node != null ? node.getName() : "配料")
+                .nodeId(systemProcessNodeHelper.resolveNodeId(node))
+                .nodeName(nodeName)
                 .status(1)
                 .masterId(masterId)
                 .assistantId(assistantId)
                 .build());
         // 同步更新订单当前工序名称快照
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
-                .set(ZcSalesOrderDO::getCurrentNodeName, "配料")
+                .set(ZcSalesOrderDO::getCurrentNodeName, nodeName)
                 .eq(ZcSalesOrderDO::getId, scope.getOrderId()));
     }
 
@@ -284,9 +285,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      */
     private void revokePeiliaoProcessRecord(ZCSalesOrderMaterialDO material,
                                             Long masterId, Long assistantId) {
-        ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
-                .eq(ZcProcessNodeDO::getGroup, 0)
-                .eq(ZcProcessNodeDO::getName, "配料"));
+        ZcSystemProcessNodeEnum nodeEnum = ZcSystemProcessNodeEnum.PEILIAO;
+        ZcProcessNodeDO node = systemProcessNodeHelper.getSystemNode(nodeEnum);
         if (node == null) {
             return;
         }
