@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
@@ -66,15 +66,14 @@ public class ZcOrderProcessRecordController {
 
     @GetMapping("/list")
     @Operation(summary = "获取订单工序时间线（按时间降序）",
-            description = "关联 zc_process_node，按节点 group 筛选；默认仅返回 group=1（手工配置）节点记录，传 groups=0 可查看系统节点（如裁剪、打包、发货）自动写入的记录")
+            description = "关联 zc_process_node，仅返回手工配置（group=1）的节点记录")
     @Parameters({
             @Parameter(name = "orderId", description = "订单 ID，不传则返回全部"),
             @Parameter(name = "masterId", description = "主操作人员 ID，不传则返回全部"),
             @Parameter(name = "curtainId", description = "窗帘行 ID，不传则返回全部"),
             @Parameter(name = "structureId", description = "结构行 ID，不传则返回全部"),
             @Parameter(name = "materialId", description = "用料明细 ID，不传则返回全部"),
-            @Parameter(name = "nodeId", description = "工序节点 ID，不传则返回全部"),
-            @Parameter(name = "groups", description = "工序节点分组多选：0=系统配置，1=手工配置，默认 1")
+            @Parameter(name = "nodeId", description = "工序节点 ID，不传则返回全部")
     })
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
     public CommonResult<List<ZcOrderProcessRecordRespVO>> getProcessRecordList(
@@ -83,13 +82,8 @@ public class ZcOrderProcessRecordController {
             @RequestParam(value = "curtainId", required = false) Long curtainId,
             @RequestParam(value = "structureId", required = false) Long structureId,
             @RequestParam(value = "materialId", required = false) Long materialId,
-            @RequestParam(value = "nodeId", required = false) Long nodeId,
-            @RequestParam(value = "groups", required = false) List<Integer> groups) {
-        // 未传 groups 时默认仅返回手工配置节点（group=1）的记录
-        if (CollUtil.isEmpty(groups)) {
-            groups = Collections.singletonList(1);
-        }
-        return success(processRecordService.getProcessRecordList(orderId, masterId, curtainId, structureId, materialId, nodeId, groups));
+            @RequestParam(value = "nodeId", required = false) Long nodeId) {
+        return success(processRecordService.getProcessRecordList(orderId, masterId, curtainId, structureId, materialId, nodeId, Arrays.asList(1)));
     }
 
 }

@@ -152,7 +152,7 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
                                                                   Long curtainId, Long structureId,
                                                                   Long materialId, Long nodeId,
                                                                   List<Integer> groups) {
-        return listProcessRecords(orderId, masterId, curtainId, structureId, materialId, nodeId, groups);
+        return processRecordMapper.selectListWithVO(orderId, masterId, curtainId, structureId, materialId, nodeId, groups);
     }
 
     @Override
