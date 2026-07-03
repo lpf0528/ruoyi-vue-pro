@@ -11,8 +11,13 @@ import java.util.List;
 /**
  * 管理后台 - 新增工序记录 Request VO
  *
- * <p>curtainId / structureId / materialId 均可为空（非必须关联到具体用料明细），
- * 记录一经创建即表示该工序已完成（status=1）。</p>
+ * <p>定位 ID 按最细粒度归一化后落库：</p>
+ * <ul>
+ *   <li>用料级（materialId 有值）：自动补齐 curtainId、structureId</li>
+ *   <li>结构级（structureId 有值）：自动补齐 curtainId，materialId 置空</li>
+ *   <li>窗帘级（仅 curtainId）：structureId、materialId 置空</li>
+ * </ul>
+ * 记录一经创建即表示该工序已完成（status=1）。
  */
 @Schema(description = "管理后台 - 新增工序记录 Request VO")
 @Data

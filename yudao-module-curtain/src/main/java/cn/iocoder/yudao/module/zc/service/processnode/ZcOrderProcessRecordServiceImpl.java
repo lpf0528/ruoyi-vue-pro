@@ -44,6 +44,8 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     private ZcSalesOrderMapper salesOrderMapper;
     @Resource
     private ZcWorkshopUserMapper workshopUserMapper;
+    @Resource
+    private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -62,29 +64,35 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(PROCESS_NODE_NOT_EXISTS);
         }
 
-        // 3. 校验在相同范围内（orderId + 非 null 的 curtainId/structureId/materialId）该节点尚未执行
-        //    已撤销（status=2）的记录不计，允许撤销后重新记录
+        // 3. 归一化定位 ID，保证层级完整（用料级补齐 curtain/structure，窗帘级清空 structure/material）
+        ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
+                reqVO.getOrderId(), reqVO.getCurtainId(), reqVO.getStructureId(), reqVO.getMaterialId());
+
+        // 4. 校验在相同范围内该节点尚未执行；已撤销（status=2）的记录不计，允许撤销后重新记录
         if (processRecordMapper.selectCompletedRecord(
-                reqVO.getOrderId(), reqVO.getCurtainId(),
-                reqVO.getStructureId(), reqVO.getMaterialId(), reqVO.getNodeId()) != null) {
+                scope.getOrderId(), scope.getCurtainId(),
+                scope.getStructureId(), scope.getMaterialId(), reqVO.getNodeId()) != null) {
             throw exception(ORDER_PROCESS_RECORD_NODE_DUPLICATED);
         }
 
-        // 4. 校验主操作人员存在
+        // 5. 校验主操作人员存在
         validateWorkshopUserExists(reqVO.getMasterId());
 
-        // 5. 若指定了副操作人员，校验其存在
+        // 6. 若指定了副操作人员，校验其存在
         if (reqVO.getAssistantId() != null) {
             validateWorkshopUserExists(reqVO.getAssistantId());
         }
 
-        // 6. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
+        // 7. 保存工序记录，status=1（完成），记录即表示工序已执行完毕
         ZcOrderProcessRecordDO record = BeanUtils.toBean(reqVO, ZcOrderProcessRecordDO.class);
+        record.setCurtainId(scope.getCurtainId());
+        record.setStructureId(scope.getStructureId());
+        record.setMaterialId(scope.getMaterialId());
         record.setNodeName(node.getName());
         record.setStatus(1);
         processRecordMapper.insert(record);
 
-        // 7. 同步更新订单当前工序名称快照，方便列表页直接展示进度
+        // 8. 同步更新订单当前工序名称快照，方便列表页直接展示进度
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getCurrentNodeName, node.getName())
                 .eq(ZcSalesOrderDO::getId, reqVO.getOrderId()));

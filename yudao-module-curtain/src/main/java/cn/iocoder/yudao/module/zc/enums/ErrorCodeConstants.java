@@ -177,5 +177,7 @@ public interface ErrorCodeConstants {
     ErrorCode SALES_ORDER_MATERIAL_CANNOT_DELETE_WHEN_CUT = new ErrorCode(100077, "存在已裁剪的用料明细，请先撤销裁剪后再保存订单");
     /** 导入客户时，传入的列表为空 */
     ErrorCode CUSTOMER_IMPORT_LIST_IS_EMPTY = new ErrorCode(100078, "导入客户列表不能为空");
+    /** 工序记录定位 ID 与订单层级不一致 */
+    ErrorCode ORDER_PROCESS_RECORD_SCOPE_MISMATCH = new ErrorCode(100083, "工序记录定位 ID 层级不一致，请检查窗帘/结构/用料关联");
 }
 

@@ -24,6 +24,7 @@ import cn.iocoder.yudao.module.zc.enums.ZcOrderOperateTypeEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
 import cn.iocoder.yudao.module.zc.service.orderoperationlog.ZcOrderOperationLogService;
+import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordScopeHelper;
 import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -53,6 +54,8 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
     private ZcWorkshopUserService workshopUserService;
     @Resource
     private ZcSalesOrderStatusCalculator orderStatusCalculator;
+    @Resource
+    private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -98,15 +101,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 Wrappers.<ZcProcessNodeDO>lambdaQuery()
                         .eq(ZcProcessNodeDO::getName, "打包")
                         .eq(ZcProcessNodeDO::getGroup, 0));
-        processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
-                .orderId(orderId)
-                .curtainId(id)
-                .nodeId(packNode != null ? packNode.getId() : null)
-                .nodeName(packNode != null ? packNode.getName() : "打包")
-                .status(1)  // 1=完成
-                .masterId(masterId)
-                .assistantId(assistantId)
-                .build());
+        insertCurtainProcessRecord(orderId, id, packNode, "打包", masterId, assistantId);
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
@@ -156,15 +151,7 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
                 Wrappers.<ZcProcessNodeDO>lambdaQuery()
                         .eq(ZcProcessNodeDO::getName, "发货")
                         .eq(ZcProcessNodeDO::getGroup, 0));
-        processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
-                .orderId(orderId)
-                .curtainId(id)
-                .nodeId(shipNode != null ? shipNode.getId() : null)
-                .nodeName(shipNode != null ? shipNode.getName() : "发货")
-                .status(1)  // 1=完成
-                .masterId(masterId)
-                .assistantId(assistantId)
-                .build());
+        insertCurtainProcessRecord(orderId, id, shipNode, "发货", masterId, assistantId);
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
@@ -285,6 +272,26 @@ public class ZcSalesOrderCurtainServiceImpl implements ZcSalesOrderCurtainServic
 
         LogRecordContext.putVariable("newOrderStatus",
                 ZcSalesOrderStatusEnum.valueOf(newOrderStatus).getLabel());
+    }
+
+    /**
+     * 写入窗帘级工序完成记录（仅 orderId + curtainId，不含 structureId / materialId）
+     */
+    private void insertCurtainProcessRecord(Long orderId, Long curtainId, ZcProcessNodeDO node,
+                                            String defaultNodeName, Long masterId, Long assistantId) {
+        ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
+                orderId, curtainId, null, null);
+        processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
+                .orderId(scope.getOrderId())
+                .curtainId(scope.getCurtainId())
+                .structureId(scope.getStructureId())
+                .materialId(scope.getMaterialId())
+                .nodeId(node != null ? node.getId() : null)
+                .nodeName(node != null ? node.getName() : defaultNodeName)
+                .status(1)
+                .masterId(masterId)
+                .assistantId(assistantId)
+                .build());
     }
 
     private ZcSalesOrderCurtainDO validateSalesOrderCurtainExists(Long id) {

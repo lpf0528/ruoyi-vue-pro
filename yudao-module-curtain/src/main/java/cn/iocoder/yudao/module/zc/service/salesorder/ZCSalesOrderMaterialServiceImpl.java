@@ -25,6 +25,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
+import cn.iocoder.yudao.module.zc.service.processnode.ZcOrderProcessRecordScopeHelper;
 import cn.iocoder.yudao.module.zc.service.workshopuser.ZcWorkshopUserService;
 import cn.iocoder.yudao.module.zc.enums.ZcInventoryRecordOperateEnum;
 import cn.iocoder.yudao.module.zc.enums.ZcProductBatchStatusEnum;
@@ -62,6 +63,8 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     private ZcWorkshopUserService workshopUserService;
     @Resource
     private ZcSalesOrderStatusCalculator orderStatusCalculator;
+    @Resource
+    private ZcOrderProcessRecordScopeHelper processRecordScopeHelper;
 
     @Override
     @LogRecord(type = ZC_SALES_ORDER_MATERIAL_TYPE, subType = ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE, bizNo = "{{#material.id}}",
@@ -174,8 +177,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecordMapper.insert(inventoryRecord);
 
         // 查找系统配置的"配料"工序节点（group=0），有则自动创建工序完成记录
-        createPeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), reqVO.getId(),
-                reqVO.getMasterId(), reqVO.getAssistantId());
+        createPeiliaoProcessRecord(material, reqVO.getMasterId(), reqVO.getAssistantId());
 
         // 联动更新窗帘行配料状态 → 订单主表状态
         orderStatusCalculator.syncAfterMaterialChange(material.getOrderId(), material.getOrderStructureId());
@@ -226,8 +228,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         inventoryRecordMapper.insert(inventoryRecord);
 
         // 撤销该用料明细对应的"配料"工序完成记录（若存在），写入操作人信息
-        revokePeiliaoProcessRecord(material.getOrderId(), material.getOrderStructureId(), materialId,
-                reqVO.getMasterId(), reqVO.getAssistantId());
+        revokePeiliaoProcessRecord(material, reqVO.getMasterId(), reqVO.getAssistantId());
 
         // 联动更新窗帘行配料状态 → 订单主表状态
         orderStatusCalculator.syncAfterMaterialChange(material.getOrderId(), material.getOrderStructureId());
@@ -241,23 +242,24 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      * 在裁剪完成后，自动创建"配料"工序完成记录
      *
      * <p>仅处理系统配置（group=0）且名称为"配料"的工序节点；
-     * 若该明细已存在完成状态的配料记录则跳过（幂等保护）。</p>
+     * 用料级记录会补齐 curtainId、structureId，保证定位链完整。</p>
      *
-     * @param orderId     销售订单 ID
-     * @param structureId 结构行 ID
-     * @param materialId  用料明细 ID
+     * @param material    用料明细
      * @param masterId    主操作人员 ID
      * @param assistantId 副操作人员 ID，可为空
      */
-    private void createPeiliaoProcessRecord(Long orderId, Long structureId, Long materialId,
+    private void createPeiliaoProcessRecord(ZCSalesOrderMaterialDO material,
                                             Long masterId, Long assistantId) {
         ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
                 .eq(ZcProcessNodeDO::getGroup, 0)
                 .eq(ZcProcessNodeDO::getName, "配料"));
+        ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
+                material.getOrderId(), null, material.getOrderStructureId(), material.getId());
         processRecordMapper.insert(ZcOrderProcessRecordDO.builder()
-                .orderId(orderId)
-                .structureId(structureId)
-                .materialId(materialId)
+                .orderId(scope.getOrderId())
+                .curtainId(scope.getCurtainId())
+                .structureId(scope.getStructureId())
+                .materialId(scope.getMaterialId())
                 .nodeId(node != null ? node.getId() : null)
                 .nodeName(node != null ? node.getName() : "配料")
                 .status(1)
@@ -267,7 +269,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         // 同步更新订单当前工序名称快照
         salesOrderMapper.update(null, Wrappers.<ZcSalesOrderDO>lambdaUpdate()
                 .set(ZcSalesOrderDO::getCurrentNodeName, "配料")
-                .eq(ZcSalesOrderDO::getId, orderId));
+                .eq(ZcSalesOrderDO::getId, scope.getOrderId()));
     }
 
     /**
@@ -276,13 +278,11 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
      * <p>仅处理系统配置（group=0）且名称为"配料"的工序节点；
      * 若找不到对应完成记录则静默跳过。</p>
      *
-     * @param orderId     销售订单 ID
-     * @param structureId 结构行 ID
-     * @param materialId  用料明细 ID
+     * @param material    用料明细
      * @param masterId    主操作人员 ID
      * @param assistantId 副操作人员 ID，可为空
      */
-    private void revokePeiliaoProcessRecord(Long orderId, Long structureId, Long materialId,
+    private void revokePeiliaoProcessRecord(ZCSalesOrderMaterialDO material,
                                             Long masterId, Long assistantId) {
         ZcProcessNodeDO node = processNodeMapper.selectOne(Wrappers.<ZcProcessNodeDO>lambdaQuery()
                 .eq(ZcProcessNodeDO::getGroup, 0)
@@ -290,9 +290,11 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
         if (node == null) {
             return;
         }
-        // structureId 可能为 null（面单场景），用 selectCompletedRecord 内的 eqIfPresent 避免 null=null 永假问题
+        ZcOrderProcessRecordScopeHelper.Scope scope = processRecordScopeHelper.normalize(
+                material.getOrderId(), null, material.getOrderStructureId(), material.getId());
         ZcOrderProcessRecordDO record = processRecordMapper.selectCompletedRecord(
-                orderId, null, structureId, materialId, node.getId());
+                scope.getOrderId(), scope.getCurtainId(), scope.getStructureId(),
+                scope.getMaterialId(), node.getId());
         if (record == null) {
             return;
         }
