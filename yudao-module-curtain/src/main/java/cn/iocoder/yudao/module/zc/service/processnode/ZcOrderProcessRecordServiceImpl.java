@@ -17,7 +17,6 @@ import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapp
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZcSalesOrderMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.workshopuser.ZcWorkshopUserMapper;
-import cn.iocoder.yudao.module.zc.enums.ZcSalesOrderStatusEnum;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mzt.logapi.context.LogRecordContext;
 import com.mzt.logapi.starter.annotation.LogRecord;
@@ -68,7 +67,7 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
         // 1. 校验订单存在，且处于已确认状态（确认后方可记录工序）
         ZcSalesOrderDO order = validateSalesOrderExists(reqVO.getOrderId());
-        if (!ZcSalesOrderStatusEnum.CONFIRMED.name().equals(order.getStatus())) {
+        if (order.getConfirmTime() == null) {
             throw exception(SALES_ORDER_STATUS_CANNOT_PROCESS);
         }
 
