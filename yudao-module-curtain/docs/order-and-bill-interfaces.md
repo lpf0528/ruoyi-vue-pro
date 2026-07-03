@@ -117,6 +117,8 @@ zc_sales_order（订单主表，L1）
 | status | String | 配料状态：`NOT_PEILIAO` / `HAVE_PEILIAO`（`ZcSalesOrderMaterialStatusEnum`） |
 | cut_quantity | BigDecimal | 裁剪数量（裁剪后写入，撤销裁剪置 null） |
 
+> **开发注意**：用料明细 DO 含 `FieldStrategy.ALWAYS` 字段；裁剪/撤销裁剪等流程内更新须用 `LambdaUpdateWrapper`，禁止稀疏 `updateById`（详见 [order-status.md §八](./order-status.md#八开发陷阱裁剪等流程内的部分更新)）。
+
 ### 1.6 收支账单相关表
 
 #### `zc_bills`（账单主表）

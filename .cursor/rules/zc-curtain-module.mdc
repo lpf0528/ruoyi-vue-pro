@@ -39,7 +39,7 @@ alwaysApply: false
 
 **订单详情**：按 orderId 批量查子表，批量查名称，内存组装，避免 N+1。
 
-**裁剪** `cutMaterial`：校验库存 → 更新用料（HAVE_PEILIAO）→ 联动窗帘/订单状态（`ZcSalesOrderStatusCalculator`）→ `decreaseQuantity` → 写 inventory_record（CAIJIAN）；整匹批次自动改余料。
+**裁剪** `cutMaterial`：校验库存 → **LambdaUpdateWrapper 仅更新 batchId/cutQuantity/status**（禁止 `updateById`，见下文「部分更新陷阱」）→ 联动窗帘/订单状态 → `decreaseQuantity` → 写 inventory_record（CAIJIAN）；整匹批次自动改余料。
 
 **撤销裁剪** `cancelCutMaterial`：状态须 HAVE_PEILIAO → `increaseQuantity` → 联动窗帘/订单状态 → **LambdaUpdateWrapper 显式置 null cutQuantity** → 写 CANCEL_CAIJIAN 流水。
 
@@ -52,6 +52,37 @@ alwaysApply: false
 - JSON 字段：`mountings`、`attributes`、`imageUrls`；DO 用 `JacksonTypeHandler`
 - 复杂 JOIN：ZcSalesOrderMapper、ZcProductMapper 的 XML
 - 单号生成：ZcNoGeneratorRedisDAO（`nextOrderSeq`/`nextBillSeq`/`nextBatchSeq`），禁止 selectCount+1
+
+## MyBatis 部分更新陷阱（FieldStrategy.ALWAYS）
+
+ZC 订单相关 DO 的可空业务字段标注了 `@TableField(updateStrategy = FieldStrategy.ALWAYS)`，用于**整单更新**时允许前端清空字段并落库为 null。
+
+**受影响 DO**：`ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO`、`ZcSalesOrderProductDO`、`ZcProductDO`、`ZcProductVersionDO`。
+
+| 场景 | 正确写法 | 错误写法 |
+|---|---|---|
+| 整单 merge 更新子行 | `updateById` + 完整 VO 字段；系统字段（status/cutQuantity）显式置 null 跳过 | 稀疏对象 `updateById` |
+| 裁剪/撤销裁剪/收款等流程内局部更新 | `LambdaUpdateWrapper` / `Wrappers.lambdaUpdate().set(...)` 只 set 目标列 | `new XxxDO()` 只设几个字段后 `updateById` |
+| 需要将某列置 null | `LambdaUpdateWrapper.set(XxxDO::getField, null)` | `updateById`（默认 NOT_NULL 会忽略 null） |
+
+**典型 Bug（已修复）**：`cutMaterial` 曾用稀疏 `updateById`，导致 `element_id/spec/price/quantity` 等 ALWAYS 字段被写成 null。修复参考 `ZCSalesOrderMaterialServiceImpl#cutMaterial`、`#cancelCutMaterial`；账单侧参考 `ZcBillsServiceImpl#updateOrderPaymentInfo`。
+
+```java
+// ✅ 流程内局部更新
+materialMapper.update(null, new LambdaUpdateWrapper<ZCSalesOrderMaterialDO>()
+        .eq(ZCSalesOrderMaterialDO::getId, id)
+        .set(ZCSalesOrderMaterialDO::getBatchId, batchId)
+        .set(ZCSalesOrderMaterialDO::getCutQuantity, cutQuantity)
+        .set(ZCSalesOrderMaterialDO::getStatus, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name()));
+
+// ❌ 会把 ALWAYS 字段全部写成 null
+ZCSalesOrderMaterialDO updateObj = new ZCSalesOrderMaterialDO();
+updateObj.setId(id);
+updateObj.setStatus(...);
+materialMapper.updateById(updateObj);
+```
+
+详见 `yudao-module-curtain/docs/order-status.md` §八。
 
 ## 关键枚举
 
@@ -72,6 +103,7 @@ alwaysApply: false
 5. 收款分摊合计 = 实收 + 优惠（BILL_ALLOCATED_AMOUNT_NOT_MATCH）
 6. 所有库存变动必须写 zc_inventory_record
 7. status/payStatus 等字典字段必须有枚举 + curtain.sql 字典，Service 用枚举.name()
+8. **流程内局部更新**（裁剪、撤销裁剪、收款等）禁止对 ALWAYS 字段 DO 使用稀疏 `updateById`，必须用 `LambdaUpdateWrapper`（见上文「部分更新陷阱」）
 
 ## 操作日志 @LogRecord（ZC 写操作必须）
 

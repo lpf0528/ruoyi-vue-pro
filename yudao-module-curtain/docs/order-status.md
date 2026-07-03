@@ -193,3 +193,54 @@ zc_sales_order（L1 订单）
 | `ZCSalesOrderMaterialServiceImpl` | 裁剪/撤销裁剪 + L4→L2→L1 |
 | `ZcSalesOrderCurtainServiceImpl` | 打包/发货/撤销 + L1 聚合 |
 | `ZcSalesOrderServiceImpl` | 确认/取消确认/完成（手动） |
+
+---
+
+## 八、开发陷阱：裁剪等流程内的部分更新
+
+### 8.1 问题现象
+
+`cutMaterial` 曾使用稀疏 `updateById` 更新用料明细，生成的 SQL 类似：
+
+```sql
+UPDATE zc_sales_order_material
+SET element_id = null, spec = null, price = null, quantity = null, ...,
+    batch_id = ?, cut_quantity = ?, status = ?
+WHERE id = ?
+```
+
+导致 `element_id`、`spec`、`price`、`quantity` 等业务字段被误清空。
+
+### 8.2 根因
+
+`ZCSalesOrderMaterialDO`（及订单相关子表 DO）的可空业务字段标注了 `@TableField(updateStrategy = FieldStrategy.ALWAYS)`：
+
+- **设计目的**：整单 `mergeCurtainSubRows` 更新时，前端传 null 表示清空该字段，需要落库
+- **误用后果**：流程内只 new 一个稀疏 DO、仅 set 少数字段后 `updateById`，未赋值的 ALWAYS 字段会以 null 参与 UPDATE
+
+`status`、`cutQuantity` 等默认 `NOT_NULL` 策略字段不受影响；`cutQuantity` 置 null 需用 `LambdaUpdateWrapper`（见 `cancelCutMaterial`）。
+
+### 8.3 正确写法
+
+| 场景 | 写法 |
+|---|---|
+| 整单更新子行 | `BeanUtils.toBean(vo, DO.class)` 全字段 + 系统字段保护（`setStatus(null)` 等） |
+| 裁剪 `cutMaterial` | `LambdaUpdateWrapper` 仅 set `batchId`、`cutQuantity`、`status` |
+| 撤销裁剪 `cancelCutMaterial` | `LambdaUpdateWrapper` set `status=NOT_PEILIAO`、`cutQuantity=null` |
+| 面料单裁剪 `cutProduct` | 同上，仅 set `cutQuantity`、`status` |
+| 账单更新订单收款 | `ZcBillsServiceImpl#updateOrderPaymentInfo` |
+
+```java
+// ✅ cutMaterial / cancelCutMaterial
+zCSalesOrderMaterialMapper.update(null, new LambdaUpdateWrapper<ZCSalesOrderMaterialDO>()
+        .eq(ZCSalesOrderMaterialDO::getId, materialId)
+        .set(ZCSalesOrderMaterialDO::getBatchId, batchId)
+        .set(ZCSalesOrderMaterialDO::getCutQuantity, cutQuantity)
+        .set(ZCSalesOrderMaterialDO::getStatus, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name()));
+```
+
+### 8.4 受影响 DO 清单
+
+`ZcSalesOrderDO`、`ZcSalesOrderCurtainDO`、`ZcSalesOrderStructureDO`、`ZCSalesOrderMaterialDO`、`ZcSalesOrderProductDO`、`ZcProductDO`、`ZcProductVersionDO`。
+
+新增流程内局部更新时，先 grep 目标 DO 是否含 `FieldStrategy.ALWAYS`，有则禁止稀疏 `updateById`。

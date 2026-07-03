@@ -147,3 +147,28 @@ public class ExampleServiceImplTest extends BaseDbUnitTest {
 4. label 映射用 `枚举.valueOf(code).getLabel()` + try-catch 兜底
 5. 枚举模板：`@Getter @AllArgsConstructor enum XxxEnum { VALUE("中文"); private final String label; }`
 6. 字典 SQL：`system_dict_type` id ≥ 2301，`system_dict_data` id ≥ 3700；颜色：默认=info、进行中=primary、警告=warning、完成=success
+
+## MyBatis Plus 部分更新（FieldStrategy.ALWAYS）
+
+DO 字段标注 `@TableField(updateStrategy = FieldStrategy.ALWAYS)` 时，`updateById` 会把**值为 null 的字段也写入 SQL**（`SET col = null`）。
+
+| 更新类型 | 写法 |
+|---|---|
+| 全量更新（VO 转 DO，含清空字段） | `updateById` |
+| 流程内局部更新（只改少数列） | `LambdaUpdateWrapper` 显式 `.set(...)` |
+| 局部更新且需置 null | `LambdaUpdateWrapper.set(Entity::getField, null)` |
+
+```java
+// ❌ 稀疏对象 updateById → ALWAYS 字段被误清空
+OrderDO u = new OrderDO();
+u.setId(id);
+u.setStatus(newStatus);
+orderMapper.updateById(u);
+
+// ✅ 只更新目标列
+orderMapper.update(null, new LambdaUpdateWrapper<OrderDO>()
+        .eq(OrderDO::getId, id)
+        .set(OrderDO::getStatus, newStatus));
+```
+
+ZC 模块受影响 DO 与案例见 `.cursor/rules/zc-curtain-module.mdc`「部分更新陷阱」及 `yudao-module-curtain/docs/order-status.md` §八。
