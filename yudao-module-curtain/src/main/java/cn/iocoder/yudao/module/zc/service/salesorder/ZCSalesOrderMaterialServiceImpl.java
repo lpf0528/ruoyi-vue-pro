@@ -145,12 +145,12 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
             throw exception(PRODUCT_BATCH_INSUFFICIENT_QUANTITY);
         }
         // 更新用料明细：绑定批次、记录裁剪数量、状态变更为已配料
-        ZCSalesOrderMaterialDO updateObj = new ZCSalesOrderMaterialDO();
-        updateObj.setId(reqVO.getId());
-        updateObj.setBatchId(reqVO.getBatchId());
-        updateObj.setCutQuantity(reqVO.getCutQuantity());
-        updateObj.setStatus(ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name());
-        zCSalesOrderMaterialMapper.updateById(updateObj);
+        // 不可使用 updateById：elementId/spec 等字段为 FieldStrategy.ALWAYS，部分更新会把未赋值字段写成 null
+        zCSalesOrderMaterialMapper.update(null, new LambdaUpdateWrapper<ZCSalesOrderMaterialDO>()
+                .eq(ZCSalesOrderMaterialDO::getId, reqVO.getId())
+                .set(ZCSalesOrderMaterialDO::getBatchId, reqVO.getBatchId())
+                .set(ZCSalesOrderMaterialDO::getCutQuantity, reqVO.getCutQuantity())
+                .set(ZCSalesOrderMaterialDO::getStatus, ZcSalesOrderMaterialStatusEnum.HAVE_PEILIAO.name()));
         // 原子扣减批次剩余数量，防止并发超卖
         productBatchMapper.decreaseQuantity(reqVO.getBatchId(), reqVO.getCutQuantity());
         // 整匹批次裁剪后调整为余料
