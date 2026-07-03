@@ -28,11 +28,20 @@ public class ZcOrderProcessRecordRespVO {
     @Schema(description = "窗帘行 ID")
     private Long curtainId;
 
+    @Schema(description = "房间")
+    private String room;
+
     @Schema(description = "结构行 ID")
     private Long structureId;
 
+    @Schema(description = "结构名称")
+    private String structureName;
+
     @Schema(description = "用料明细 ID")
     private Long materialId;
+
+    @Schema(description = "用料元素名称")
+    private String elementName;
 
     @Schema(description = "工序节点 ID")
     private Long nodeId;
