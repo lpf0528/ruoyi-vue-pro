@@ -65,7 +65,7 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     @LogRecord(type = ZC_ORDER_PROCESS_RECORD_TYPE, subType = ZC_ORDER_PROCESS_RECORD_CREATE_SUB_TYPE,
             bizNo = "{{#record.id}}", success = ZC_ORDER_PROCESS_RECORD_CREATE_SUCCESS)
     public Long createProcessRecord(ZcOrderProcessRecordSaveReqVO reqVO) {
-        // 1. 校验订单存在，且处于已确认状态（确认后方可记录工序）
+        // 1. 校验订单存在，且已确认（confirmTime 不为空后方可记录工序）
         ZcSalesOrderDO order = validateSalesOrderExists(reqVO.getOrderId());
         if (order.getConfirmTime() == null) {
             throw exception(SALES_ORDER_STATUS_CANNOT_PROCESS);

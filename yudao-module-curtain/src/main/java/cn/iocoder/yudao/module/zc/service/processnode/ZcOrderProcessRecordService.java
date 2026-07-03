@@ -23,7 +23,7 @@ public interface ZcOrderProcessRecordService {
      * 新增工序记录（记录某道工序已完成）
      *
      * <p>前置校验：<br>
-     * 1. 订单必须处于已确认状态；<br>
+     * 1. 订单必须已确认（confirmTime 不为空）；<br>
      * 2. 若指定了车间员工，该员工必须已绑定所选工序节点。</p>
      *
      * @param reqVO 创建信息，含订单、窗帘行、结构行、用料明细及工序节点
