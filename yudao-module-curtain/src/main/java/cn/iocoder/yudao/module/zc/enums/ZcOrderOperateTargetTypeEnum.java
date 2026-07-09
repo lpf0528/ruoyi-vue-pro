@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>标识操作发生在哪个层级，对应 {@code zc_order_operation_log.target_type} 字段</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcOrderOperateTargetTypeEnum {
 
     /** 订单级操作，如确认、取消确认、标记加急 */
@@ -21,5 +19,9 @@ public enum ZcOrderOperateTargetTypeEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcOrderOperateTargetTypeEnum(String label) {
+        this.label = label;
+    }
 
 }

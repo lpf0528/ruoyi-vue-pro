@@ -8,7 +8,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderPro
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProductUpdateReqVO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 产品类销售订单 Service 接口

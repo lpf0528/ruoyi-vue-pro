@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>用于 {@code zc_customer_balance_log.ref_type} 字段，标识触发余额变动的来源单据类型。</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcRefTypeEnum {
 
     /** 销售单 */
@@ -19,5 +17,9 @@ public enum ZcRefTypeEnum {
     COLLECTION_RECORD("收款单");
 
     private final String label;
+
+    ZcRefTypeEnum(String label) {
+        this.label = label;
+    }
 
 }

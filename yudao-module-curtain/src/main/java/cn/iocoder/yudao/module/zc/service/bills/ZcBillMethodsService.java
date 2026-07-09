@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.bills;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.bills.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.bills.ZcBillMethodsDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

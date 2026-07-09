@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.bills;
 
 import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import cn.iocoder.yudao.module.zc.controller.admin.bills.vo.*;

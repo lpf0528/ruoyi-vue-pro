@@ -9,7 +9,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.*;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Schema(description = "管理后台 - 产品批次新增/修改 Request VO")

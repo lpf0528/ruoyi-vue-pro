@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.curtainstructureelement;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.curtainstructureelement.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtainstructureelement.ZcCurtainStructureElementDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

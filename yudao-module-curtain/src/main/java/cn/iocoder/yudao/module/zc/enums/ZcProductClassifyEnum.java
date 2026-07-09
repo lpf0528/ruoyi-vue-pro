@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_product_classify}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcProductClassifyEnum {
 
     /** 运费：物流运费项 */
@@ -38,5 +36,9 @@ public enum ZcProductClassifyEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcProductClassifyEnum(String label) {
+        this.label = label;
+    }
 
 }

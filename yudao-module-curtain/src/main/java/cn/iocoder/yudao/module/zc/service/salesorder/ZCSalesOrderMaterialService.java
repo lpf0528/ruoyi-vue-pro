@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.salesorder;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

@@ -1,6 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.curtaintemplate;
 
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.ZcCurtainTemplateGetRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaintemplate.vo.ZcCurtainTemplateSaveReqVO;
 

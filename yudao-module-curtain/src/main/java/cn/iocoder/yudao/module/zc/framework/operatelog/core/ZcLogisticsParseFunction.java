@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.zc.service.logistics.ZcLogisticsService;
 import com.mzt.logapi.service.IParseFunction;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * ZC 物流公司的 {@link IParseFunction} 实现类

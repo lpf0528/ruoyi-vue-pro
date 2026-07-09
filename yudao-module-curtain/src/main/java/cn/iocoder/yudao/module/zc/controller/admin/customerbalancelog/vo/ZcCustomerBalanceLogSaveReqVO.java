@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.controller.admin.customerbalancelog.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.*;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Schema(description = "管理后台 - 客户余额变动流水新增/修改 Request VO")

@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_customer_balance_biz_type}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcCustomerBalanceBizTypeEnum {
 
     /** 订单确认扣减：订单确认时从客户余额扣除订单金额 */
@@ -35,5 +33,9 @@ public enum ZcCustomerBalanceBizTypeEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcCustomerBalanceBizTypeEnum(String label) {
+        this.label = label;
+    }
 
 }

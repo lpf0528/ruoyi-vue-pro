@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.productversion;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;

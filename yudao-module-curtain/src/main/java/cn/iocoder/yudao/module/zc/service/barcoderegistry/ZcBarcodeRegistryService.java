@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.service.barcoderegistry;
 import cn.iocoder.yudao.module.zc.controller.admin.barcoderegistry.vo.ZcBarcodeRegistryCreateReqVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.barcoderegistry.ZcBarcodeRegistryDO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 码注册表 Service 接口

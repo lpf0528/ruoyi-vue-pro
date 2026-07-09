@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_paste_direction}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcPasteDirectionEnum {
 
     /** 正反贴：正面与背面均可粘贴 */
@@ -23,5 +21,9 @@ public enum ZcPasteDirectionEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcPasteDirectionEnum(String label) {
+        this.label = label;
+    }
 
 }

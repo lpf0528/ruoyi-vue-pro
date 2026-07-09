@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.curtain.ZcCurtainMapper;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 

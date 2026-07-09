@@ -5,8 +5,8 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 管理后台 - 销售订单结构行（嵌套创建/更新）VO

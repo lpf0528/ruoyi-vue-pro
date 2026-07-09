@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.zc.service.brand.ZcBrandService;
 import com.mzt.logapi.service.IParseFunction;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * ZC 品牌的 {@link IParseFunction} 实现类

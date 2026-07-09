@@ -2,7 +2,7 @@ package cn.iocoder.yudao.module.zc.service.customer;
 
 import java.math.BigDecimal;
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.customer.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customer.ZcCustomerDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

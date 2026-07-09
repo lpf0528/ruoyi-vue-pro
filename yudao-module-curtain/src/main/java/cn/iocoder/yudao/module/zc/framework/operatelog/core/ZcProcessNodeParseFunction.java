@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.zc.service.processnode.ZcProcessNodeService;
 import com.mzt.logapi.service.IParseFunction;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * ZC 工序节点的 {@link IParseFunction} 实现类

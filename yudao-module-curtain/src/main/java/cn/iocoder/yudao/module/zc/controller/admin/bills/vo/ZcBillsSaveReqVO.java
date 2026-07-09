@@ -7,8 +7,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.*;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Schema(description = "管理后台 - 收支账单新增/修改 Request VO")

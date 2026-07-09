@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 管理后台 - 面单结构行（嵌套创建/更新）VO

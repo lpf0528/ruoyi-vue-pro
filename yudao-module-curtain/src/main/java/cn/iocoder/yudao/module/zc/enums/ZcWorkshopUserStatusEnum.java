@@ -1,14 +1,12 @@
 package cn.iocoder.yudao.module.zc.enums;
 
 import cn.hutool.core.util.ObjUtil;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 车间员工状态枚举
  */
 @Getter
-@AllArgsConstructor
 public enum ZcWorkshopUserStatusEnum {
 
     /** 关闭 */
@@ -22,6 +20,11 @@ public enum ZcWorkshopUserStatusEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcWorkshopUserStatusEnum(Integer status, String label) {
+        this.status = status;
+        this.label = label;
+    }
 
     public static boolean isEnable(Integer status) {
         return ObjUtil.equal(ENABLE.status, status);

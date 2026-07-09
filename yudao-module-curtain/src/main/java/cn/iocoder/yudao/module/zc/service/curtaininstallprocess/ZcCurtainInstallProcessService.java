@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.curtaininstallprocess;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.curtaininstallprocess.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtaininstallprocess.ZcCurtainInstallProcessDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

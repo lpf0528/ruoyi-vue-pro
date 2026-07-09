@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.customerproductprice;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.customerproductprice.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.customerproductprice.ZcCustomerProductPriceDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

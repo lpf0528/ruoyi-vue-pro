@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.logistics;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.logistics.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.logistics.ZcLogisticsDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;

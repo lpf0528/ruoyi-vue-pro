@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.workshopuser;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.workshopuser.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.workshopuser.ZcWorkshopUserDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

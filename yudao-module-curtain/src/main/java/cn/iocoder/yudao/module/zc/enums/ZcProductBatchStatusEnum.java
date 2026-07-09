@@ -1,13 +1,11 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 产品批次状态枚举
  */
 @Getter
-@AllArgsConstructor
 public enum ZcProductBatchStatusEnum {
 
     /** 整匹：未裁剪的完整匹布 */
@@ -24,5 +22,10 @@ public enum ZcProductBatchStatusEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcProductBatchStatusEnum(Integer status, String label) {
+        this.status = status;
+        this.label = label;
+    }
 
 }

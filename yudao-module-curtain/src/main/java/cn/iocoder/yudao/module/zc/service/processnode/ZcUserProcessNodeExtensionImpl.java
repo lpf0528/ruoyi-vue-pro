@@ -8,7 +8,7 @@ import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcProcessNodeMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcUserProcessNodeMapper;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 

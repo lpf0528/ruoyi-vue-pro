@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应 {@code zc_order_operation_log.operate_type} 字段</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcOrderOperateTypeEnum {
 
     CONFIRM("确认订单"),
@@ -25,5 +23,9 @@ public enum ZcOrderOperateTypeEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcOrderOperateTypeEnum(String label) {
+        this.label = label;
+    }
 
 }

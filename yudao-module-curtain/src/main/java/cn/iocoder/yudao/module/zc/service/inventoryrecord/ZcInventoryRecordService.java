@@ -1,6 +1,6 @@
 package cn.iocoder.yudao.module.zc.service.inventoryrecord;
 
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.*;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 

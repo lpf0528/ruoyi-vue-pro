@@ -1,13 +1,11 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 库存变动操作类型枚举
  */
 @Getter
-@AllArgsConstructor
 public enum ZcInventoryRecordOperateEnum {
 
     /** 盘点：手动盘点库存 */
@@ -24,5 +22,9 @@ public enum ZcInventoryRecordOperateEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcInventoryRecordOperateEnum(String label) {
+        this.label = label;
+    }
 
 }

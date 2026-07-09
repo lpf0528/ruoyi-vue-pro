@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.productcategory;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.productcategory.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productcategory.ZcProductCategoryDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

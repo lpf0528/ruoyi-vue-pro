@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.dal.redis;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 

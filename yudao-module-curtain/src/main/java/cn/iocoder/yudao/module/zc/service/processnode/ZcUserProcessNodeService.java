@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.service.processnode;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcProcessNodeRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcUserProcessNodeSaveReqVO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**

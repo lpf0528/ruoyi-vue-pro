@@ -6,7 +6,7 @@ import cn.iocoder.yudao.module.zc.enums.ZcSystemProcessNodeEnum;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 系统内置工序节点辅助类

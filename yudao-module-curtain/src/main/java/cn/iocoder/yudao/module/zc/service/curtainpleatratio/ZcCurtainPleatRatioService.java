@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.curtainpleatratio;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.curtainpleatratio.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.curtainpleatratio.ZcCurtainPleatRatioDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.zc.service.productbatch;
 
 import java.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.inventoryrecord.vo.ZcInventoryRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.*;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;

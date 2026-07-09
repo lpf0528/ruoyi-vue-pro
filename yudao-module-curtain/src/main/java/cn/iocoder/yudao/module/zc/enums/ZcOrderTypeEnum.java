@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_order_type}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcOrderTypeEnum {
 
     /** 面料单：直接购买产品批次，无工艺配置 */
@@ -20,5 +18,9 @@ public enum ZcOrderTypeEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcOrderTypeEnum(String label) {
+        this.label = label;
+    }
 
 }

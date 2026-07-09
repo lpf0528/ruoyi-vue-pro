@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.service.productversion;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionSpcDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionSpcMapper;
 import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;

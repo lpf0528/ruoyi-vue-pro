@@ -5,7 +5,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcess
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProcessRecordDetailRespVO;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**

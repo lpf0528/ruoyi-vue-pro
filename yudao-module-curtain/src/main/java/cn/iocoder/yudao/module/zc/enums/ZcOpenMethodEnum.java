@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_open_method}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcOpenMethodEnum {
 
     /** 右开：窗帘向右侧拉开 */
@@ -32,5 +30,9 @@ public enum ZcOpenMethodEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcOpenMethodEnum(String label) {
+        this.label = label;
+    }
 
 }

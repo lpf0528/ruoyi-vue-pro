@@ -1,13 +1,11 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 成品订单-用料明细 配料状态枚举
  */
 @Getter
-@AllArgsConstructor
 public enum ZcSalesOrderMaterialStatusEnum {
 
     /** 未配料：尚未绑定批次和裁剪数量 */
@@ -18,5 +16,9 @@ public enum ZcSalesOrderMaterialStatusEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcSalesOrderMaterialStatusEnum(String label) {
+        this.label = label;
+    }
 
 }

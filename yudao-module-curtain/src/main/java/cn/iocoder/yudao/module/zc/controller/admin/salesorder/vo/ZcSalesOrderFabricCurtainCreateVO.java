@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 管理后台 - 面单窗帘行（嵌套创建/更新）VO

@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.zc.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@code zc_order_status}</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcSalesOrderStatusEnum {
 
     /** 未确认：订单刚创建，尚未审核 */
@@ -44,5 +42,9 @@ public enum ZcSalesOrderStatusEnum {
 
     /** 中文名称 */
     private final String label;
+
+    ZcSalesOrderStatusEnum(String label) {
+        this.label = label;
+    }
 
 }

@@ -3,7 +3,7 @@ package cn.iocoder.yudao.module.zc.service.customerproductprice;
 import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,7 +1,6 @@
 package cn.iocoder.yudao.module.zc.enums;
 
 import cn.iocoder.yudao.framework.dict.core.DictFrameworkUtils;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -10,7 +9,6 @@ import lombok.Getter;
  * <p>对应字典类型 {@link #DICT_TYPE}，用于查询 group=0 的系统工序节点及 nodeName 兜底展示。</p>
  */
 @Getter
-@AllArgsConstructor
 public enum ZcSystemProcessNodeEnum {
 
     /** 配料：裁剪出库后自动记录的工序 */
@@ -28,6 +26,11 @@ public enum ZcSystemProcessNodeEnum {
 
     /** 排序号，数字越小越靠前 */
     private final Integer sort;
+
+    ZcSystemProcessNodeEnum(String label, Integer sort) {
+        this.label = label;
+        this.sort = sort;
+    }
 
     /**
      * 从字典读取工序名称，字典未配置时回退枚举内置 label
