@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcCustomerVersionSpecPriceMapper">
+
+    <select id="selectListWithVersionName"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceRespVO">
+        SELECT
+            p.id,
+            p.customer_id,
+            p.version_id,
+            v.name AS version_name,
+            s.inbound_price,
+            s.one_price,
+            p.spec,
+            p.authorized_price
+        FROM zc_customer_version_spec_price p
+            LEFT JOIN zc_product_version_spc s ON s.version_id = p.version_id AND s.spec = p.spec AND s.deleted = 0
+            LEFT JOIN zc_product_version v ON v.id = p.version_id AND v.deleted = 0
+        WHERE p.deleted = 0
+          AND p.customer_id = #{customerId}
+          <if test="versionId != null">
+              AND p.version_id = #{versionId}
+          </if>
+        ORDER BY p.version_id, p.spec
+    </select>
+
+    <select id="selectByProductIdAndCustomerIdAndSpec"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productversion.vo.ZcCustomerVersionSpecPriceGetRespVO">
+        SELECT
+            #{customerId} AS customer_id,
+            s.version_id,
+            s.spec,
+            COALESCE(p.authorized_price, s.one_price) AS authorized_price
+        FROM zc_product_version_spc s
+            JOIN zc_product v ON v.version_id = s.version_id AND v.deleted = 0 AND v.id = #{productId}
+            LEFT JOIN zc_customer_version_spec_price p ON s.version_id = p.version_id
+                AND s.spec = p.spec
+                AND p.customer_id = #{customerId}
+                AND p.deleted = 0
+        WHERE s.deleted = 0
+          AND s.spec = #{spec}
+        LIMIT 1
+    </select>
+
+</mapper>

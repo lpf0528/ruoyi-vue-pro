@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper">
+
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.ZcProductBatchRespVO">
+        SELECT
+            t41.one_price,
+            t2.`name`      AS product_name,
+            t2.version_id  AS version_id,
+            t4.`name`      AS version_name,
+            t4.unit_value  AS unit_value,
+            t5.short_name  AS supplier_name,
+            t6.`name`      AS warehouse_name,
+            t1.id, t1.batch_no, t1.inbound_date, t1.product_id,
+            t1.inbound_price, t1.inbound_quantity, t1.quantity,
+            t1.warehouse_id, t1.supplier_id, t1.note, t1.spec, t1.status,
+            t1.create_time, t1.update_time, t1.creator, t1.updater
+        FROM zc_product_batch t1
+            LEFT JOIN zc_product             t2  ON t1.product_id  = t2.id  AND t2.deleted = 0
+            LEFT JOIN zc_product_version     t4  ON t2.version_id  = t4.id  AND t4.deleted = 0
+            LEFT JOIN zc_product_version_spc t41 ON t2.version_id  = t41.version_id AND t1.spec = t41.spec
+            LEFT JOIN zc_supplier            t5  ON t1.supplier_id = t5.id  AND t5.deleted = 0
+            LEFT JOIN zc_warehouse           t6  ON t1.warehouse_id= t6.id  AND t6.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.ids != null and reqVO.ids.size() > 0">
+            AND t1.id IN
+            <foreach collection="reqVO.ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="reqVO.batchNo != null and reqVO.batchNo != ''">
+            AND t1.batch_no LIKE CONCAT('%', #{reqVO.batchNo}, '%')
+        </if>
+        <if test="reqVO.inboundDate != null and reqVO.inboundDate.length == 2">
+            AND t1.inbound_date BETWEEN #{reqVO.inboundDate[0]} AND #{reqVO.inboundDate[1]}
+        </if>
+        <if test="reqVO.productId != null">
+            AND t1.product_id = #{reqVO.productId}
+        </if>
+        <if test="reqVO.warehouseId != null">
+            AND t1.warehouse_id = #{reqVO.warehouseId}
+        </if>
+        <if test="reqVO.supplierId != null">
+            AND t1.supplier_id = #{reqVO.supplierId}
+        </if>
+        <if test="reqVO.spec != null and reqVO.spec != ''">
+            AND t1.spec LIKE CONCAT('%', #{reqVO.spec}, '%')
+        </if>
+        <if test="reqVO.status != null">
+            AND t1.status = #{reqVO.status}
+        </if>
+        <if test="reqVO.createTime != null and reqVO.createTime.length == 2">
+            AND t1.create_time BETWEEN #{reqVO.createTime[0]} AND #{reqVO.createTime[1]}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+    <select id="selectBatchWithVOById"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.productbatch.vo.ZcProductBatchRespVO">
+        SELECT
+            t41.one_price,
+            t2.`name`      AS product_name,
+            t2.version_id  AS version_id,
+            t4.`name`      AS version_name,
+            t4.unit_value  AS unit_value,
+            t5.short_name  AS supplier_name,
+            t6.`name`      AS warehouse_name,
+            t1.id, t1.batch_no, t1.inbound_date, t1.product_id,
+            t1.inbound_price, t1.inbound_quantity, t1.quantity,
+            t1.warehouse_id, t1.supplier_id, t1.note, t1.spec, t1.status,
+            t1.create_time, t1.update_time, t1.creator, t1.updater
+        FROM zc_product_batch t1
+            LEFT JOIN zc_product             t2  ON t1.product_id  = t2.id  AND t2.deleted = 0
+            LEFT JOIN zc_product_version     t4  ON t2.version_id  = t4.id  AND t4.deleted = 0
+            LEFT JOIN zc_product_version_spc t41 ON t2.version_id  = t41.version_id AND t1.spec = t41.spec
+            LEFT JOIN zc_supplier            t5  ON t1.supplier_id = t5.id  AND t5.deleted = 0
+            LEFT JOIN zc_warehouse           t6  ON t1.warehouse_id= t6.id  AND t6.deleted = 0
+        WHERE t1.deleted = 0
+          AND t1.id = #{id}
+    </select>
+
+</mapper>

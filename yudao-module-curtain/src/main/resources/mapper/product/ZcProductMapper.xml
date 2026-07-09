@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper">
+
+    <resultMap id="ZcProductSimpleRespVOMap" type="cn.iocoder.yudao.module.zc.controller.admin.product.vo.ZcProductSimpleRespVO">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="versionId" column="version_id"/>
+        <result property="supplierId" column="supplier_id"/>
+    </resultMap>
+
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.product.vo.ZcProductRespVO">
+        SELECT
+            t2.`name`     AS version_name,
+            t2.unit_value,
+            t4.short_name AS supplier_name,
+            t5.nickname   AS creator_name,
+            t1.id, t1.`name`, t1.version_id,
+            t1.supplier_id, t1.note,
+            t1.create_time, t1.update_time, t1.creator, t1.updater
+        FROM zc_product t1
+            LEFT JOIN zc_product_version t2 ON t1.version_id  = t2.id AND t2.deleted = 0
+            LEFT JOIN zc_supplier         t4 ON t1.supplier_id = t4.id AND t4.deleted = 0
+            LEFT JOIN system_users        t5 ON t1.creator     = t5.id AND t5.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.name != null and reqVO.name != ''">
+            AND t1.`name` LIKE CONCAT('%', #{reqVO.name}, '%')
+        </if>
+        <if test="reqVO.versionId != null">
+            AND t1.version_id = #{reqVO.versionId}
+        </if>
+        <if test="reqVO.supplierId != null">
+            AND t1.supplier_id = #{reqVO.supplierId}
+        </if>
+        <if test="reqVO.createTime != null and reqVO.createTime.length == 2">
+            AND t1.create_time BETWEEN #{reqVO.createTime[0]} AND #{reqVO.createTime[1]}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+    <select id="selectSimpleList" resultMap="ZcProductSimpleRespVOMap">
+        SELECT
+            t1.id, t1.`name`, t1.version_id, t1.supplier_id
+        FROM zc_product t1
+        LEFT JOIN zc_product_version t2 ON t1.version_id = t2.id AND t2.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.name != null and reqVO.name != ''">
+            AND t1.`name` LIKE CONCAT('%', #{reqVO.name}, '%')
+        </if>
+        <if test="reqVO.versionId != null">
+            AND t1.version_id = #{reqVO.versionId}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+</mapper>

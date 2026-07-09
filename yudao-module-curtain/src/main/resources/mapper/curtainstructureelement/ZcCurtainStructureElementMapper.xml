@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper">
+
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.curtainstructureelement.vo.ZcCurtainStructureElementRespVO">
+        SELECT
+            t2.name AS version_name,
+            t1.id, t1.name, t1.note, t1.version_id, t1.is_print,
+            t1.create_time, t1.update_time, t1.creator, t1.updater
+        FROM zc_curtain_structure_element t1
+        LEFT JOIN zc_product_version t2 ON t1.version_id = t2.id AND t2.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.name != null and reqVO.name != ''">
+            AND t1.name LIKE CONCAT('%', #{reqVO.name}, '%')
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+</mapper>

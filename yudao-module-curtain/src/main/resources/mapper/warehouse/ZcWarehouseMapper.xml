@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.warehouse.ZcWarehouseMapper">
+
+    <!-- 分页查询，LEFT JOIN system_users 获取负责人昵称 -->
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.warehouse.vo.ZcWarehouseRespVO">
+        SELECT
+            t1.id, t1.`name`, t1.manager_id, t1.note,
+            t1.default_status, t1.creator, t1.create_time,
+            t2.nickname AS manager_name
+        FROM zc_warehouse t1
+            LEFT JOIN system_users t2 ON t1.manager_id = t2.id AND t2.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.name != null and reqVO.name != ''">
+            AND t1.`name` LIKE CONCAT('%', #{reqVO.name}, '%')
+        </if>
+        <if test="reqVO.managerId != null">
+            AND t1.manager_id = #{reqVO.managerId}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+    <!-- 单条查询，LEFT JOIN system_users 获取负责人昵称 -->
+    <select id="selectByIdWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.warehouse.vo.ZcWarehouseRespVO">
+        SELECT
+            t1.id, t1.`name`, t1.manager_id, t1.note,
+            t1.default_status, t1.creator, t1.create_time,
+            t2.nickname AS manager_name
+        FROM zc_warehouse t1
+            LEFT JOIN system_users t2 ON t1.manager_id = t2.id AND t2.deleted = 0
+        WHERE t1.deleted = 0
+          AND t1.id = #{id}
+    </select>
+
+</mapper>

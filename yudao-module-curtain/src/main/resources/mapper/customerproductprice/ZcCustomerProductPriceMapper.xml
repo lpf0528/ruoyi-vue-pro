@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.zc.dal.mysql.customerproductprice.ZcCustomerProductPriceMapper">
+
+    <select id="selectPageWithVO"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.customerproductprice.vo.ZcCustomerProductPriceRespVO">
+        SELECT
+            t2.`name`      AS product_name,
+            t3.short_name  AS customer_name,
+            t1.id, t1.customer_id, t1.product_id, t1.authorized_price,
+            t1.creator, t1.create_time, t1.updater, t1.update_time
+        FROM zc_customer_product_price t1
+        LEFT JOIN zc_product t2  ON t1.product_id  = t2.id AND t2.deleted = 0
+        LEFT JOIN zc_customer t3 ON t1.customer_id = t3.id AND t3.deleted = 0
+        WHERE t1.deleted = 0
+        <if test="reqVO.customerId != null">
+            AND t1.customer_id = #{reqVO.customerId}
+        </if>
+        <if test="reqVO.productId != null">
+            AND t1.product_id = #{reqVO.productId}
+        </if>
+        ORDER BY t1.id DESC
+    </select>
+
+
+
+    <!--
+        批量 upsert：存在（含软删除）则更新授权价并恢复删除状态，不存在则新建。
+        tenant_id 由 TenantLineInnerInterceptor 自动注入，无需手动填写。
+        creator / updater 由调用方在 DO 上预填后传入。
+        create_time / update_time / deleted 依赖 DB 默认值与 ON UPDATE CURRENT_TIMESTAMP 兜底。
+    -->
+    <insert id="insertOrUpdateBatch">
+        INSERT INTO zc_customer_product_price
+            (customer_id, product_id, authorized_price, creator, updater)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.customerId}, #{item.productId}, #{item.authorizedPrice},
+             #{item.creator,jdbcType=VARCHAR}, #{item.updater,jdbcType=VARCHAR})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            authorized_price = VALUES(authorized_price),
+            updater          = VALUES(updater),
+            deleted          = 0
+    </insert>
+
+</mapper>
