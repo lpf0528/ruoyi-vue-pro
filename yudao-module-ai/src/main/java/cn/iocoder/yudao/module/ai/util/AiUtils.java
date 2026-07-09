@@ -117,14 +117,16 @@ public class AiUtils {
                         .toolCallbacks(toolCallbacks).toolContext(toolContext).build();
             case OPENAI:
             case GROK: // 复用 OpenAI 客户端
-                return OpenAiChatOptions.builder().model(model).temperature(temperature).maxTokens(maxTokens)
+                // 注意：新版 OpenAI API 规范要求使用 max_completion_tokens，旧版的 max_tokens 在部分上游模型中已不再支持
+                return OpenAiChatOptions.builder().model(model).temperature(temperature).maxCompletionTokens(maxTokens)
                         .toolCallbacks(toolCallbacks).toolContext(toolContext).build();
             case GEMINI:
                 return GoogleGenAiChatOptions.builder().model(model).temperature(temperature).maxOutputTokens(maxTokens)
                         .toolCallbacks(toolCallbacks).toolContext(toolContext).build();
             case AZURE_OPENAI:
+                // 注意：Azure OpenAI 同样遵循新版规范，使用 max_completion_tokens
                 return OpenAiChatOptions.builder().model(model).deploymentName(model).azure(true)
-                        .temperature(temperature).maxTokens(maxTokens)
+                        .temperature(temperature).maxCompletionTokens(maxTokens)
                         .toolCallbacks(toolCallbacks).toolContext(toolContext).build();
             case ANTHROPIC:
                 return AnthropicChatOptions.builder().model(model).temperature(temperature).maxTokens(maxTokens)
