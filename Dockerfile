@@ -1,16 +1,18 @@
 # =====================================================
 # 单阶段运行时镜像（Maven 构建已在 CI 中完成）
+# JDK 25：Eclipse Temurin 官方镜像（JDK 25 暂无 Alpine 变体，使用 Ubuntu 精简版）
 # =====================================================
-FROM eclipse-temurin:8-jre-alpine
+FROM eclipse-temurin:25-jre
 
-# 安装基础工具
-RUN apk add --no-cache tzdata curl && \
+# 安装基础工具并设置时区（Ubuntu 基础镜像使用 apt-get）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends tzdata curl && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
-    apk del tzdata
+    rm -rf /var/lib/apt/lists/*
 
-# 创建非 root 用户
-RUN addgroup -S app && adduser -S app -G app
+# 创建非 root 用户（Ubuntu 使用 groupadd/useradd）
+RUN groupadd -r app && useradd -r -g app app
 
 WORKDIR /app
 
@@ -24,13 +26,18 @@ USER app
 
 EXPOSE 48080
 
-# JVM 参数
+# JVM 参数（JDK 25 优化）
+# -XX:+UseContainerSupport  容器感知，自动读取 cgroup 内存/CPU 限制（JDK 10+ 默认开启，显式保留）
+# -XX:MaxRAMPercentage       最大堆占容器内存的 75%
+# -XX:+UseZGC                JDK 25 推荐低延迟 GC（可换回 G1GC：-XX:+UseG1GC）
+# -XX:+ZGenerational         JDK 21+ ZGC 分代模式（吞吐量更好）
+# -XX:+HeapDumpOnOutOfMemoryError / HeapDumpPath  OOM 时自动 dump
+# -Djava.security.egd        加速随机数生成
 ENV JAVA_OPTS="\
 -XX:+UseContainerSupport \
 -XX:MaxRAMPercentage=75.0 \
--XX:+UseG1GC \
--XX:MaxGCPauseMillis=200 \
--XX:+UseStringDeduplication \
+-XX:+UseZGC \
+-XX:+ZGenerational \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:HeapDumpPath=/app/logs/heapdump.hprof \
 -Djava.security.egd=file:/dev/./urandom \
