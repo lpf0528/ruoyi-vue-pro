@@ -1,0 +1,104 @@
+---
+description: 芋道 ruoyi-vue-pro 项目概览、技术栈与 AI 协作总则
+alwaysApply: true
+---
+
+# ruoyi-vue-pro 项目指南
+
+**语言要求：永远使用中文回复用户，不得使用其他语言。**
+
+芋道（ruoyi-vue-pro）是基于 RuoYi-Vue 深度重构的企业级快速开发平台（MIT）。
+
+| 维度 | 说明 |
+|---|---|
+| 后端 | Spring Boot 多模块 + MyBatis Plus + Redis |
+| 前端 | Vue 3 (element-plus / vben) + Vue 2 (element-ui) |
+| 移动端 | uni-app（APP、小程序、H5） |
+| 数据库 | MySQL 5.7/8.0（兼容 Oracle、PostgreSQL、达梦等） |
+| 核心特性 | RBAC、SaaS 多租户、Flowable、支付、商城、CRM、ERP、AI、IoT |
+
+## 模块结构
+
+```
+ruoyi-vue-pro/
+├── yudao-dependencies/        # Maven BOM
+├── yudao-framework/           # 框架封装（Security、MVC、Redis、MQ）
+├── yudao-server/              # 启动入口
+├── yudao-module-system/       # 用户、角色、菜单、租户、字典
+├── yudao-module-member/       # C 端会员
+├── yudao-module-infra/        # 代码生成、定时任务、文件、MQ
+├── yudao-module-bpm/          # Flowable 工作流
+├── yudao-module-pay/          # 支付
+├── yudao-module-mall/         # 商城
+├── yudao-module-erp/          # ERP
+├── yudao-module-crm/          # CRM
+├── yudao-module-ai/           # AI 大模型
+├── yudao-module-mp/           # 微信公众号
+├── yudao-module-report/       # 报表 & 大屏
+├── yudao-module-iot/          # IoT
+├── yudao-module-curtain/      # 窗帘业务（智仓 zc）
+├── sql/                       # 数据库初始化 SQL
+├── script/                    # 运维脚本
+└── yudao-ui/                  # 前端子项目（外部仓库）
+```
+
+业务模块内部结构（以 `yudao-module-system` 为例）：
+
+```
+yudao-module-system/
+├── yudao-module-system-api/     # 对外接口（DTO、枚举、Feign）
+└── yudao-module-system-biz/
+    └── controller/admin|app → service → dal/dataobject|mysql → convert → enums
+```
+
+- 管理后台：`controller/admin`，路径 `/admin-api/**`
+- 用户 APP：`controller/app`，路径 `/app-api/**`
+
+## 技术栈与分支
+
+| 框架 / 组件 | 用途 | 版本 |
+|---|---|---|
+| Spring Boot | 应用框架 | 2.7.x（master）/ 3.2.x（master-jdk17） |
+| MyBatis Plus | ORM | 3.5.x |
+| Redisson | Redis 客户端 | 3.32.x |
+| Spring Security + Token | 认证鉴权 | 5.7.x |
+| Flowable | 工作流 | 6.8.x |
+| MapStruct | Bean 转换 | 1.6.x |
+| JUnit 5 + Mockito | 单元测试 | 5.8.x / 4.8.x |
+
+| 分支 | JDK | Spring Boot |
+|---|---|---|
+| master | JDK 8 | 2.7.x |
+| master-jdk17 | JDK 17/21 | 3.2.x |
+
+## 常见命令
+
+```bash
+# 后端编译（跳过测试）
+mvn clean package -DskipTests
+
+# 后端运行
+java -jar yudao-server/target/yudao-server.jar --spring.profiles.active=dev
+
+# 前端（Vue3）
+cd yudao-ui-admin-vue3 && pnpm install && pnpm dev
+
+# 单元测试
+mvn test -pl yudao-module-system/yudao-module-system-biz
+```
+
+## AI 协作总则
+
+1. 生成 Java 代码必须包含必要注释（类、Service 方法、复杂逻辑）
+2. 严格遵循 `controller → service → dal → convert → enums` 分层
+3. 优先使用 `yudao-framework` 工具类，不引入外部库
+4. 业务异常用 `exception(errorCode)`，禁止 `throw new RuntimeException()`
+5. Controller 返回 `CommonResult<T>`，用 `success()` / `error()` 包装
+6. 多租户改动需提醒开发者确认是否影响租户隔离
+7. 窗帘（ZC）模块细节见 `zc-curtain-module` 规则；Java 规范见 `java-conventions` 规则
+
+## 参考资料
+
+- 官方文档：https://doc.iocoder.cn/
+- 快速启动：https://doc.iocoder.cn/quick-start/
+- Gitee：https://gitee.com/zhijiantianya/ruoyi-vue-pro

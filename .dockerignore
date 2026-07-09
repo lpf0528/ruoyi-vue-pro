@@ -1,0 +1,41 @@
+# =====================================================
+# .dockerignore — 放项目根目录
+# 作用：避免将无关文件传入 Docker build context
+#      未配置时整个 .git 历史、源码都会传进去（几百 MB）
+# =====================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# CI/CD
+.github
+
+# 构建产物（除 target/*.jar 外都不需要）
+**/target/
+!yudao-server/target/*.jar
+
+# 前端
+node_modules
+dist
+
+# 文档 & 图片
+*.md
+.image
+docs
+
+# SQL（运行时不需要）
+sql
+
+# Docker 自身
+Dockerfile
+docker-compose.yml
+docker/
