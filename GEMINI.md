@@ -54,15 +54,27 @@ The **ZC** (智仓) module is a core business domain for curtain manufacturing.
 
 ## Building and Running
 
-```bash
-# Compile backend and skip tests
-mvn clean package -DskipTests
+> **Maven 执行方式（Windows）：** 本项目使用 IntelliJ IDEA 内置的 Maven，请用以下完整路径替代裸命令 `mvn`：
+> ```
+> & 'D:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\plugins\maven\lib\maven3\bin\mvn.cmd'
+> ```
+> **注意**：PowerShell 中路径含空格时，`&` 操作符后必须使用**单引号** `'...'`，而非双引号。
 
-# Run backend (Dev profile)
+```powershell
+# 编译项目并跳过测试
+& 'D:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\plugins\maven\lib\maven3\bin\mvn.cmd' clean package -DskipTests
+
+# 安装单个模块到本地仓库（解决未解析依赖问题），-am 同时安装其上游依赖
+& 'D:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\plugins\maven\lib\maven3\bin\mvn.cmd' install -pl yudao-module-pay -am -DskipTests
+
+# 安装整个项目到本地仓库（彻底解决所有 SNAPSHOT 依赖问题）
+& 'D:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\plugins\maven\lib\maven3\bin\mvn.cmd' install -DskipTests
+
+# 运行后端（Dev 环境）
 java -jar yudao-server/target/yudao-server.jar --spring.profiles.active=dev
 
-# Run tests
-mvn test -pl yudao-module-system/yudao-module-system-biz
+# 运行单元测试
+& 'D:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\plugins\maven\lib\maven3\bin\mvn.cmd' test -pl yudao-module-system/yudao-module-system-biz
 ```
 
 ## Development Conventions

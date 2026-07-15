@@ -29,7 +29,7 @@ import static cn.iocoder.yudao.module.zc.enums.LogRecordConstants.*;
 public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
 
     @Resource
-    private ZcProductCategoryMapper productCategoryMapper;
+    private ZcProductCategoryMapper zcProductCategoryMapper;
 
     @Override
     @LogRecord(type = ZC_PRODUCT_CATEGORY_TYPE, subType = ZC_PRODUCT_CATEGORY_CREATE_SUB_TYPE, bizNo = "{{#productCategory.id}}",
@@ -39,7 +39,7 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
         validateProductCategoryValueUnique(null, createReqVO.getValue());
         // 插入
         ZcProductCategoryDO productCategory = BeanUtils.toBean(createReqVO, ZcProductCategoryDO.class);
-        productCategoryMapper.insert(productCategory);
+        zcProductCategoryMapper.insert(productCategory);
         // 记录操作日志上下文
         LogRecordContext.putVariable("productCategory", productCategory);
         return productCategory.getId();
@@ -55,7 +55,7 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
         validateProductCategoryValueUnique(updateReqVO.getId(), updateReqVO.getValue());
         // 更新
         ZcProductCategoryDO updateObj = BeanUtils.toBean(updateReqVO, ZcProductCategoryDO.class);
-        productCategoryMapper.updateById(updateObj);
+        zcProductCategoryMapper.updateById(updateObj);
         // 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldProductCategory, ZcProductCategorySaveReqVO.class));
         LogRecordContext.putVariable("productCategoryName", oldProductCategory.getValue());
@@ -70,18 +70,18 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
         // 记录操作日志上下文
         LogRecordContext.putVariable("productCategoryName", productCategory.getValue());
         // 删除
-        productCategoryMapper.deleteById(id);
+        zcProductCategoryMapper.deleteById(id);
     }
 
     @Override
-        public void deleteProductCategoryListByIds(List<Long> ids) {
+    public void deleteProductCategoryListByIds(List<Long> ids) {
         // 删除
-        productCategoryMapper.deleteByIds(ids);
-        }
+        zcProductCategoryMapper.deleteByIds(ids);
+    }
 
 
     private ZcProductCategoryDO validateProductCategoryExists(Long id) {
-        ZcProductCategoryDO productCategory = productCategoryMapper.selectById(id);
+        ZcProductCategoryDO productCategory = zcProductCategoryMapper.selectById(id);
         if (productCategory == null) {
             throw exception(PRODUCT_CATEGORY_NOT_EXISTS);
         }
@@ -89,7 +89,7 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
     }
 
     private void validateProductCategoryValueUnique(Long id, String value) {
-        ZcProductCategoryDO existing = productCategoryMapper.selectByValue(value);
+        ZcProductCategoryDO existing = zcProductCategoryMapper.selectByValue(value);
         if (existing == null) {
             return;
         }
@@ -101,17 +101,17 @@ public class ZcProductCategoryServiceImpl implements ZcProductCategoryService {
 
     @Override
     public ZcProductCategoryDO getProductCategory(Long id) {
-        return productCategoryMapper.selectById(id);
+        return zcProductCategoryMapper.selectById(id);
     }
 
     @Override
     public PageResult<ZcProductCategoryDO> getProductCategoryPage(ZcProductCategoryPageReqVO pageReqVO) {
-        return productCategoryMapper.selectPage(pageReqVO);
+        return zcProductCategoryMapper.selectPage(pageReqVO);
     }
 
     @Override
     public List<ZcProductCategoryDO> getProductCategoryList(ZcProductCategoryListReqVO listReqVO) {
-        return productCategoryMapper.selectList(listReqVO);
+        return zcProductCategoryMapper.selectList(listReqVO);
     }
 
 }
