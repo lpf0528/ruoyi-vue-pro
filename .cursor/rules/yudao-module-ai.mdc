@@ -1,0 +1,192 @@
+---
+description: AI 模块技术方案、Spring AI 调用链路与跨业务模块集成指南
+globs: "yudao-module-ai/**"
+alwaysApply: false
+---
+
+# yudao-module-ai 模块指南
+
+包名：`cn.iocoder.yudao.module.ai`。单 jar 模块（无 `-api`/`-biz` 拆分），由 `yudao-server` 引入。  
+**在其他业务模块使用 AI 处理数据时，优先遵循本规则。**
+
+## 架构分层
+
+```
+controller/admin/     # REST API，路径 /admin-api/ai/**
+service/              # 业务编排（聊天、写作、知识库、绘图、音乐、工作流）
+dal/dataobject|mysql/ # ai_model、ai_api_key、ai_knowledge、ai_chat_* 等
+framework/ai/
+  config/             # AiAutoConfiguration、YudaoAiProperties
+  core/model/         # AiModelFactory + 各平台 ChatModel 封装
+  core/webserch/      # 联网搜索（博查）
+util/                 # AiUtils
+tool/function/        # Function Calling 工具 Bean
+enums/model/          # AiPlatformEnum、AiModelTypeEnum
+```
+
+技术栈：**Spring AI 2.0.0** + `spring-ai-alibaba-starter-dashscope`（通义）+ 向量库（Qdrant/Redis/Milvus）+ MCP + TinyFlow。
+
+## 核心调用链路（必读）
+
+运行时模型配置来自 **DB（`ai_model` + `ai_api_key`）**，非仅 `application.yaml`。
+
+```
+XxxServiceImpl
+  → AiModelService.validateModel(id) 或 getRequiredDefaultModel(type)
+  → AiModelService.getChatModel(id) / getImageModel() / getOrCreateVectorStore()
+    → AiApiKeyService.validateApiKey(keyId)
+    → AiPlatformEnum.validatePlatform(platform)
+    → AiModelFactoryImpl.getOrCreateXxx(platform, apiKey, url)  // Hutool Singleton 缓存
+  → new Prompt(messages, AiUtils.buildChatOptions(...))
+  → chatModel.call(prompt)           // 同步
+  → chatModel.stream(prompt)         // 流式 → Flux SSE
+  → AiUtils.getChatResponseContent(response)
+```
+
+`AiModelServiceImpl.getChatModel()` 模式：
+
+```java
+AiModelDO model = validateModel(id);
+AiApiKeyDO apiKey = apiKeyService.validateApiKey(model.getKeyId());
+AiPlatformEnum platform = AiPlatformEnum.validatePlatform(apiKey.getPlatform());
+return modelFactory.getOrCreateChatModel(platform, apiKey.getApiKey(), apiKey.getUrl());
+```
+
+## 关键类职责
+
+| 类 | 职责 |
+|---|---|
+| `AiModelService` | 模型 CRUD、`getChatModel`/`getImageModel`/`getOrCreateVectorStore` |
+| `AiModelFactoryImpl` | 按平台动态创建并缓存 Spring AI 客户端；解析 `${ENV}` 占位符 |
+| `AiUtils` | `buildChatOptions`、`buildMessage`、`buildCommonToolContext`、响应解析 |
+| `AiChatMessageServiceImpl` | 最完整示例：RAG + 联网 + Tool + 同步/流式 |
+| `AiWriteServiceImpl` | 轻量业务示例：SystemMessage + UserMessage + 流式落库 |
+| `AiKnowledgeSegmentService` | 文档分片、向量化、相似度检索 |
+
+## 平台与模型类型
+
+**AiPlatformEnum**：通义、文心、DeepSeek、智谱、星火、豆包、混元、硅基流动、MiniMax、月之暗面、百川、阶跃、OpenAI、Azure、Anthropic、Gemini、Ollama、Grok、StableDiffusion、Midjourney、Suno。
+
+**AiModelTypeEnum**：`CHAT(1)`、`IMAGE(2)`、`VOICE(3)`、`VIDEO(4)`、`EMBEDDING(5)`、`RERANK(6)`。
+
+多数国内平台复用 `DeepSeekChatModel`（OpenAI 兼容协议）；OpenAI/Grok 用 `OpenAiChatOptions`。
+
+## 同步 vs 流式（SSE）
+
+| 方式 | Service | Spring AI |
+|---|---|---|
+| 同步 | `sendMessage()` | `chatModel.call(prompt)` |
+| 流式 | `sendChatMessageStream()` | `chatModel.stream(prompt)` |
+
+Controller 流式端点统一：
+
+```java
+@PostMapping(value = "/xxx-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public Flux<CommonResult<T>> xxxStream(...) {
+    return xxxService.xxxStream(...);
+}
+```
+
+流式 Service 要点（参考 `AiWriteServiceImpl`）：
+1. `StreamingChatModel chatModel = aiModelService.getChatModel(modelId)`
+2. `Flux<ChatResponse> flux = chatModel.stream(prompt)`
+3. `.map(chunk -> success(content))` 逐块返回
+4. `.doOnComplete()` / `.doOnError()` 用 `TenantUtils.executeIgnore()` 异步落库（Flux 不传播租户上下文）
+5. `.onErrorResume(e -> Flux.just(error(ERROR_CODE)))`
+
+## RAG 知识库
+
+**写入**：文档 → `TokenTextSplitter`/`SemanticTextSplitter` 分片 → `EmbeddingModel` 向量化 → `VectorStore.add()`（metadata: knowledgeId/documentId/segmentId）。
+
+**检索**：`AiKnowledgeSegmentService.searchKnowledgeSegment(reqBO)` → `vectorStore.similaritySearch()`，可选 Rerank。
+
+**注入 Prompt**：非 Spring AI 原生 RAG，而是将召回片段包在 `<Reference>` 标签中作为额外 `UserMessage` 注入（见 `AiChatMessageServiceImpl.buildPrompt`）。
+
+默认向量库为 `SimpleVectorStore`（开发用）；生产切换 `QdrantVectorStore`/`RedisVectorStore`/`MilvusVectorStore`（改 `AiModelServiceImpl.getOrCreateVectorStore` 注释行）。
+
+## Tool / Function Calling
+
+三种来源：
+1. `@Component("tool_name")` 实现 `Function`/`BiFunction` → `ToolCallbackResolver.resolve(name)`
+2. `@Tool` 注解方法 → `ToolCallbacks.from(bean)`
+3. MCP 客户端 → `SyncMcpToolCallbackProvider`
+
+绑定到对话：`AiUtils.buildChatOptions(..., toolCallbacks, AiUtils.buildCommonToolContext())`。  
+`buildCommonToolContext()` 注入 `LOGIN_USER`、`TENANT_ID` 供工具读取当前用户/租户。
+
+## 在其他业务模块集成 AI（数据处理场景）
+
+### 1. Maven 依赖
+
+```xml
+<dependency>
+    <groupId>cn.iocoder.boot</groupId>
+    <artifactId>yudao-module-ai</artifactId>
+    <version>${revision}</version>
+</dependency>
+```
+
+`yudao-server` 已引入则同 JVM 内可直接 `@Resource` 注入；新业务模块需自行添加依赖。
+
+### 2. 同步调用模板（结构化数据处理）
+
+```java
+@Resource
+private AiModelService aiModelService;
+
+public String processDataWithAi(String systemPrompt, String userData, @Nullable Long modelId) {
+    AiModelDO model = modelId != null
+            ? aiModelService.validateModel(modelId)
+            : aiModelService.getRequiredDefaultModel(AiModelTypeEnum.CHAT.getType());
+    ChatModel chatModel = aiModelService.getChatModel(model.getId());
+    AiPlatformEnum platform = AiPlatformEnum.validatePlatform(model.getPlatform());
+
+    List<Message> messages = new ArrayList<>();
+    if (StrUtil.isNotBlank(systemPrompt)) {
+        messages.add(new SystemMessage(systemPrompt));
+    }
+    messages.add(new UserMessage(userData));
+
+    Prompt prompt = new Prompt(messages,
+            AiUtils.buildChatOptions(platform, model.getModel(), model.getTemperature(), model.getMaxTokens()));
+    return AiUtils.getChatResponseContent(chatModel.call(prompt));
+}
+```
+
+### 3. 流式对外暴露
+
+Controller 返回 `Flux<CommonResult<String>>`，`produces = TEXT_EVENT_STREAM_VALUE`；Service 参考 `AiWriteServiceImpl.generateWriteContent()`。
+
+### 4. 结合 RAG
+
+注入 `AiKnowledgeSegmentService`，先 `searchKnowledgeSegment()` 召回，再将结果拼入 `UserMessage` 后调用 `chatModel`。
+
+### 5. 自定义 Tool
+
+在 AI 模块或业务模块新增 `@Component("my_tool")` 实现 `Function<Req, Resp>`（Jackson `@JsonClassDescription` 描述参数），管理后台 `ai_tool` 表注册后在角色中绑定。
+
+### 6. 配置
+
+- API Key：管理后台配置 `ai_api_key`，支持 `${OPENAI_API_KEY}` 环境变量占位符
+- 默认模型：`getRequiredDefaultModel(AiModelTypeEnum.CHAT.getType())`
+- 业务异常：`exception(ErrorCodeConstants.xxx)`，禁止裸 `RuntimeException`
+
+## 业务场景复用模式
+
+| 场景 | Service | 复用方式 |
+|---|---|---|
+| 聊天 | `AiChatMessageServiceImpl` | 完整链路（历史消息 + RAG + Tool + 联网） |
+| 写作/导图 | `AiWriteServiceImpl` / `AiMindMapServiceImpl` | 角色 SystemMessage + 流式 SSE |
+| 绘图 | `AiImageServiceImpl` | `getImageModel` + `ImageModel.call(ImagePrompt)` |
+| 音乐 | `AiMusicServiceImpl` | `getSunoApi()` 自定义 HTTP |
+| 工作流 | `AiWorkflowServiceImpl` | TinyFlow + `getLLmProvider4Tinyflow()` |
+
+数据处理类业务优先参考 **写作模块**（简单 Prompt）或 **聊天模块**（需上下文/RAG 时）。
+
+## 注意事项
+
+1. **禁止引入 WebFlux MCP starter**（`spring-ai-starter-mcp-*-webflux`），会与 SpringMVC SSE 冲突；使用 `webmvc` 版
+2. **Flux 异步落库**必须用 `TenantUtils.executeIgnore()`，否则租户上下文丢失
+3. **Tool 需要用户上下文**时用 `AiUtils.buildCommonToolContext()`
+4. **响应解析**统一用 `AiUtils.getChatResponseContent()` / `getChatResponseReasoningContent()`（含 DeepSeek/通义 reasoning）
+5. 当前无 `yudao-module-ai-api` 子模块；跨模块直接依赖完整 jar。长期可抽 api 层避免循环依赖

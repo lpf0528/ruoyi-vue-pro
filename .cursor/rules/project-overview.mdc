@@ -96,6 +96,7 @@ mvn test -pl yudao-module-system/yudao-module-system-biz
 5. Controller 返回 `CommonResult<T>`，用 `success()` / `error()` 包装
 6. 多租户改动需提醒开发者确认是否影响租户隔离
 7. 窗帘（ZC）模块细节见 `zc-curtain-module` 规则；Java 规范见 `java-conventions` 规则
+8. 业务模块集成 AI（大模型调用、RAG、数据处理）见 `yudao-module-ai` 规则
 
 ## 参考资料
 
