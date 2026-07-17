@@ -10,7 +10,7 @@ import cn.idev.excel.annotation.*;
 @Schema(description = "管理后台 - 项目分类 Response VO")
 @Data
 @ExcelIgnoreUnannotated
-public class QuizQuizProjectCategoryRespVO {
+public class QuizProjectCategoryRespVO {
 
     @Schema(description = "项目分类编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "26896")
     @ExcelProperty("项目分类编号")

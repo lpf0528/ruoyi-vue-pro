@@ -20,7 +20,7 @@ import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class QuizQuizProjectCategoryDO extends BaseDO {
+public class QuizProjectCategoryDO extends BaseDO {
 
     /**
      * 项目分类编号

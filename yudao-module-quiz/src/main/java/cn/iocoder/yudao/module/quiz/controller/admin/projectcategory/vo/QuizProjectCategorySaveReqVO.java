@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 
 @Schema(description = "管理后台 - 项目分类新增/修改 Request VO")
 @Data
-public class QuizQuizProjectCategorySaveReqVO {
+public class QuizProjectCategorySaveReqVO {
 
     @Schema(description = "项目分类编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "26896")
     private Long id;
