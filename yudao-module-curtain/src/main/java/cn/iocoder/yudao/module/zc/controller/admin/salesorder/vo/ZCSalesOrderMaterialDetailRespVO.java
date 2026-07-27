@@ -35,5 +35,9 @@ public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO
     @Schema(description = "组件是否打印")
     private Boolean elementIsPrint;
 
+    /** 产品对应版本的分类，来自 zc_product_version.classify，枚举 {@link cn.iocoder.yudao.module.zc.enums.ZcProductClassifyEnum} */
+    @Schema(description = "产品版本分类")
+    private String classify;
+
 }
 
