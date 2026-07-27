@@ -31,45 +31,12 @@ import cn.iocoder.yudao.module.zc.service.salesorder.ZCSalesOrderMaterialService
 
 @Tag(name = "管理后台 - 成品订单-用料明细")
 @RestController
-@RequestMapping("/zc/ZC-sales-order-material")
+@RequestMapping("/zc/sales-order-material")
 @Validated
 public class ZCSalesOrderMaterialController {
 
     @Resource
     private ZCSalesOrderMaterialService zCSalesOrderMaterialService;
-
-    @PostMapping("/create")
-    @Operation(summary = "创建成品订单-用料明细")
-    @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:create')")
-    public CommonResult<Long> createZCSalesOrderMaterial(@Valid @RequestBody ZCSalesOrderMaterialSaveReqVO createReqVO) {
-        return success(zCSalesOrderMaterialService.createZCSalesOrderMaterial(createReqVO));
-    }
-
-    @PutMapping("/update")
-    @Operation(summary = "更新成品订单-用料明细")
-    @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:update')")
-    public CommonResult<Boolean> updateZCSalesOrderMaterial(@Valid @RequestBody ZCSalesOrderMaterialSaveReqVO updateReqVO) {
-        zCSalesOrderMaterialService.updateZCSalesOrderMaterial(updateReqVO);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete")
-    @Operation(summary = "删除成品订单-用料明细")
-    @Parameter(name = "id", description = "编号", required = true)
-    @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:delete')")
-    public CommonResult<Boolean> deleteZCSalesOrderMaterial(@RequestParam("id") Long id) {
-        zCSalesOrderMaterialService.deleteZCSalesOrderMaterial(id);
-        return success(true);
-    }
-
-    @DeleteMapping("/delete-list")
-    @Parameter(name = "ids", description = "编号", required = true)
-    @Operation(summary = "批量删除成品订单-用料明细")
-                @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:delete')")
-    public CommonResult<Boolean> deleteZCSalesOrderMaterialList(@RequestParam("ids") List<Long> ids) {
-        zCSalesOrderMaterialService.deleteZCSalesOrderMaterialListByIds(ids);
-        return success(true);
-    }
 
     @GetMapping("/get")
     @Operation(summary = "获得成品订单-用料明细")

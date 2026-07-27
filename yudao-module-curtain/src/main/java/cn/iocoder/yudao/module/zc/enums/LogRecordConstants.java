@@ -262,12 +262,6 @@ public interface LogRecordConstants {
     // ======================= ZC_SALES_ORDER_MATERIAL 订单用料明细 =======================
 
     String ZC_SALES_ORDER_MATERIAL_TYPE = "ZC 订单用料明细";
-    String ZC_SALES_ORDER_MATERIAL_CREATE_SUB_TYPE = "创建订单用料明细";
-    String ZC_SALES_ORDER_MATERIAL_CREATE_SUCCESS = "创建了订单用料明细【{{#material.id}}】";
-    String ZC_SALES_ORDER_MATERIAL_UPDATE_SUB_TYPE = "更新订单用料明细";
-    String ZC_SALES_ORDER_MATERIAL_UPDATE_SUCCESS = "更新了订单用料明细【{{#materialId}}】: {_DIFF{#updateReqVO}}";
-    String ZC_SALES_ORDER_MATERIAL_DELETE_SUB_TYPE = "删除订单用料明细";
-    String ZC_SALES_ORDER_MATERIAL_DELETE_SUCCESS = "删除了订单用料明细【{{#materialId}}】";
     String ZC_SALES_ORDER_MATERIAL_CUT_SUB_TYPE = "裁剪用料明细";
     String ZC_SALES_ORDER_MATERIAL_CUT_SUCCESS = "裁剪了用料明细【{{#reqVO.id}}】，批次【{{#batchNo}}】，裁剪数量 {{#reqVO.cutQuantity}}";
     String ZC_SALES_ORDER_MATERIAL_CANCEL_CUT_SUB_TYPE = "撤销裁剪用料明细";

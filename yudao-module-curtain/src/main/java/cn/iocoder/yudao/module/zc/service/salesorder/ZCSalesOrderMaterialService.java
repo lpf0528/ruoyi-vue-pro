@@ -14,35 +14,6 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 public interface ZCSalesOrderMaterialService {
 
     /**
-     * 创建成品订单-用料明细
-     *
-     * @param createReqVO 创建信息
-     * @return 编号
-     */
-    Long createZCSalesOrderMaterial(@Valid ZCSalesOrderMaterialSaveReqVO createReqVO);
-
-    /**
-     * 更新成品订单-用料明细
-     *
-     * @param updateReqVO 更新信息
-     */
-    void updateZCSalesOrderMaterial(@Valid ZCSalesOrderMaterialSaveReqVO updateReqVO);
-
-    /**
-     * 删除成品订单-用料明细
-     *
-     * @param id 编号
-     */
-    void deleteZCSalesOrderMaterial(Long id);
-
-    /**
-    * 批量删除成品订单-用料明细
-    *
-    * @param ids 编号
-    */
-    void deleteZCSalesOrderMaterialListByIds(List<Long> ids);
-
-    /**
      * 获得成品订单-用料明细
      *
      * @param id 编号
