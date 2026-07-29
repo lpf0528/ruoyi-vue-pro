@@ -27,7 +27,7 @@ public interface ZCSalesOrderMaterialService {
      * @param pageReqVO 分页查询
      * @return 成品订单-用料明细分页
      */
-    PageResult<ZCSalesOrderMaterialDO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO);
+    PageResult<ZCSalesOrderMaterialRespVO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO);
 
     /**
      * 裁剪用料明细

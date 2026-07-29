@@ -6,6 +6,8 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -19,11 +21,13 @@ import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 @Mapper
 public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMaterialDO> {
 
-    default PageResult<ZCSalesOrderMaterialDO> selectPage(ZCSalesOrderMaterialPageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<ZCSalesOrderMaterialDO>()
-                .eqIfPresent(ZCSalesOrderMaterialDO::getOrderId, reqVO.getOrderId())
-                .eqIfPresent(ZCSalesOrderMaterialDO::getOrderStructureId, reqVO.getOrderStructureId())
-                .orderByDesc(ZCSalesOrderMaterialDO::getId));
+    /** XML 绑定方法，联表查询销售单号/客户、产品名称/分类、批次号，由分页插件注入 LIMIT/OFFSET 及 COUNT */
+    IPage<ZCSalesOrderMaterialRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZCSalesOrderMaterialPageReqVO reqVO);
+
+    default PageResult<ZCSalesOrderMaterialRespVO> selectPage(ZCSalesOrderMaterialPageReqVO reqVO) {
+        IPage<ZCSalesOrderMaterialRespVO> result = selectPageWithVO(
+                new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
     /**

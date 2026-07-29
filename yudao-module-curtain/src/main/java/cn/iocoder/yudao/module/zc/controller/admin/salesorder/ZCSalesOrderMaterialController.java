@@ -51,8 +51,7 @@ public class ZCSalesOrderMaterialController {
     @Operation(summary = "获得成品订单-用料明细分页")
     @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:query')")
     public CommonResult<PageResult<ZCSalesOrderMaterialRespVO>> getZCSalesOrderMaterialPage(@Valid ZCSalesOrderMaterialPageReqVO pageReqVO) {
-        PageResult<ZCSalesOrderMaterialDO> pageResult = zCSalesOrderMaterialService.getZCSalesOrderMaterialPage(pageReqVO);
-        return success(BeanUtils.toBean(pageResult, ZCSalesOrderMaterialRespVO.class));
+        return success(zCSalesOrderMaterialService.getZCSalesOrderMaterialPage(pageReqVO));
     }
 
     @GetMapping("/export-excel")
@@ -62,10 +61,9 @@ public class ZCSalesOrderMaterialController {
     public void exportZCSalesOrderMaterialExcel(@Valid ZCSalesOrderMaterialPageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         pageReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<ZCSalesOrderMaterialDO> list = zCSalesOrderMaterialService.getZCSalesOrderMaterialPage(pageReqVO).getList();
+        List<ZCSalesOrderMaterialRespVO> list = zCSalesOrderMaterialService.getZCSalesOrderMaterialPage(pageReqVO).getList();
         // 导出 Excel
-        ExcelUtils.write(response, "成品订单-用料明细.xls", "数据", ZCSalesOrderMaterialRespVO.class,
-                        BeanUtils.toBean(list, ZCSalesOrderMaterialRespVO.class));
+        ExcelUtils.write(response, "成品订单-用料明细.xls", "数据", ZCSalesOrderMaterialRespVO.class, list);
     }
 
 }

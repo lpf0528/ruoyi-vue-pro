@@ -80,7 +80,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     }
 
     @Override
-    public PageResult<ZCSalesOrderMaterialDO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO) {
+    public PageResult<ZCSalesOrderMaterialRespVO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO) {
         return zCSalesOrderMaterialMapper.selectPage(pageReqVO);
     }
 

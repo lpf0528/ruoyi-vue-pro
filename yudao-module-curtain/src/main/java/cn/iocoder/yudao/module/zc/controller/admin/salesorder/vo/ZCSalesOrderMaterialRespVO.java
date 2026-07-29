@@ -19,6 +19,14 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("销售单")
     private Long orderId;
 
+    @Schema(description = "销售单号")
+    @ExcelProperty("销售单号")
+    private String orderNo;
+
+    @Schema(description = "客户编号")
+    @ExcelProperty("客户编号")
+    private Long customerId;
+
     @Schema(description = "结构行", requiredMode = Schema.RequiredMode.REQUIRED, example = "29364")
     @ExcelProperty("结构行")
     private Long orderStructureId;
@@ -31,9 +39,21 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("货号")
     private Long productId;
 
+    @Schema(description = "产品名称")
+    @ExcelProperty("产品名称")
+    private String productName;
+
+    @Schema(description = "产品版本分类，参见 ZcProductClassifyEnum")
+    @ExcelProperty("产品版本分类")
+    private String classify;
+
     @Schema(description = "批次", example = "25324")
     @ExcelProperty("批次")
     private Long batchId;
+
+    @Schema(description = "批次号")
+    @ExcelProperty("批次号")
+    private String batchNo;
 
     @Schema(description = "规格", example = "2.8米")
     @ExcelProperty("规格")
@@ -74,5 +94,9 @@ public class ZCSalesOrderMaterialRespVO {
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
+
+    @Schema(description = "更新时间")
+    @ExcelProperty("更新时间")
+    private LocalDateTime updateTime;
 
 }
