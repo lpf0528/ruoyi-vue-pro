@@ -40,4 +40,11 @@ public class ZcProcessNodeRespVO {
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @Schema(description = "关联组件编号列表")
+    private List<Long> elementIds;
+
+    @Schema(description = "关联组件名称列表")
+    @ExcelProperty("关联组件")
+    private List<String> elementNames;
+
 }

@@ -47,5 +47,15 @@ public class ZcProcessNodeDO extends BaseDO {
     @TableField("`group`")
     private Integer group;
 
+    /**
+     * 关联组件编号列表（JOIN 查询冗余字段，非数据库列）
+     */
+    @TableField(exist = false)
+    private List<Long> elementIds;
+    /**
+     * 关联组件名称列表（JOIN 查询冗余字段，非数据库列）
+     */
+    @TableField(exist = false)
+    private List<String> elementNames;
 
 }

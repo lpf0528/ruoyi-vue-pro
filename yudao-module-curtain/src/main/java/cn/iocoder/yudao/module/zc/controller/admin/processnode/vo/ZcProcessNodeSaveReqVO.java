@@ -26,4 +26,7 @@ public class ZcProcessNodeSaveReqVO {
     @DiffLogField(name = "工序描述")
     private String description;
 
+    @Schema(description = "关联组件编号列表")
+    private List<Long> elementIds;
+
 }
