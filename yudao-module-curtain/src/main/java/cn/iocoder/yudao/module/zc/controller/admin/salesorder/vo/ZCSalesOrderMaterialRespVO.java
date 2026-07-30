@@ -43,10 +43,6 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("产品名称")
     private String productName;
 
-    @Schema(description = "产品版本分类，参见 ZcProductClassifyEnum")
-    @ExcelProperty("产品版本分类")
-    private String classify;
-
     @Schema(description = "批次", example = "25324")
     @ExcelProperty("批次")
     private Long batchId;

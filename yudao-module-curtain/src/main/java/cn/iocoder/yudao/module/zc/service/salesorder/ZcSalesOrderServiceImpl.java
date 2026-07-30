@@ -49,8 +49,6 @@ import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructure.ZcCurtainStructureM
 import cn.iocoder.yudao.module.zc.dal.mysql.curtainstructureelement.ZcCurtainStructureElementMapper;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productspec.ZcProductSpecDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.product.ZcProductMapper;
-import cn.iocoder.yudao.module.zc.dal.mysql.productversion.ZcProductVersionMapper;
-import cn.iocoder.yudao.module.zc.dal.dataobject.productversion.ZcProductVersionDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.productbatch.ZcProductBatchMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.productspec.ZcProductSpecMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.salesorder.ZCSalesOrderMaterialMapper;
@@ -113,8 +111,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
     private ZcCurtainStructureElementMapper curtainStructureElementMapper;
     @Resource
     private ZcProductMapper productMapper;
-    @Resource
-    private ZcProductVersionMapper productVersionMapper;
     @Resource
     private ZcProductBatchMapper productBatchMapper;
     @Resource
@@ -761,12 +757,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                 .collect(Collectors.toSet());
         List<ZcProductDO> productList = productMapper.selectList(ZcProductDO::getId, productIds);
         Map<Long, String> productNameMap = convertMap(productList, ZcProductDO::getId, ZcProductDO::getName);
-        // 产品 -> 产品版本 -> 分类（classify），需先取产品对应的版本编号，再批量查版本表
-        Map<Long, Long> productVersionIdMap = toMapSkipNullValues(productList, ZcProductDO::getId, ZcProductDO::getVersionId);
-        Set<Long> versionIds = productVersionIdMap.values().stream().filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<Long, String> versionClassifyMap = convertMap(
-                productVersionMapper.selectList(ZcProductVersionDO::getId, versionIds),
-                ZcProductVersionDO::getId, ZcProductVersionDO::getClassify);
         Set<Long> batchIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getBatchId)
                 .filter(Objects::nonNull)
@@ -787,7 +777,6 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             vo.setProductName(productNameMap.get(m.getProductId()));
                             vo.setBatchNo(batchNoMap.get(m.getBatchId()));
                             vo.setBarcode(batchBarcodeMap.get(m.getBatchId()));
-                            vo.setClassify(versionClassifyMap.get(productVersionIdMap.get(m.getProductId())));
                             return vo;
                         }, Collectors.toList())
                 ));
