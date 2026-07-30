@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.dal.mysql.processnode;
 
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordDO;
 import org.apache.ibatis.annotations.Mapper;
@@ -48,5 +49,17 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
                 .eq(ZcOrderProcessRecordDO::getNodeId, nodeId)
                 .eq(ZcOrderProcessRecordDO::getStatus, 1));
     }
+
+    /**
+     * 统计某操作员在指定工序节点下的工序次数与用料合计
+     *
+     * <p>仅统计完成状态（status=1）的工序记录，用料通过节点绑定的组件与订单用料明细匹配后累加。</p>
+     *
+     * @param masterId 主操作人员 ID
+     * @param nodeId   工序节点 ID
+     * @return 统计结果（工序次数、用料合计）
+     */
+    ZcOrderProcessRecordMasterMaterialRespVO selectMasterMaterialStat(@Param("masterId") Long masterId,
+                                                                       @Param("nodeId") Long nodeId);
 
 }

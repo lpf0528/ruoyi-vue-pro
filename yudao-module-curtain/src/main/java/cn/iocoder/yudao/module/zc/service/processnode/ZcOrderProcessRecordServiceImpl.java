@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.zc.service.processnode;
 import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderDetailRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProcessRecordDetailRespVO;
@@ -242,6 +243,11 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
             throw exception(SALES_ORDER_NOT_EXISTS);
         }
         return order;
+    }
+
+    @Override
+    public ZcOrderProcessRecordMasterMaterialRespVO getMasterMaterialStat(Long masterId, Long nodeId) {
+        return processRecordMapper.selectMasterMaterialStat(masterId, nodeId);
     }
 
     private ZcOrderProcessRecordDO validateProcessRecordExists(Long id) {

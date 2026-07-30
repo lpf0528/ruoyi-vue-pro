@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.zc.controller.admin.processnode;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
@@ -84,6 +85,20 @@ public class ZcOrderProcessRecordController {
             @RequestParam(value = "materialId", required = false) Long materialId,
             @RequestParam(value = "nodeId", required = false) Long nodeId) {
         return success(processRecordService.getProcessRecordList(orderId, masterId, curtainId, structureId, materialId, nodeId, Arrays.asList(1)));
+    }
+
+    @GetMapping("/master-material-stat")
+    @Operation(summary = "获取某操作员当前节点的用料统计",
+            description = "统计完成状态（status=1）的工序记录，返回工序次数与用料合计")
+    @Parameters({
+            @Parameter(name = "masterId", description = "主操作人员 ID", required = true),
+            @Parameter(name = "nodeId", description = "工序节点 ID", required = true)
+    })
+    @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
+    public CommonResult<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(
+            @RequestParam("masterId") Long masterId,
+            @RequestParam("nodeId") Long nodeId) {
+        return success(processRecordService.getMasterMaterialStat(masterId, nodeId));
     }
 
 }

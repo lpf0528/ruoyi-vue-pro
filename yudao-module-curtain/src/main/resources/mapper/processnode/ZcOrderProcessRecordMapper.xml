@@ -98,4 +98,21 @@
         ORDER BY t1.create_time DESC
     </select>
 
+    <select id="selectMasterMaterialStat"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO">
+        SELECT
+            COUNT(*) AS processCount,
+            SUM(t4.quantity) AS totalQuantity
+        FROM zc_order_process_record t1
+        LEFT JOIN zc_process_node_element t2 ON t1.node_id = t2.process_node_id
+        LEFT JOIN zc_sales_order_material t4
+            ON t1.order_id = t4.order_id
+            AND t1.structure_id = t4.order_structure_id
+            AND t2.element_id = t4.element_id
+        WHERE t1.deleted = 0
+        AND t1.status = 1
+        AND t1.master_id = #{masterId}
+        AND t1.node_id = #{nodeId}
+    </select>
+
 </mapper>
