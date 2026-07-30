@@ -113,6 +113,12 @@
         AND t1.status = 1
         AND t1.master_id = #{masterId}
         AND t1.node_id = #{nodeId}
+        <if test="beginCreateTime != null">
+            AND t1.create_time &gt;= #{beginCreateTime}
+        </if>
+        <if test="endCreateTime != null">
+            AND t1.create_time &lt;= #{endCreateTime}
+        </if>
     </select>
 
 </mapper>

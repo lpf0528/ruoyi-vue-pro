@@ -11,12 +11,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,13 +94,19 @@ public class ZcOrderProcessRecordController {
             description = "统计完成状态（status=1）的工序记录，返回工序次数与用料合计")
     @Parameters({
             @Parameter(name = "masterId", description = "主操作人员 ID", required = true),
-            @Parameter(name = "nodeId", description = "工序节点 ID", required = true)
+            @Parameter(name = "nodeId", description = "工序节点 ID", required = true),
+            @Parameter(name = "beginCreateTime", description = "创建时间范围（开始），不传则不限制"),
+            @Parameter(name = "endCreateTime", description = "创建时间范围（结束），不传则不限制")
     })
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
     public CommonResult<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(
             @RequestParam("masterId") Long masterId,
-            @RequestParam("nodeId") Long nodeId) {
-        return success(processRecordService.getMasterMaterialStat(masterId, nodeId));
+            @RequestParam("nodeId") Long nodeId,
+            @RequestParam(value = "beginCreateTime", required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime beginCreateTime,
+            @RequestParam(value = "endCreateTime", required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endCreateTime) {
+        return success(processRecordService.getMasterMaterialStat(masterId, nodeId, beginCreateTime, endCreateTime));
     }
 
 }

@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecor
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -55,11 +56,15 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
      *
      * <p>仅统计完成状态（status=1）的工序记录，用料通过节点绑定的组件与订单用料明细匹配后累加。</p>
      *
-     * @param masterId 主操作人员 ID
-     * @param nodeId   工序节点 ID
+     * @param masterId       主操作人员 ID
+     * @param nodeId         工序节点 ID
+     * @param beginCreateTime 创建时间范围（开始），可为 null
+     * @param endCreateTime   创建时间范围（结束），可为 null
      * @return 统计结果（工序次数、用料合计）
      */
     ZcOrderProcessRecordMasterMaterialRespVO selectMasterMaterialStat(@Param("masterId") Long masterId,
-                                                                       @Param("nodeId") Long nodeId);
+                                                                       @Param("nodeId") Long nodeId,
+                                                                       @Param("beginCreateTime") LocalDateTime beginCreateTime,
+                                                                       @Param("endCreateTime") LocalDateTime endCreateTime);
 
 }

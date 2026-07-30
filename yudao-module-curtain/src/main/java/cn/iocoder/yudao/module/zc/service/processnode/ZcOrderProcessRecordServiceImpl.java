@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -246,8 +247,10 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     }
 
     @Override
-    public ZcOrderProcessRecordMasterMaterialRespVO getMasterMaterialStat(Long masterId, Long nodeId) {
-        return processRecordMapper.selectMasterMaterialStat(masterId, nodeId);
+    public ZcOrderProcessRecordMasterMaterialRespVO getMasterMaterialStat(Long masterId, Long nodeId,
+                                                                           LocalDateTime beginCreateTime,
+                                                                           LocalDateTime endCreateTime) {
+        return processRecordMapper.selectMasterMaterialStat(masterId, nodeId, beginCreateTime, endCreateTime);
     }
 
     private ZcOrderProcessRecordDO validateProcessRecordExists(Long id) {
