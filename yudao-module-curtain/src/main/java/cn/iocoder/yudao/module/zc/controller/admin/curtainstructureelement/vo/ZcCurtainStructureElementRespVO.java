@@ -32,6 +32,10 @@ public class ZcCurtainStructureElementRespVO {
     @ExcelProperty("是否打印")
     private Boolean isPrint;
 
+    @Schema(description = "计算用料")
+    @ExcelProperty("计算用料")
+    private Boolean isCalMaterial;
+
     @Schema(description = "版本名称")
     @ExcelProperty("版本名称")
     private String versionName;

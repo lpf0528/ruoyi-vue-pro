@@ -18,4 +18,7 @@ public class ZcCurtainStructureElementSimpleRespVO {
     @Schema(description = "是否打印")
     private Boolean isPrint;
 
+    @Schema(description = "计算用料")
+    private Boolean isCalMaterial;
+
 }

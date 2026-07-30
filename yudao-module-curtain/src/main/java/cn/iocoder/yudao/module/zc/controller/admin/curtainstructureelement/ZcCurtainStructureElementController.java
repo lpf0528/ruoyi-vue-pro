@@ -97,6 +97,7 @@ public class ZcCurtainStructureElementController {
                 .setId(item.getId())
                 .setName(item.getName())
                 .setIsPrint(item.getIsPrint())
+                .setIsCalMaterial(item.getIsCalMaterial())
         ));
     }
 

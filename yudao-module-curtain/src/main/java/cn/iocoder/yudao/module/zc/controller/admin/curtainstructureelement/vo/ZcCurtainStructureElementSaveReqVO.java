@@ -30,4 +30,8 @@ public class ZcCurtainStructureElementSaveReqVO {
     @DiffLogField(name = "是否打印")
     private Boolean isPrint;
 
+    @Schema(description = "计算用料", example = "true")
+    @DiffLogField(name = "计算用料")
+    private Boolean isCalMaterial;
+
 }

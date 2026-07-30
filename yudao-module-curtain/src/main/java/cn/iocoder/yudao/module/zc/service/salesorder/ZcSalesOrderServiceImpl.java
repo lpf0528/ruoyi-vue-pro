@@ -751,6 +751,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
         List<ZcCurtainStructureElementDO> elementList = curtainStructureElementMapper.selectList(ZcCurtainStructureElementDO::getId, elementIds);
         Map<Long, String> elementNameMap = convertMap(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getName);
         Map<Long, Boolean> elementIsPrintMap = toMapSkipNullValues(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getIsPrint);
+        Map<Long, Boolean> elementIsCalMaterialMap = toMapSkipNullValues(elementList, ZcCurtainStructureElementDO::getId, ZcCurtainStructureElementDO::getIsCalMaterial);
         Set<Long> productIds = materialList.stream()
                 .map(ZCSalesOrderMaterialDO::getProductId)
                 .filter(Objects::nonNull)
@@ -774,6 +775,7 @@ public class ZcSalesOrderServiceImpl implements ZcSalesOrderService {
                             ZCSalesOrderMaterialDetailRespVO vo = BeanUtils.toBean(m, ZCSalesOrderMaterialDetailRespVO.class);
                             vo.setElementName(elementNameMap.get(m.getElementId()));
                             vo.setElementIsPrint(elementIsPrintMap.get(m.getElementId()));
+                            vo.setElementIsCalMaterial(elementIsCalMaterialMap.get(m.getElementId()));
                             vo.setProductName(productNameMap.get(m.getProductId()));
                             vo.setBatchNo(batchNoMap.get(m.getBatchId()));
                             vo.setBarcode(batchBarcodeMap.get(m.getBatchId()));

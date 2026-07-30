@@ -27,5 +27,9 @@ public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO
     @Schema(description = "组件是否打印")
     private Boolean elementIsPrint;
 
+    /** 组件是否计算用料，来自 zc_curtain_structure_element.is_cal_material */
+    @Schema(description = "组件是否计算用料")
+    private Boolean elementIsCalMaterial;
+
 }
 

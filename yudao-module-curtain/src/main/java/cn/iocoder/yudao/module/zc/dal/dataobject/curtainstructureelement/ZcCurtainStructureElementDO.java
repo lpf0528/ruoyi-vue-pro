@@ -44,6 +44,11 @@ public class ZcCurtainStructureElementDO extends BaseDO {
      */
     @TableField("is_print")
     private Boolean isPrint;
+    /**
+     * 是否计算用料，true=是，false=否，默认为 false
+     */
+    @TableField("is_cal_material")
+    private Boolean isCalMaterial;
 
 
 }
