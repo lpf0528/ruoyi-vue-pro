@@ -83,18 +83,18 @@ public interface ZcOrderProcessRecordService {
     ZcSalesOrderProcessRecordDetailRespVO getSalesOrderProcessRecordDetail(Long orderId);
 
     /**
-     * 获取某操作员在指定工序节点下的用料统计（工序次数、用料合计）
+     * 按用料组件分组获取某操作员在指定工序节点下的用料统计（工序次数、用料合计）
      *
-     * <p>仅统计完成状态（status=1）的工序记录，用料通过节点绑定的组件与订单用料明细匹配后累加。</p>
+     * <p>仅统计完成状态（status=1）的工序记录，用料通过节点绑定的组件与订单用料明细匹配后按组件分组累加。</p>
      *
      * @param masterId        主操作人员 ID
      * @param nodeId          工序节点 ID
      * @param beginCreateTime 创建时间范围（开始），可为 null
      * @param endCreateTime   创建时间范围（结束），可为 null
-     * @return 用料统计结果
+     * @return 按用料组件分组的统计结果列表
      */
-    ZcOrderProcessRecordMasterMaterialRespVO getMasterMaterialStat(Long masterId, Long nodeId,
-                                                                    LocalDateTime beginCreateTime,
-                                                                    LocalDateTime endCreateTime);
+    List<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(Long masterId, Long nodeId,
+                                                                          LocalDateTime beginCreateTime,
+                                                                          LocalDateTime endCreateTime);
 
 }

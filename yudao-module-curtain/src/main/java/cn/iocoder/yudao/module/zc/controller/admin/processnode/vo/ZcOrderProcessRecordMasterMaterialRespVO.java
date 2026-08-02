@@ -14,6 +14,12 @@ import java.math.BigDecimal;
 @Data
 public class ZcOrderProcessRecordMasterMaterialRespVO {
 
+    @Schema(description = "用料组件 ID")
+    private Long elementId;
+
+    @Schema(description = "用料组件名称")
+    private String elementName;
+
     @Schema(description = "工序次数")
     private Long processCount;
 

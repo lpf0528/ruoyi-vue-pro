@@ -91,7 +91,7 @@ public class ZcOrderProcessRecordController {
 
     @GetMapping("/master-material-stat")
     @Operation(summary = "获取某操作员当前节点的用料统计",
-            description = "统计完成状态（status=1）的工序记录，返回工序次数与用料合计")
+            description = "统计完成状态（status=1）的工序记录，按用料组件分组返回工序次数与用料合计")
     @Parameters({
             @Parameter(name = "masterId", description = "主操作人员 ID", required = true),
             @Parameter(name = "nodeId", description = "工序节点 ID", required = true),
@@ -99,7 +99,7 @@ public class ZcOrderProcessRecordController {
             @Parameter(name = "endCreateTime", description = "创建时间范围（结束），不传则不限制")
     })
     @PreAuthorize("@ss.hasPermission('zc:order-process-record:query')")
-    public CommonResult<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(
+    public CommonResult<List<ZcOrderProcessRecordMasterMaterialRespVO>> getMasterMaterialStat(
             @RequestParam("masterId") Long masterId,
             @RequestParam("nodeId") Long nodeId,
             @RequestParam(value = "beginCreateTime", required = false)

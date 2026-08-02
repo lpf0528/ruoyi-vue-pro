@@ -101,14 +101,17 @@
     <select id="selectMasterMaterialStat"
             resultType="cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO">
         SELECT
+            t4.element_id AS elementId,
+            t3.`name` AS elementName,
             COUNT(*) AS processCount,
             SUM(t4.quantity) AS totalQuantity
-        FROM zc_order_process_record t1
-        LEFT JOIN zc_process_node_element t2 ON t1.node_id = t2.process_node_id
-        LEFT JOIN zc_sales_order_material t4
+        FROM zc_order_process_record t1  -- 加工节点记录
+        JOIN zc_process_node_element t2 ON t1.node_id = t2.process_node_id  -- 加工节点对应的组件
+        JOIN zc_sales_order_material t4  -- 看这些组件是否存在订单的原料中
             ON t1.order_id = t4.order_id
             AND t1.structure_id = t4.order_structure_id
             AND t2.element_id = t4.element_id
+        JOIN zc_curtain_structure_element t3 ON t4.element_id = t3.id -- 组件的名称
         WHERE t1.deleted = 0
         AND t1.status = 1
         AND t1.master_id = #{masterId}
@@ -119,6 +122,7 @@
         <if test="endCreateTime != null">
             AND t1.create_time &lt;= #{endCreateTime}
         </if>
+        GROUP BY t4.element_id, t3.`name`
     </select>
 
 </mapper>

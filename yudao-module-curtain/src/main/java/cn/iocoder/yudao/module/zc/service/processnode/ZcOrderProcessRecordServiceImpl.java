@@ -247,9 +247,9 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     }
 
     @Override
-    public ZcOrderProcessRecordMasterMaterialRespVO getMasterMaterialStat(Long masterId, Long nodeId,
-                                                                           LocalDateTime beginCreateTime,
-                                                                           LocalDateTime endCreateTime) {
+    public List<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(Long masterId, Long nodeId,
+                                                                                 LocalDateTime beginCreateTime,
+                                                                                 LocalDateTime endCreateTime) {
         return processRecordMapper.selectMasterMaterialStat(masterId, nodeId, beginCreateTime, endCreateTime);
     }
 
