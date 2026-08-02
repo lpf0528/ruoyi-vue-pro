@@ -4,7 +4,6 @@ import java.util.*;
 import jakarta.validation.*;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 
 /**
  * 成品订单-用料明细 Service 接口
@@ -22,12 +21,12 @@ public interface ZCSalesOrderMaterialService {
     ZCSalesOrderMaterialDO getZCSalesOrderMaterial(Long id);
 
     /**
-     * 获得成品订单-用料明细分页
+     * 获得成品订单-用料明细分页（含当前筛选条件下全量用料合计、金额合计）
      *
      * @param pageReqVO 分页查询
-     * @return 成品订单-用料明细分页
+     * @return 分页列表 + 用料/金额合计
      */
-    PageResult<ZCSalesOrderMaterialRespVO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO);
+    ZCSalesOrderMaterialPageRespVO getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO);
 
     /**
      * 裁剪用料明细

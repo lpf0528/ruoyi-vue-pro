@@ -14,9 +14,6 @@ import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcProcessNodeDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.productbatch.ZcProductBatchDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZcSalesOrderDO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
-
 import cn.iocoder.yudao.module.zc.dal.dataobject.inventoryrecord.ZcInventoryRecordDO;
 import cn.iocoder.yudao.module.zc.dal.mysql.inventoryrecord.ZcInventoryRecordMapper;
 import cn.iocoder.yudao.module.zc.dal.mysql.processnode.ZcOrderProcessRecordMapper;
@@ -80,7 +77,7 @@ public class ZCSalesOrderMaterialServiceImpl implements ZCSalesOrderMaterialServ
     }
 
     @Override
-    public PageResult<ZCSalesOrderMaterialRespVO> getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO) {
+    public ZCSalesOrderMaterialPageRespVO getZCSalesOrderMaterialPage(ZCSalesOrderMaterialPageReqVO pageReqVO) {
         return zCSalesOrderMaterialMapper.selectPage(pageReqVO);
     }
 

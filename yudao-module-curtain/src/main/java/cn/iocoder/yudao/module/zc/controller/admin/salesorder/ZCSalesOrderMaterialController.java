@@ -15,7 +15,6 @@ import java.util.*;
 import java.io.IOException;
 
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
@@ -48,9 +47,9 @@ public class ZCSalesOrderMaterialController {
     }
 
     @GetMapping("/page")
-    @Operation(summary = "获得成品订单-用料明细分页")
+    @Operation(summary = "获得成品订单-用料明细分页（含用料合计、金额合计）")
     @PreAuthorize("@ss.hasPermission('zc:ZC-sales-order-material:query')")
-    public CommonResult<PageResult<ZCSalesOrderMaterialRespVO>> getZCSalesOrderMaterialPage(@Valid ZCSalesOrderMaterialPageReqVO pageReqVO) {
+    public CommonResult<ZCSalesOrderMaterialPageRespVO> getZCSalesOrderMaterialPage(@Valid ZCSalesOrderMaterialPageReqVO pageReqVO) {
         return success(zCSalesOrderMaterialService.getZCSalesOrderMaterialPage(pageReqVO));
     }
 

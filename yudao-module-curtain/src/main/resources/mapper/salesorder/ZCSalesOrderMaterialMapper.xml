@@ -9,6 +9,17 @@
         文档可见：https://www.iocoder.cn/MyBatis/x-plugins/
      -->
 
+    <!-- 分页与合计共用的筛选条件（与 selectPageWithVO 保持一致） -->
+    <sql id="pageQueryWhere">
+        WHERE t1.deleted = 0
+        <if test="reqVO.orderId != null">
+            AND t1.order_id = #{reqVO.orderId}
+        </if>
+        <if test="reqVO.orderStructureId != null">
+            AND t1.order_structure_id = #{reqVO.orderStructureId}
+        </if>
+    </sql>
+
     <select id="selectPageWithVO"
             resultType="cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZCSalesOrderMaterialRespVO">
         SELECT
@@ -26,14 +37,19 @@
         LEFT JOIN zc_product_batch t5 ON t1.batch_id = t5.id AND t5.deleted = 0
         LEFT JOIN zc_curtain_structure_element t6 ON t6.id = t1.element_id AND t6.deleted = 0
         LEFT JOIN zc_customer t7 ON t7.id = t4.customer_id AND t7.deleted = 0
-        WHERE t1.deleted = 0
-        <if test="reqVO.orderId != null">
-            AND t1.order_id = #{reqVO.orderId}
-        </if>
-        <if test="reqVO.orderStructureId != null">
-            AND t1.order_structure_id = #{reqVO.orderStructureId}
-        </if>
+        <include refid="pageQueryWhere"/>
         ORDER BY t1.id ASC
+    </select>
+
+    <!-- 当前筛选条件下全量用料、金额合计（与分页列表同条件，非当前页相加） -->
+    <select id="selectSummary"
+            resultType="cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZCSalesOrderMaterialPageRespVO">
+        SELECT
+            COALESCE(SUM(t1.quantity), 0) AS total_quantity,
+            COALESCE(SUM(t1.amount), 0)   AS total_amount
+        FROM zc_sales_order_material t1
+        JOIN zc_sales_order t4 ON t1.order_id = t4.id AND t4.deleted = 0
+        <include refid="pageQueryWhere"/>
     </select>
 
     <select id="selectProductSpecStatistics"

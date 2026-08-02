@@ -1,8 +1,8 @@
 package cn.iocoder.yudao.module.zc.dal.mysql.salesorder;
 
+import java.math.BigDecimal;
 import java.util.*;
 
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.module.zc.dal.dataobject.salesorder.ZCSalesOrderMaterialDO;
@@ -24,10 +24,32 @@ public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMate
     /** XML 绑定方法，联表查询销售单号/客户名称、产品名称/版本、组件名称、批次号，由分页插件注入 LIMIT/OFFSET 及 COUNT */
     IPage<ZCSalesOrderMaterialRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZCSalesOrderMaterialPageReqVO reqVO);
 
-    default PageResult<ZCSalesOrderMaterialRespVO> selectPage(ZCSalesOrderMaterialPageReqVO reqVO) {
+    /**
+     * 按与分页相同的筛选条件，汇总全量用料合计与金额合计
+     *
+     * @param reqVO 分页筛选条件
+     * @return 仅填充 totalQuantity、totalAmount 的合计结果
+     */
+    ZCSalesOrderMaterialPageRespVO selectSummary(@Param("reqVO") ZCSalesOrderMaterialPageReqVO reqVO);
+
+    /**
+     * 分页查询用料明细，并附带当前筛选条件下的用料/金额合计
+     *
+     * @param reqVO 分页筛选条件
+     * @return 分页列表 + 全量合计
+     */
+    default ZCSalesOrderMaterialPageRespVO selectPage(ZCSalesOrderMaterialPageReqVO reqVO) {
         IPage<ZCSalesOrderMaterialRespVO> result = selectPageWithVO(
                 new Page<>(reqVO.getPageNo(), reqVO.getPageSize()), reqVO);
-        return new PageResult<>(result.getRecords(), result.getTotal());
+        ZCSalesOrderMaterialPageRespVO summary = selectSummary(reqVO);
+        if (summary == null) {
+            summary = new ZCSalesOrderMaterialPageRespVO();
+            summary.setTotalQuantity(BigDecimal.ZERO);
+            summary.setTotalAmount(BigDecimal.ZERO);
+        }
+        summary.setList(result.getRecords());
+        summary.setTotal(result.getTotal());
+        return summary;
     }
 
     /**
