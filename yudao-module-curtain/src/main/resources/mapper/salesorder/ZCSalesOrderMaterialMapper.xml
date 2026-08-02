@@ -13,16 +13,19 @@
             resultType="cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZCSalesOrderMaterialRespVO">
         SELECT
             t1.id, t1.order_id, t4.order_no, t4.customer_id,
-            t1.product_id, t2.name AS product_name, t3.classify,
+            t7.name AS customer_name,
+            t1.product_id, t2.name AS product_name, t2.version_id,
             t1.batch_id, t5.batch_no,
-            t1.order_structure_id, t1.element_id, t1.spec, t1.price, t1.quantity,
+            t1.order_structure_id, t1.element_id, t6.name AS element_name,
+            t1.spec, t1.price, t1.quantity,
             t1.unit_value, t1.discount_rate, t1.amount, t1.note, t1.status, t1.cut_quantity,
             t1.create_time, t1.update_time, t1.creator, t1.updater
         FROM zc_sales_order_material t1
-        LEFT JOIN zc_product t2 ON t1.product_id = t2.id
-        LEFT JOIN zc_product_version t3 ON t2.version_id = t3.id
-        JOIN zc_sales_order t4 ON t1.order_id = t4.id
-        LEFT JOIN zc_product_batch t5 ON t1.batch_id = t5.id
+        LEFT JOIN zc_product t2 ON t1.product_id = t2.id AND t2.deleted = 0
+        JOIN zc_sales_order t4 ON t1.order_id = t4.id AND t4.deleted = 0
+        LEFT JOIN zc_product_batch t5 ON t1.batch_id = t5.id AND t5.deleted = 0
+        LEFT JOIN zc_curtain_structure_element t6 ON t6.id = t1.element_id AND t6.deleted = 0
+        LEFT JOIN zc_customer t7 ON t7.id = t4.customer_id AND t7.deleted = 0
         WHERE t1.deleted = 0
         <if test="reqVO.orderId != null">
             AND t1.order_id = #{reqVO.orderId}

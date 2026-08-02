@@ -21,7 +21,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.*;
 @Mapper
 public interface ZCSalesOrderMaterialMapper extends BaseMapperX<ZCSalesOrderMaterialDO> {
 
-    /** XML 绑定方法，联表查询销售单号/客户、产品名称/分类、批次号，由分页插件注入 LIMIT/OFFSET 及 COUNT */
+    /** XML 绑定方法，联表查询销售单号/客户名称、产品名称/版本、组件名称、批次号，由分页插件注入 LIMIT/OFFSET 及 COUNT */
     IPage<ZCSalesOrderMaterialRespVO> selectPageWithVO(IPage<?> page, @Param("reqVO") ZCSalesOrderMaterialPageReqVO reqVO);
 
     default PageResult<ZCSalesOrderMaterialRespVO> selectPage(ZCSalesOrderMaterialPageReqVO reqVO) {

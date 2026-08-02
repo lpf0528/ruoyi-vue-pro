@@ -27,6 +27,10 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("客户编号")
     private Long customerId;
 
+    @Schema(description = "客户名称")
+    @ExcelProperty("客户名称")
+    private String customerName;
+
     @Schema(description = "结构行", requiredMode = Schema.RequiredMode.REQUIRED, example = "29364")
     @ExcelProperty("结构行")
     private Long orderStructureId;
@@ -35,6 +39,10 @@ public class ZCSalesOrderMaterialRespVO {
     @ExcelProperty("组件类型")
     private Long elementId;
 
+    @Schema(description = "组件类型名称")
+    @ExcelProperty("组件类型名称")
+    private String elementName;
+
     @Schema(description = "货号", requiredMode = Schema.RequiredMode.REQUIRED, example = "24015")
     @ExcelProperty("货号")
     private Long productId;
@@ -42,6 +50,10 @@ public class ZCSalesOrderMaterialRespVO {
     @Schema(description = "产品名称")
     @ExcelProperty("产品名称")
     private String productName;
+
+    @Schema(description = "产品版本编号")
+    @ExcelProperty("产品版本编号")
+    private Long versionId;
 
     @Schema(description = "批次", example = "25324")
     @ExcelProperty("批次")

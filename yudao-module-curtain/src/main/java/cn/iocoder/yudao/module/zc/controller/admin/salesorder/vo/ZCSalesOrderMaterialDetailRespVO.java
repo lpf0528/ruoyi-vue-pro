@@ -15,10 +15,6 @@ import lombok.*;
 @ToString(callSuper = true)
 public class ZCSalesOrderMaterialDetailRespVO extends ZCSalesOrderMaterialRespVO {
 
-    /** 组件类型名称，来自 zc_curtain_structure_element.name */
-    @Schema(description = "组件类型名称")
-    private String elementName;
-
     /** 批次条码，来自 zc_product_batch.barcode */
     @Schema(description = "批次条码")
     private String barcode;
