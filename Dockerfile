@@ -11,15 +11,16 @@ RUN apt-get update && \
     echo "Asia/Shanghai" > /etc/timezone && \
     rm -rf /var/lib/apt/lists/*
 
-# 创建非 root 用户（Ubuntu 使用 groupadd/useradd）
-RUN groupadd -r app && useradd -r -g app app
+# 创建非 root 用户：-d /app 使 user.home=/app，与 logging.file.name=${user.home}/logs/... 对齐
+# （useradd -r 默认不创建家目录，否则会落到不存在的 /home/app/logs，导致 Logback 启动失败）
+RUN groupadd -r app && useradd -r -g app -d /app -s /usr/sbin/nologin app
 
 WORKDIR /app
 
 # 复制 jar
 COPY yudao-server/target/yudao-server.jar app.jar
 
-# 日志目录
+# 日志目录（与 application-*.yaml 中 logging.file.name 一致）
 RUN mkdir -p /app/logs && chown -R app:app /app
 
 USER app
@@ -42,7 +43,8 @@ ENV JAVA_OPTS="\
 -XX:HeapDumpPath=/app/logs/heapdump.hprof \
 -Djava.security.egd=file:/dev/./urandom \
 -Dfile.encoding=UTF-8 \
--Duser.timezone=Asia/Shanghai"
+-Duser.timezone=Asia/Shanghai \
+-Duser.home=/app"
 
 # 外置配置目录（关键）
 ENV CONFIG_DIR=/config
