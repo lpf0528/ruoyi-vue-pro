@@ -26,18 +26,18 @@ USER app
 
 EXPOSE 48080
 
-# JVM 参数（JDK 25 优化）
-# -XX:+UseContainerSupport  容器感知，自动读取 cgroup 内存/CPU 限制（JDK 10+ 默认开启，显式保留）
-# -XX:MaxRAMPercentage       最大堆占容器内存的 75%
-# -XX:+UseZGC                JDK 25 推荐低延迟 GC（可换回 G1GC：-XX:+UseG1GC）
-# -XX:+ZGenerational         JDK 21+ ZGC 分代模式（吞吐量更好）
+# JVM 参数（面向 4G 小内存服务器的默认配置）
+# -Xms/-Xmx                  固定堆 512m，避免 MaxRAMPercentage 按整机内存膨胀（4G 机 75% ≈ 3G 堆）
+# -XX:+UseG1GC               小堆场景用 G1，比 ZGC 更省内存（ZGC 适合大堆/低延迟）
+# -XX:MaxMetaspaceSize       限制元空间，防止类加载无限膨胀
 # -XX:+HeapDumpOnOutOfMemoryError / HeapDumpPath  OOM 时自动 dump
 # -Djava.security.egd        加速随机数生成
+# 可通过 docker-compose environment.JAVA_OPTS 覆盖（大内存机器可改为 -Xmx1g 或启用 ZGC）
 ENV JAVA_OPTS="\
--XX:+UseContainerSupport \
--XX:MaxRAMPercentage=75.0 \
--XX:+UseZGC \
--XX:+ZGenerational \
+-Xms512m \
+-Xmx512m \
+-XX:+UseG1GC \
+-XX:MaxMetaspaceSize=256m \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:HeapDumpPath=/app/logs/heapdump.hprof \
 -Djava.security.egd=file:/dev/./urandom \

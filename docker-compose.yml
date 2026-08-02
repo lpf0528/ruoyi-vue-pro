@@ -9,6 +9,11 @@ services:
       - /opt/deployments/resources:/config
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      # 4G 服务器：堆固定 512m；进程总占用通常约 700MB~1GB（含元空间/直接内存/线程栈）
+      - JAVA_OPTS=-Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
+    # 限制容器内存，防止 JVM/原生内存把整机打满；超出后由 Docker OOM Killer 处理
+    mem_limit: 1g
+    mem_reservation: 768m
     networks:
       - 1panel-network
 
