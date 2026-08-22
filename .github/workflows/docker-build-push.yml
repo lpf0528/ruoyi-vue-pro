@@ -153,7 +153,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           request_pty: true
           script: |
-            cd /opt/deployments
+            cd /opt/1panel/docker/compose/zhicang
 
             echo "▶ 登录华为云 SWR 镜像仓库"
             sudo docker login -u ${{ secrets.SWR_USERNAME }} -p ${{ secrets.SWR_PASSWORD }} ${{ env.REGISTRY }}
