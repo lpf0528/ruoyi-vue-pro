@@ -136,7 +136,7 @@ jobs:
             cd /opt/deployments
 
             echo "▶ 登录华为云 SWR 镜像仓库"
-            sudo docker login -u ${{ secrets.SWR_USERNAME || 'cn-south-1@HPUAV4IMWHLH70DOUGFS' }} -p ${{ secrets.SWR_PASSWORD || 'c1091200282343602889354adcdc81261c0cbbedc7ef7e65984cbfbe848cfbd4' }} ${{ env.REGISTRY }}
+            sudo docker login -u ${{ secrets.SWR_USERNAME }} -p ${{ secrets.SWR_PASSWORD }} ${{ env.REGISTRY }}
 
             echo "▶ 拉取最新镜像"
             sudo docker compose pull yudao-server
