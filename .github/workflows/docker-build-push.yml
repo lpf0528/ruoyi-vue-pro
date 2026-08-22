@@ -25,14 +25,10 @@ env:
   JAVA_VERSION: '25'                                          # 构建所使用的 JDK 版本
 
 jobs:
-  # ============ Job 1：构建 Maven 项目并打包/推送 Docker 镜像 ============
-  build-and-push:
-    name: 构建并推送镜像
+  # ============ Job 1：构建 Maven 项目并生成 Docker 镜像包 ============
+  build:
+    name: 构建 Docker 镜像
     runs-on: ubuntu-latest
-    # 对外暴露的输出变量，供后续 job（如 deploy）引用镜像完整地址和 tag
-    outputs:
-      image_full: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-      image_tag: ${{ steps.meta.outputs.version }}
     steps:
       # 拉取仓库代码到 CI 运行环境
       - name: 检出代码
@@ -60,9 +56,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # 根据分支、commit sha 等信息自动生成镜像 tag 与 OCI 标签
-      # - type=ref,event=branch：使用分支名作为 tag
-      # - type=sha,format=short：使用短 commit sha 作为 tag
-      # - type=raw,value=latest：仅当分支为 master-jdk25 时，额外打上 latest 标签
       - name: 生成镜像元数据
         id: meta
         uses: docker/metadata-action@v5
@@ -77,22 +70,14 @@ jobs:
             org.opencontainers.image.description=芋道后端服务
             org.opencontainers.image.revision=${{ github.sha }}
 
-      # 登录华为云 SWR 镜像服务（支持 GitHub Secrets 配置或缺省认证）
-      - name: 登录华为云 SWR 镜像服务
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.SWR_USERNAME }}
-          password: ${{ secrets.SWR_PASSWORD }}
-
-      # 基于根目录 Dockerfile 构建镜像并推送到华为云 SWR
-      # 使用 GitHub Actions 缓存（type=gha）加速重复构建；关闭 provenance/sbom 以精简镜像元数据
-      - name: 构建并推送 Docker 镜像
+      # 基于根目录 Dockerfile 构建镜像导出为本地 tar 文件（暂不推送）
+      - name: 构建 Docker 镜像 (离线包)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: true
+          push: false
+          outputs: type=docker,dest=/tmp/yudao-server.tar
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
@@ -101,7 +86,47 @@ jobs:
           provenance: false
           sbom: false
 
-      # 将本次构建结果（镜像名、commit sha、所有 tag）写入 GitHub Actions 的 Step Summary，方便在 Actions 页面查看
+      # 上传构建导出的镜像 tar 文件作为 Artifact 传递给下一个 Job
+      - name: 上传镜像产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/yudao-server.tar
+          retention-days: 1
+
+  # ============ Job 2：推送到华为云 SWR 镜像仓库 ============
+  push:
+    name: 推送镜像到 SWR
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # 下载 Job 1 打包生成的镜像包
+      - name: 下载镜像产物
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      # 将离线包导入本地 Docker 引擎
+      - name: 加载 Docker 镜像
+        run: |
+          docker load --input /tmp/yudao-server.tar
+          docker image ls
+
+      # 登录华为云 SWR 镜像服务
+      - name: 登录华为云 SWR 镜像服务
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.SWR_USERNAME }}
+          password: ${{ secrets.SWR_PASSWORD }}
+
+      # 推送所有生成的 Tag 镜像至华为云 SWR
+      - name: 推送镜像到华为云 SWR
+        run: |
+          docker push --all-tags ${{ env.IMAGE_NAME }}
+
+      # 输出构建推送结果总结
       - name: 输出构建结果
         run: |
           echo "## 🚀 镜像推送成功 (华为云 SWR)" >> $GITHUB_STEP_SUMMARY
@@ -110,17 +135,12 @@ jobs:
           echo "| 仓库地址 | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| 镜像全名 | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  # ============ Job 2：SSH 登录服务器，拉取最新镜像并重启服务 ============
-  # 依赖 build-and-push 成功完成后才会执行，且仅在 master-jdk25 分支才触发部署
+  # ============ Job 3：SSH 登录服务器，拉取最新镜像并重启服务 ============
   # deploy:
   #   name: 部署到服务器
   #   runs-on: ubuntu-latest
-  #   needs: build-and-push
+  #   needs: push
   #   if: github.ref_name == 'master-jdk25'
   #   steps:
   #     # 通过 appleboy/ssh-action 远程登录服务器，执行部署脚本：
@@ -134,21 +154,21 @@ jobs:
   #         request_pty: true
   #         script: |
   #           cd /opt/deployments
-
+  #
   #           echo "▶ 登录华为云 SWR 镜像仓库"
   #           sudo docker login -u ${{ secrets.SWR_USERNAME }} -p ${{ secrets.SWR_PASSWORD }} ${{ env.REGISTRY }}
-
+  #
   #           echo "▶ 拉取最新镜像"
   #           sudo docker compose pull yudao-server
-
+  #
   #           echo "▶ 重启服务"
   #           sudo docker compose up -d yudao-server
-
+  #
   #           echo "▶ 清理旧镜像"
   #           sudo docker image prune -f
-
+  #
   #           echo "✅ 后端部署完成。"
-
+  #
   #     # 将部署结果（镜像地址、目标服务器）写入 Step Summary，便于在 Actions 页面直接查看部署详情
   #     - name: 输出部署结果
   #       run: |
