@@ -1,7 +1,7 @@
 # 后端 CI/CD 工作流：负责将 yudao-server 打包为 Docker 镜像，
-# 推送到 DockerHub，并在 master-jdk25 分支自动 SSH 部署到线上服务器。
+# 推送到华为云 SWR 镜像服务，并在 master-jdk25 分支自动 SSH 部署到线上服务器。
 # 触发条件：仅 push 到 master-jdk25 分支时触发，且改动不仅限于文档、SQL 等忽略路径。
-name: 后端 - 构建推送并部署（DockerHub版）
+name: 后端 - 构建推送并部署（华为云 SWR版）
 on:
   push:
     branches:
@@ -19,9 +19,10 @@ concurrency:
   cancel-in-progress: true
 # 全局环境变量，供下方所有 job/step 引用
 env:
-  REGISTRY: docker.io                     # 镜像仓库地址（DockerHub）
-  IMAGE_NAME: eatsleeprun/yudao-server     # 镜像名称（含命名空间）
-  JAVA_VERSION: '25'                      # 构建所使用的 JDK 版本
+  REGISTRY: swr.cn-south-1.myhuaweicloud.com                     # 华为云 SWR 镜像仓库地址 (华南-广州)
+  SWR_ORGANIZATION: zhicang                             # 华为云 SWR 组织名称 (请根据实际组织名修改)
+  IMAGE_NAME: swr.cn-south-1.myhuaweicloud.com/zhicang/yudao-server     # 镜像完整名称（含 SWR 域名与组织名称）
+  JAVA_VERSION: '25'                                          # 构建所使用的 JDK 版本
 
 jobs:
   # ============ Job 1：构建 Maven 项目并打包/推送 Docker 镜像 ============
@@ -30,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     # 对外暴露的输出变量，供后续 job（如 deploy）引用镜像完整地址和 tag
     outputs:
-      image_full: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+      image_full: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
       image_tag: ${{ steps.meta.outputs.version }}
     steps:
       # 拉取仓库代码到 CI 运行环境
@@ -76,15 +77,16 @@ jobs:
             org.opencontainers.image.description=芋道后端服务
             org.opencontainers.image.revision=${{ github.sha }}
 
-      # 使用仓库 Secrets 中配置的账号密码登录 DockerHub，为后续推送镜像做准备
-      - name: 登录 Docker Hub
+      # 登录华为云 SWR 镜像服务（支持 GitHub Secrets 配置或缺省认证）
+      - name: 登录华为云 SWR 镜像服务
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.SWR_USERNAME }}
+          password: ${{ secrets.SWR_PASSWORD }}
 
-      # 基于根目录 Dockerfile 构建镜像并推送到 DockerHub
-      # 使用远程仓库缓存（cache-from/cache-to）加速重复构建；关闭 provenance/sbom 以精简镜像元数据
+      # 基于根目录 Dockerfile 构建镜像并推送到华为云 SWR
+      # 使用 GitHub Actions 缓存（type=gha）加速重复构建；关闭 provenance/sbom 以精简镜像元数据
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
@@ -94,18 +96,19 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}-cache:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}-cache:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           provenance: false
           sbom: false
 
       # 将本次构建结果（镜像名、commit sha、所有 tag）写入 GitHub Actions 的 Step Summary，方便在 Actions 页面查看
       - name: 输出构建结果
         run: |
-          echo "## 🚀 镜像推送成功" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 镜像推送成功 (华为云 SWR)" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| 镜像 | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 仓库地址 | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像全名 | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -121,7 +124,7 @@ jobs:
     if: github.ref_name == 'master-jdk25'
     steps:
       # 通过 appleboy/ssh-action 远程登录服务器，执行部署脚本：
-      # 拉取最新镜像 -> 重启 yudao-server 容器 -> 清理无用旧镜像
+      # 登录 SWR -> 拉取最新镜像 -> 重启 yudao-server 容器 -> 清理无用旧镜像
       - name: SSH 远程部署
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -131,6 +134,9 @@ jobs:
           request_pty: true
           script: |
             cd /opt/deployments
+
+            echo "▶ 登录华为云 SWR 镜像仓库"
+            sudo docker login -u ${{ secrets.SWR_USERNAME || 'cn-south-1@HPUAV4IMWHLH70DOUGFS' }} -p ${{ secrets.SWR_PASSWORD || 'c1091200282343602889354adcdc81261c0cbbedc7ef7e65984cbfbe848cfbd4' }} ${{ env.REGISTRY }}
 
             echo "▶ 拉取最新镜像"
             sudo docker compose pull yudao-server
@@ -149,5 +155,5 @@ jobs:
           echo "## ✅ 后端部署成功" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| 镜像 | \`docker.io/eatsleeprun/yudao-server:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`${{ env.IMAGE_NAME }}:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| 服务器 | \`${{ secrets.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY
