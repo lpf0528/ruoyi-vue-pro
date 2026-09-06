@@ -24,6 +24,9 @@
         <if test="reqVO.versionId != null">
             AND t2.version_id = #{reqVO.versionId}
         </if>
+        <if test="reqVO.elementId != null">
+            AND t1.element_id = #{reqVO.elementId}
+        </if>
         <if test="reqVO.createTime != null and reqVO.createTime.length == 2">
             AND t1.create_time BETWEEN #{reqVO.createTime[0]} AND #{reqVO.createTime[1]}
         </if>

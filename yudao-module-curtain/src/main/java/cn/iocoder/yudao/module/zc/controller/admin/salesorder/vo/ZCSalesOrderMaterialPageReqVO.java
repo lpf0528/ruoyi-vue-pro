@@ -26,6 +26,9 @@ public class ZCSalesOrderMaterialPageReqVO extends PageParam {
     @Schema(description = "产品版本编号", example = "2048")
     private Long versionId;
 
+    @Schema(description = "组件类型编号", example = "1024")
+    private Long elementId;
+
     @Schema(description = "创建时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] createTime;
