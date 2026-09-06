@@ -125,4 +125,36 @@
         GROUP BY t4.element_id, t3.`name`
     </select>
 
+    <select id="selectTodayUserMaterialStat"
+            resultType="cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordTodayUserMaterialFlatDTO">
+        SELECT
+            t1.master_id AS masterId,
+            u.`name` AS masterName,
+            t1.node_id AS nodeId,
+            pn.`name` AS nodeName,
+            t4.element_id AS elementId,
+            t3.`name` AS elementName,
+            COUNT(*) AS processCount,
+            SUM(t4.quantity) AS totalQuantity
+        FROM zc_order_process_record t1  -- 加工节点记录
+        LEFT JOIN zc_workshop_user u ON t1.master_id = u.id -- 车间员工
+        LEFT JOIN zc_process_node pn ON t1.node_id = pn.id  -- 工序节点
+        JOIN zc_process_node_element t2 ON t1.node_id = t2.process_node_id  -- 加工节点对应的组件
+        JOIN zc_sales_order_material t4  -- 看这些组件是否存在订单的原料中
+            ON t1.order_id = t4.order_id
+            AND t1.structure_id = t4.order_structure_id
+            AND t2.element_id = t4.element_id
+        JOIN zc_curtain_structure_element t3 ON t4.element_id = t3.id -- 组件的名称
+        WHERE t1.deleted = 0
+        AND t1.status = 1
+        <if test="beginCreateTime != null">
+            AND t1.create_time &gt;= #{beginCreateTime}
+        </if>
+        <if test="endCreateTime != null">
+            AND t1.create_time &lt;= #{endCreateTime}
+        </if>
+        GROUP BY t1.master_id, u.`name`, t1.node_id, pn.`name`, t4.element_id, t3.`name`
+        ORDER BY t1.master_id ASC, t1.node_id ASC
+    </select>
+
 </mapper>

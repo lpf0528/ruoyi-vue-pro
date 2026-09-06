@@ -4,6 +4,7 @@ import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcess
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRevokeReqVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordSaveReqVO;
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordTodayUserMaterialRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.salesorder.vo.ZcSalesOrderProcessRecordDetailRespVO;
 
 import jakarta.validation.Valid;
@@ -96,5 +97,15 @@ public interface ZcOrderProcessRecordService {
     List<ZcOrderProcessRecordMasterMaterialRespVO> getMasterMaterialStat(Long masterId, Long nodeId,
                                                                           LocalDateTime beginCreateTime,
                                                                           LocalDateTime endCreateTime);
+
+    /**
+     * 获取当日（或指定时间范围）所有员工在各自对应工序节点下的用料统计
+     *
+     * @param beginCreateTime 创建时间范围（开始），若 null 默认当日零点
+     * @param endCreateTime   创建时间范围（结束），若 null 默认当日 23:59:59
+     * @return 按员工 -> 节点 -> 组件分组的统计结果列表
+     */
+    List<ZcOrderProcessRecordTodayUserMaterialRespVO> getTodayUserMaterialStat(LocalDateTime beginCreateTime,
+                                                                               LocalDateTime endCreateTime);
 
 }

@@ -5,6 +5,7 @@ import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordMasterMaterialRespVO;
 import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordRespVO;
 import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordDO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordTodayUserMaterialFlatDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -66,5 +67,15 @@ public interface ZcOrderProcessRecordMapper extends BaseMapperX<ZcOrderProcessRe
                                                                              @Param("nodeId") Long nodeId,
                                                                              @Param("beginCreateTime") LocalDateTime beginCreateTime,
                                                                              @Param("endCreateTime") LocalDateTime endCreateTime);
+
+    /**
+     * 统计指定时间范围内所有员工在各自工序节点下的用料统计
+     *
+     * @param beginCreateTime 创建时间范围（开始），可为 null
+     * @param endCreateTime   创建时间范围（结束），可为 null
+     * @return 包含员工、节点、组件及用料汇总的扁平 DTO 列表
+     */
+    List<ZcOrderProcessRecordTodayUserMaterialFlatDTO> selectTodayUserMaterialStat(@Param("beginCreateTime") LocalDateTime beginCreateTime,
+                                                                                    @Param("endCreateTime") LocalDateTime endCreateTime);
 
 }

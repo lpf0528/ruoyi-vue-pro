@@ -25,14 +25,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import cn.iocoder.yudao.module.zc.controller.admin.processnode.vo.ZcOrderProcessRecordTodayUserMaterialRespVO;
+import cn.iocoder.yudao.module.zc.dal.dataobject.processnode.ZcOrderProcessRecordTodayUserMaterialFlatDTO;
+
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertMap;
@@ -253,6 +260,88 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
         return processRecordMapper.selectMasterMaterialStat(masterId, nodeId, beginCreateTime, endCreateTime);
     }
 
+    @Override
+    public List<ZcOrderProcessRecordTodayUserMaterialRespVO> getTodayUserMaterialStat(LocalDateTime beginCreateTime,
+                                                                                       LocalDateTime endCreateTime) {
+        if (beginCreateTime == null) {
+            beginCreateTime = LocalDateTime.now().with(LocalTime.MIN);
+        }
+        if (endCreateTime == null) {
+            endCreateTime = LocalDateTime.now().with(LocalTime.MAX);
+        }
+
+        // 1. 查询时间范围内有实际记录的用料统计
+        List<ZcOrderProcessRecordTodayUserMaterialFlatDTO> flatList =
+                processRecordMapper.selectTodayUserMaterialStat(beginCreateTime, endCreateTime);
+
+        // 2. 按 masterId 保持分组顺序
+        Map<Long, List<ZcOrderProcessRecordTodayUserMaterialFlatDTO>> userGroup = flatList.stream()
+                .filter(item -> item.getMasterId() != null)
+                .collect(Collectors.groupingBy(ZcOrderProcessRecordTodayUserMaterialFlatDTO::getMasterId,
+                        LinkedHashMap::new, Collectors.toList()));
+
+        List<ZcOrderProcessRecordTodayUserMaterialRespVO> result = new ArrayList<>();
+        Set<Long> processedUserIds = new HashSet<>();
+
+        for (Map.Entry<Long, List<ZcOrderProcessRecordTodayUserMaterialFlatDTO>> entry : userGroup.entrySet()) {
+            Long masterId = entry.getKey();
+            List<ZcOrderProcessRecordTodayUserMaterialFlatDTO> userRecords = entry.getValue();
+            String masterName = userRecords.get(0).getMasterName();
+            processedUserIds.add(masterId);
+
+            ZcOrderProcessRecordTodayUserMaterialRespVO userVO = new ZcOrderProcessRecordTodayUserMaterialRespVO();
+            userVO.setMasterId(masterId);
+            userVO.setMasterName(masterName);
+
+            // 按 nodeId 分组
+            Map<Long, List<ZcOrderProcessRecordTodayUserMaterialFlatDTO>> nodeGroup = userRecords.stream()
+                    .filter(item -> item.getNodeId() != null)
+                    .collect(Collectors.groupingBy(ZcOrderProcessRecordTodayUserMaterialFlatDTO::getNodeId,
+                            LinkedHashMap::new, Collectors.toList()));
+
+            List<ZcOrderProcessRecordTodayUserMaterialRespVO.NodeStat> nodeStats = new ArrayList<>();
+            for (Map.Entry<Long, List<ZcOrderProcessRecordTodayUserMaterialFlatDTO>> nodeEntry : nodeGroup.entrySet()) {
+                Long nodeId = nodeEntry.getKey();
+                List<ZcOrderProcessRecordTodayUserMaterialFlatDTO> nodeRecords = nodeEntry.getValue();
+                String nodeName = nodeRecords.get(0).getNodeName();
+
+                ZcOrderProcessRecordTodayUserMaterialRespVO.NodeStat nodeStat = new ZcOrderProcessRecordTodayUserMaterialRespVO.NodeStat();
+                nodeStat.setNodeId(nodeId);
+                nodeStat.setNodeName(nodeName);
+
+                List<ZcOrderProcessRecordTodayUserMaterialRespVO.MaterialStat> materials = nodeRecords.stream().map(r -> {
+                    ZcOrderProcessRecordTodayUserMaterialRespVO.MaterialStat ms = new ZcOrderProcessRecordTodayUserMaterialRespVO.MaterialStat();
+                    ms.setElementId(r.getElementId());
+                    ms.setElementName(r.getElementName());
+                    ms.setProcessCount(r.getProcessCount());
+                    ms.setTotalQuantity(r.getTotalQuantity());
+                    return ms;
+                }).collect(Collectors.toList());
+
+                nodeStat.setMaterials(materials);
+                nodeStats.add(nodeStat);
+            }
+
+            userVO.setNodeStats(nodeStats);
+            result.add(userVO);
+        }
+
+        // 3. 补充无用料记录但开启的车间员工
+        List<ZcWorkshopUserDO> activeUsers = workshopUserMapper.selectList(
+                new LambdaQueryWrapperX<ZcWorkshopUserDO>().eq(ZcWorkshopUserDO::getStatus, 1));
+        for (ZcWorkshopUserDO user : activeUsers) {
+            if (!processedUserIds.contains(user.getId())) {
+                ZcOrderProcessRecordTodayUserMaterialRespVO userVO = new ZcOrderProcessRecordTodayUserMaterialRespVO();
+                userVO.setMasterId(user.getId());
+                userVO.setMasterName(user.getName());
+                userVO.setNodeStats(Collections.emptyList());
+                result.add(userVO);
+            }
+        }
+
+        return result;
+    }
+
     private ZcOrderProcessRecordDO validateProcessRecordExists(Long id) {
         ZcOrderProcessRecordDO record = processRecordMapper.selectById(id);
         if (record == null) {
@@ -274,3 +363,4 @@ public class ZcOrderProcessRecordServiceImpl implements ZcOrderProcessRecordServ
     }
 
 }
+
